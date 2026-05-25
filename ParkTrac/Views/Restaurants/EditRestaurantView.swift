@@ -1,6 +1,11 @@
 import SwiftUI
 import SwiftData
 
+private let editParkOptions: [(resort: String, parks: [String])] = [
+    ("Walt Disney World", ["Magic Kingdom", "EPCOT", "Hollywood Studios", "Animal Kingdom", "Disney Springs"]),
+    ("Universal Orlando", ["Universal Studios Florida", "Islands of Adventure", "Epic Universe", "CityWalk"]),
+]
+
 struct EditRestaurantView: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -12,10 +17,6 @@ struct EditRestaurantView: View {
     @State private var notes: String
     @State private var mattRating: Int
     @State private var wifeRating: Int
-
-    private let allParks: [(group: String, parks: [Park])] = ParkGroup.allCases.map {
-        (group: $0.rawValue, parks: $0.parks)
-    }
 
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
@@ -38,10 +39,10 @@ struct EditRestaurantView: View {
 
                 Section("Park") {
                     Picker("Park", selection: $park) {
-                        ForEach(allParks, id: \.group) { entry in
-                            Section(entry.group) {
-                                ForEach(entry.parks) { p in
-                                    Text(p.name).tag(p.name)
+                        ForEach(editParkOptions, id: \.resort) { entry in
+                            Section(entry.resort) {
+                                ForEach(entry.parks, id: \.self) { p in
+                                    Text(p).tag(p)
                                 }
                             }
                         }

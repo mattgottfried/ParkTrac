@@ -1,12 +1,17 @@
 import SwiftUI
 import SwiftData
 
+private let parkOptions: [(resort: String, parks: [String])] = [
+    ("Walt Disney World", ["Magic Kingdom", "EPCOT", "Hollywood Studios", "Animal Kingdom", "Disney Springs"]),
+    ("Universal Orlando", ["Universal Studios Florida", "Islands of Adventure", "Epic Universe", "CityWalk"]),
+]
+
 struct AddRestaurantView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var name = ""
-    @State private var selectedPark = ParkGroup.disney.parks[0]
+    @State private var selectedPark = "Magic Kingdom"
     @State private var dateVisited = Date.now
     @State private var notes = ""
     @State private var mattRating = 3
@@ -22,11 +27,11 @@ struct AddRestaurantView: View {
                 }
 
                 Section("Park") {
-                    Picker("Resort", selection: $selectedPark) {
-                        ForEach(ParkGroup.allCases) { group in
-                            Section(group.rawValue) {
-                                ForEach(group.parks) { park in
-                                    Text(park.name).tag(park)
+                    Picker("Park", selection: $selectedPark) {
+                        ForEach(parkOptions, id: \.resort) { entry in
+                            Section(entry.resort) {
+                                ForEach(entry.parks, id: \.self) { park in
+                                    Text(park).tag(park)
                                 }
                             }
                         }
@@ -61,7 +66,7 @@ struct AddRestaurantView: View {
     private func save() {
         let restaurant = Restaurant(
             name: name.trimmingCharacters(in: .whitespaces),
-            park: selectedPark.name,
+            park: selectedPark,
             dateVisited: dateVisited,
             notes: notes,
             mattRating: mattRating,
