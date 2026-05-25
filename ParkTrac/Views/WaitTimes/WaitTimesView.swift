@@ -42,7 +42,7 @@ struct WaitTimesView: View {
                         systemImage: "magnifyingglass",
                         description: Text(viewModel.searchText.isEmpty
                             ? "No attraction data available."
-                            : "No rides match "\(viewModel.searchText)".")
+                            : "No rides match \"\(viewModel.searchText)\".")
                     )
                     Spacer()
                 } else {
