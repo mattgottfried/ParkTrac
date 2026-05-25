@@ -1,0 +1,432 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA0000000000000000000021 /* ParkTracApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* ParkTracApp.swift */; };
+		AA0000000000000000000023 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000022 /* ContentView.swift */; };
+		AA0000000000000000000025 /* ParkDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000024 /* ParkDestination.swift */; };
+		AA0000000000000000000027 /* ParkModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000026 /* ParkModels.swift */; };
+		AA0000000000000000000029 /* Restaurant.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000028 /* Restaurant.swift */; };
+		AA000000000000000000002B /* ParkAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002A /* ParkAPIService.swift */; };
+		AA000000000000000000002D /* WaitTimesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002C /* WaitTimesViewModel.swift */; };
+		AA000000000000000000002F /* WaitTimesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002E /* WaitTimesView.swift */; };
+		AA0000000000000000000031 /* RideRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000030 /* RideRowView.swift */; };
+		AA0000000000000000000033 /* WaitBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000032 /* WaitBadgeView.swift */; };
+		AA0000000000000000000035 /* RestaurantListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000034 /* RestaurantListView.swift */; };
+		AA0000000000000000000037 /* RestaurantRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000036 /* RestaurantRowView.swift */; };
+		AA0000000000000000000039 /* AddRestaurantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000038 /* AddRestaurantView.swift */; };
+		AA000000000000000000003B /* EditRestaurantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003A /* EditRestaurantView.swift */; };
+		AA000000000000000000003D /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003C /* StarRatingView.swift */; };
+		AA000000000000000000003F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003E /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA0000000000000000000020 /* ParkTracApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkTracApp.swift; sourceTree = "<group>"; };
+		AA0000000000000000000022 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000024 /* ParkDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkDestination.swift; sourceTree = "<group>"; };
+		AA0000000000000000000026 /* ParkModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkModels.swift; sourceTree = "<group>"; };
+		AA0000000000000000000028 /* Restaurant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Restaurant.swift; sourceTree = "<group>"; };
+		AA000000000000000000002A /* ParkAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkAPIService.swift; sourceTree = "<group>"; };
+		AA000000000000000000002C /* WaitTimesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimesViewModel.swift; sourceTree = "<group>"; };
+		AA000000000000000000002E /* WaitTimesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimesView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000030 /* RideRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideRowView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000032 /* WaitBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitBadgeView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000034 /* RestaurantListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantListView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000036 /* RestaurantRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantRowView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000038 /* AddRestaurantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRestaurantView.swift; sourceTree = "<group>"; };
+		AA000000000000000000003A /* EditRestaurantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditRestaurantView.swift; sourceTree = "<group>"; };
+		AA000000000000000000003C /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
+		AA000000000000000000003E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000000000000000000047 /* ParkTrac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ParkTrac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0000000000000000000016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA000000000000000000000B /* ParkTrac */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000020 /* ParkTracApp.swift */,
+				AA0000000000000000000022 /* ContentView.swift */,
+				AA0000000000000000000041 /* Models */,
+				AA0000000000000000000042 /* Services */,
+				AA0000000000000000000043 /* ViewModels */,
+				AA0000000000000000000044 /* Views */,
+				AA000000000000000000003E /* Assets.xcassets */,
+			);
+			path = ParkTrac;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000000C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000047 /* ParkTrac.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000041 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000024 /* ParkDestination.swift */,
+				AA0000000000000000000026 /* ParkModels.swift */,
+				AA0000000000000000000028 /* Restaurant.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000042 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000002A /* ParkAPIService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000043 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000002C /* WaitTimesViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000044 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000045 /* WaitTimes */,
+				AA0000000000000000000046 /* Restaurants */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000045 /* WaitTimes */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000002E /* WaitTimesView.swift */,
+				AA0000000000000000000030 /* RideRowView.swift */,
+				AA0000000000000000000032 /* WaitBadgeView.swift */,
+			);
+			path = WaitTimes;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000046 /* Restaurants */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000034 /* RestaurantListView.swift */,
+				AA0000000000000000000036 /* RestaurantRowView.swift */,
+				AA0000000000000000000038 /* AddRestaurantView.swift */,
+				AA000000000000000000003A /* EditRestaurantView.swift */,
+				AA000000000000000000003C /* StarRatingView.swift */,
+			);
+			path = Restaurants;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000060 /* MainGroup */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000000B /* ParkTrac */,
+				AA000000000000000000000C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA000000000000000000000D /* ParkTrac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA000000000000000000000F /* Build configuration list for PBXNativeTarget "ParkTrac" */;
+			buildPhases = (
+				AA0000000000000000000014 /* Sources */,
+				AA0000000000000000000016 /* Frameworks */,
+				AA0000000000000000000015 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ParkTrac;
+			productName = ParkTrac;
+			productReference = AA0000000000000000000047 /* ParkTrac.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA000000000000000000000A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					AA000000000000000000000D = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = AA000000000000000000000E /* Build configuration list for PBXProject "ParkTrac" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA0000000000000000000060 /* MainGroup */;
+			productRefGroup = AA000000000000000000000C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA000000000000000000000D /* ParkTrac */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0000000000000000000015 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000000000000000000003F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000014 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000021 /* ParkTracApp.swift in Sources */,
+				AA0000000000000000000023 /* ContentView.swift in Sources */,
+				AA0000000000000000000025 /* ParkDestination.swift in Sources */,
+				AA0000000000000000000027 /* ParkModels.swift in Sources */,
+				AA0000000000000000000029 /* Restaurant.swift in Sources */,
+				AA000000000000000000002B /* ParkAPIService.swift in Sources */,
+				AA000000000000000000002D /* WaitTimesViewModel.swift in Sources */,
+				AA000000000000000000002F /* WaitTimesView.swift in Sources */,
+				AA0000000000000000000031 /* RideRowView.swift in Sources */,
+				AA0000000000000000000033 /* WaitBadgeView.swift in Sources */,
+				AA0000000000000000000035 /* RestaurantListView.swift in Sources */,
+				AA0000000000000000000037 /* RestaurantRowView.swift in Sources */,
+				AA0000000000000000000039 /* AddRestaurantView.swift in Sources */,
+				AA000000000000000000003B /* EditRestaurantView.swift in Sources */,
+				AA000000000000000000003D /* StarRatingView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		AA0000000000000000000012 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mattgottfried.parktrac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000013 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mattgottfried.parktrac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA000000000000000000000E /* Build configuration list for PBXProject "ParkTrac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000010 /* Debug */,
+				AA0000000000000000000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA000000000000000000000F /* Build configuration list for PBXNativeTarget "ParkTrac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000012 /* Debug */,
+				AA0000000000000000000013 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = AA000000000000000000000A /* Project object */;
+}
