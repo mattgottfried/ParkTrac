@@ -51,7 +51,7 @@ struct EditRestaurantView: View {
 
                 Section("Ratings") {
                     StarRatingView(label: "Matt", rating: $mattRating)
-                    StarRatingView(label: "Wife", rating: $wifeRating)
+                    StarRatingView(label: "Heather", rating: $wifeRating)
                 }
 
                 Section("Notes") {

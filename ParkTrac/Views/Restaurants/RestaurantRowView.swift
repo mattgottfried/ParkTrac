@@ -28,7 +28,7 @@ struct RestaurantRowView: View {
                     StarDisplayView(rating: Double(restaurant.mattRating))
                 }
                 HStack(spacing: 4) {
-                    Text("Wife:").font(.caption2).foregroundStyle(.secondary)
+                    Text("Heather:").font(.caption2).foregroundStyle(.secondary)
                     StarDisplayView(rating: Double(restaurant.wifeRating))
                 }
             }

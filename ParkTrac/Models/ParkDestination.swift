@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum ParkGroup: String, CaseIterable, Identifiable {
     case disney = "Walt Disney World"
@@ -6,30 +7,33 @@ enum ParkGroup: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var parks: [Park] {
+    var destinationId: String {
         switch self {
-        case .disney:
-            return [
-                Park(id: "75ea578a-adc8-4116-a54d-dccb60765ef9", name: "Magic Kingdom"),
-                Park(id: "47f90d2c-e191-4239-a466-5892ef59a88b", name: "EPCOT"),
-                Park(id: "288747d1-8b4f-4a64-867e-ea7c9b27bad8", name: "Hollywood Studios"),
-                Park(id: "1c84a229-8862-4648-9c71-378ddd2c7693", name: "Animal Kingdom"),
-            ]
-        case .universal:
-            return [
-                Park(id: "9a245984-2824-4c4f-b5b9-dc4041d503af", name: "Universal Studios Florida"),
-                Park(id: "267615cc-8943-4522-b299-4b2de2bc8c14", name: "Islands of Adventure"),
-                Park(id: "b6700ea4-f9c4-4b7c-b7a1-a26e24a97fd3", name: "Epic Universe"),
-            ]
+        case .disney:    return "e957da41-3552-4cf6-b636-5babc5cbc4e6"
+        case .universal: return "eb3f4560-2383-4a36-9152-6b3e5ed6bc57"
         }
     }
 
-    var allParkNames: [String] {
-        parks.map(\.name)
+    var theme: ParkTheme {
+        switch self {
+        case .disney:
+            return ParkTheme(
+                primaryColor: Color(red: 0/255, green: 60/255, blue: 113/255),
+                accentColor: Color(red: 253/255, green: 185/255, blue: 19/255),
+                annotationTextColor: .white
+            )
+        case .universal:
+            return ParkTheme(
+                primaryColor: Color(red: 20/255, green: 20/255, blue: 20/255),
+                accentColor: Color(red: 252/255, green: 190/255, blue: 17/255),
+                annotationTextColor: .black
+            )
+        }
     }
 }
 
-struct Park: Identifiable, Hashable {
-    let id: String
-    let name: String
+struct ParkTheme {
+    let primaryColor: Color
+    let accentColor: Color
+    let annotationTextColor: Color
 }

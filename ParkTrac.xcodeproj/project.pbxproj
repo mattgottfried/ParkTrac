@@ -14,15 +14,31 @@
 		AA0000000000000000000029 /* Restaurant.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000028 /* Restaurant.swift */; };
 		AA000000000000000000002B /* ParkAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002A /* ParkAPIService.swift */; };
 		AA000000000000000000002D /* WaitTimesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002C /* WaitTimesViewModel.swift */; };
-		AA000000000000000000002F /* WaitTimesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002E /* WaitTimesView.swift */; };
-		AA0000000000000000000031 /* RideRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000030 /* RideRowView.swift */; };
-		AA0000000000000000000033 /* WaitBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000032 /* WaitBadgeView.swift */; };
-		AA0000000000000000000035 /* RestaurantListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000034 /* RestaurantListView.swift */; };
-		AA0000000000000000000037 /* RestaurantRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000036 /* RestaurantRowView.swift */; };
-		AA0000000000000000000039 /* AddRestaurantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000038 /* AddRestaurantView.swift */; };
-		AA000000000000000000003B /* EditRestaurantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003A /* EditRestaurantView.swift */; };
-		AA000000000000000000003D /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003C /* StarRatingView.swift */; };
-		AA000000000000000000003F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003E /* Assets.xcassets */; };
+		AA000000000000000000002F /* ParkMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002E /* ParkMapView.swift */; };
+		AA0000000000000000000031 /* WaitTimeAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000030 /* WaitTimeAnnotation.swift */; };
+		AA0000000000000000000033 /* RideCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000032 /* RideCardView.swift */; };
+		AA0000000000000000000035 /* RideDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000034 /* RideDetailSheet.swift */; };
+		AA0000000000000000000037 /* RidePredictionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000036 /* RidePredictionView.swift */; };
+		AA0000000000000000000039 /* RestaurantListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000038 /* RestaurantListView.swift */; };
+		AA000000000000000000003B /* RestaurantRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003A /* RestaurantRowView.swift */; };
+		AA000000000000000000003D /* AddRestaurantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003C /* AddRestaurantView.swift */; };
+		AA000000000000000000003F /* EditRestaurantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003E /* EditRestaurantView.swift */; };
+		AA0000000000000000000041 /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000040 /* StarRatingView.swift */; };
+		AA0000000000000000000043 /* BucketListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000042 /* BucketListView.swift */; };
+		AA0000000000000000000045 /* BucketRestaurantListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000044 /* BucketRestaurantListView.swift */; };
+		AA0000000000000000000047 /* HotelListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000046 /* HotelListView.swift */; };
+		AA0000000000000000000049 /* BucketRestaurantDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000048 /* BucketRestaurantDetailView.swift */; };
+		AA000000000000000000004B /* HotelDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000004A /* HotelDetailView.swift */; };
+		AA000000000000000000004D /* BucketProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000004C /* BucketProgressView.swift */; };
+		AA000000000000000000004F /* BucketRestaurant.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000004E /* BucketRestaurant.swift */; };
+		AA0000000000000000000051 /* HotelStay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000050 /* HotelStay.swift */; };
+		AA0000000000000000000053 /* WaitTimeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000052 /* WaitTimeRecord.swift */; };
+		AA0000000000000000000055 /* DowntimeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000054 /* DowntimeRecord.swift */; };
+		AA0000000000000000000057 /* BucketListService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000056 /* BucketListService.swift */; };
+		AA0000000000000000000059 /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000058 /* SeedData.swift */; };
+		AA000000000000000000005B /* WaitTimeRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000005A /* WaitTimeRecorder.swift */; };
+		AA000000000000000000005D /* WaitTimePredictionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000005C /* WaitTimePredictionService.swift */; };
+		AA000000000000000000005F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000005E /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,16 +49,32 @@
 		AA0000000000000000000028 /* Restaurant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Restaurant.swift; sourceTree = "<group>"; };
 		AA000000000000000000002A /* ParkAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkAPIService.swift; sourceTree = "<group>"; };
 		AA000000000000000000002C /* WaitTimesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimesViewModel.swift; sourceTree = "<group>"; };
-		AA000000000000000000002E /* WaitTimesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimesView.swift; sourceTree = "<group>"; };
-		AA0000000000000000000030 /* RideRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideRowView.swift; sourceTree = "<group>"; };
-		AA0000000000000000000032 /* WaitBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitBadgeView.swift; sourceTree = "<group>"; };
-		AA0000000000000000000034 /* RestaurantListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantListView.swift; sourceTree = "<group>"; };
-		AA0000000000000000000036 /* RestaurantRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantRowView.swift; sourceTree = "<group>"; };
-		AA0000000000000000000038 /* AddRestaurantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRestaurantView.swift; sourceTree = "<group>"; };
-		AA000000000000000000003A /* EditRestaurantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditRestaurantView.swift; sourceTree = "<group>"; };
-		AA000000000000000000003C /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
-		AA000000000000000000003E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		AA0000000000000000000047 /* ParkTrac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ParkTrac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000000000000000000002E /* ParkMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkMapView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000030 /* WaitTimeAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimeAnnotation.swift; sourceTree = "<group>"; };
+		AA0000000000000000000032 /* RideCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideCardView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000034 /* RideDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideDetailSheet.swift; sourceTree = "<group>"; };
+		AA0000000000000000000036 /* RidePredictionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidePredictionView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000038 /* RestaurantListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantListView.swift; sourceTree = "<group>"; };
+		AA000000000000000000003A /* RestaurantRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantRowView.swift; sourceTree = "<group>"; };
+		AA000000000000000000003C /* AddRestaurantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRestaurantView.swift; sourceTree = "<group>"; };
+		AA000000000000000000003E /* EditRestaurantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditRestaurantView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000040 /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000042 /* BucketListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketListView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000044 /* BucketRestaurantListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketRestaurantListView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000046 /* HotelListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotelListView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000048 /* BucketRestaurantDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketRestaurantDetailView.swift; sourceTree = "<group>"; };
+		AA000000000000000000004A /* HotelDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotelDetailView.swift; sourceTree = "<group>"; };
+		AA000000000000000000004C /* BucketProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketProgressView.swift; sourceTree = "<group>"; };
+		AA000000000000000000004E /* BucketRestaurant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketRestaurant.swift; sourceTree = "<group>"; };
+		AA0000000000000000000050 /* HotelStay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotelStay.swift; sourceTree = "<group>"; };
+		AA0000000000000000000052 /* WaitTimeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimeRecord.swift; sourceTree = "<group>"; };
+		AA0000000000000000000054 /* DowntimeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DowntimeRecord.swift; sourceTree = "<group>"; };
+		AA0000000000000000000056 /* BucketListService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketListService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000058 /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
+		AA000000000000000000005A /* WaitTimeRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimeRecorder.swift; sourceTree = "<group>"; };
+		AA000000000000000000005C /* WaitTimePredictionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimePredictionService.swift; sourceTree = "<group>"; };
+		AA000000000000000000005E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000000000000000000070 /* ParkTrac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ParkTrac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,11 +93,11 @@
 			children = (
 				AA0000000000000000000020 /* ParkTracApp.swift */,
 				AA0000000000000000000022 /* ContentView.swift */,
-				AA0000000000000000000041 /* Models */,
-				AA0000000000000000000042 /* Services */,
-				AA0000000000000000000043 /* ViewModels */,
-				AA0000000000000000000044 /* Views */,
-				AA000000000000000000003E /* Assets.xcassets */,
+				AA0000000000000000000061 /* Models */,
+				AA0000000000000000000062 /* Services */,
+				AA0000000000000000000063 /* ViewModels */,
+				AA0000000000000000000064 /* Views */,
+				AA000000000000000000005E /* Assets.xcassets */,
 			);
 			path = ParkTrac;
 			sourceTree = "<group>";
@@ -73,30 +105,38 @@
 		AA000000000000000000000C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000000000000000000047 /* ParkTrac.app */,
+				AA0000000000000000000070 /* ParkTrac.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000041 /* Models */ = {
+		AA0000000000000000000061 /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000024 /* ParkDestination.swift */,
 				AA0000000000000000000026 /* ParkModels.swift */,
 				AA0000000000000000000028 /* Restaurant.swift */,
+				AA000000000000000000004E /* BucketRestaurant.swift */,
+				AA0000000000000000000050 /* HotelStay.swift */,
+				AA0000000000000000000052 /* WaitTimeRecord.swift */,
+				AA0000000000000000000054 /* DowntimeRecord.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000042 /* Services */ = {
+		AA0000000000000000000062 /* Services */ = {
 			isa = PBXGroup;
 			children = (
 				AA000000000000000000002A /* ParkAPIService.swift */,
+				AA0000000000000000000056 /* BucketListService.swift */,
+				AA0000000000000000000058 /* SeedData.swift */,
+				AA000000000000000000005A /* WaitTimeRecorder.swift */,
+				AA000000000000000000005C /* WaitTimePredictionService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000043 /* ViewModels */ = {
+		AA0000000000000000000063 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
 				AA000000000000000000002C /* WaitTimesViewModel.swift */,
@@ -104,35 +144,51 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000044 /* Views */ = {
+		AA0000000000000000000064 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000000000000000000045 /* WaitTimes */,
-				AA0000000000000000000046 /* Restaurants */,
+				AA0000000000000000000065 /* WaitTimes */,
+				AA0000000000000000000066 /* Restaurants */,
+				AA0000000000000000000067 /* BucketList */,
 			);
 			path = Views;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000045 /* WaitTimes */ = {
+		AA0000000000000000000065 /* WaitTimes */ = {
 			isa = PBXGroup;
 			children = (
-				AA000000000000000000002E /* WaitTimesView.swift */,
-				AA0000000000000000000030 /* RideRowView.swift */,
-				AA0000000000000000000032 /* WaitBadgeView.swift */,
+				AA000000000000000000002E /* ParkMapView.swift */,
+				AA0000000000000000000030 /* WaitTimeAnnotation.swift */,
+				AA0000000000000000000032 /* RideCardView.swift */,
+				AA0000000000000000000034 /* RideDetailSheet.swift */,
+				AA0000000000000000000036 /* RidePredictionView.swift */,
 			);
 			path = WaitTimes;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000046 /* Restaurants */ = {
+		AA0000000000000000000066 /* Restaurants */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000000000000000000034 /* RestaurantListView.swift */,
-				AA0000000000000000000036 /* RestaurantRowView.swift */,
-				AA0000000000000000000038 /* AddRestaurantView.swift */,
-				AA000000000000000000003A /* EditRestaurantView.swift */,
-				AA000000000000000000003C /* StarRatingView.swift */,
+				AA0000000000000000000038 /* RestaurantListView.swift */,
+				AA000000000000000000003A /* RestaurantRowView.swift */,
+				AA000000000000000000003C /* AddRestaurantView.swift */,
+				AA000000000000000000003E /* EditRestaurantView.swift */,
+				AA0000000000000000000040 /* StarRatingView.swift */,
 			);
 			path = Restaurants;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000067 /* BucketList */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000042 /* BucketListView.swift */,
+				AA0000000000000000000044 /* BucketRestaurantListView.swift */,
+				AA0000000000000000000046 /* HotelListView.swift */,
+				AA0000000000000000000048 /* BucketRestaurantDetailView.swift */,
+				AA000000000000000000004A /* HotelDetailView.swift */,
+				AA000000000000000000004C /* BucketProgressView.swift */,
+			);
+			path = BucketList;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000060 /* MainGroup */ = {
@@ -160,7 +216,7 @@
 			);
 			name = ParkTrac;
 			productName = ParkTrac;
-			productReference = AA0000000000000000000047 /* ParkTrac.app */;
+			productReference = AA0000000000000000000070 /* ParkTrac.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -201,7 +257,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA000000000000000000003F /* Assets.xcassets in Resources */,
+				AA000000000000000000005F /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,14 +275,30 @@
 				AA0000000000000000000029 /* Restaurant.swift in Sources */,
 				AA000000000000000000002B /* ParkAPIService.swift in Sources */,
 				AA000000000000000000002D /* WaitTimesViewModel.swift in Sources */,
-				AA000000000000000000002F /* WaitTimesView.swift in Sources */,
-				AA0000000000000000000031 /* RideRowView.swift in Sources */,
-				AA0000000000000000000033 /* WaitBadgeView.swift in Sources */,
-				AA0000000000000000000035 /* RestaurantListView.swift in Sources */,
-				AA0000000000000000000037 /* RestaurantRowView.swift in Sources */,
-				AA0000000000000000000039 /* AddRestaurantView.swift in Sources */,
-				AA000000000000000000003B /* EditRestaurantView.swift in Sources */,
-				AA000000000000000000003D /* StarRatingView.swift in Sources */,
+				AA000000000000000000002F /* ParkMapView.swift in Sources */,
+				AA0000000000000000000031 /* WaitTimeAnnotation.swift in Sources */,
+				AA0000000000000000000033 /* RideCardView.swift in Sources */,
+				AA0000000000000000000035 /* RideDetailSheet.swift in Sources */,
+				AA0000000000000000000037 /* RidePredictionView.swift in Sources */,
+				AA0000000000000000000039 /* RestaurantListView.swift in Sources */,
+				AA000000000000000000003B /* RestaurantRowView.swift in Sources */,
+				AA000000000000000000003D /* AddRestaurantView.swift in Sources */,
+				AA000000000000000000003F /* EditRestaurantView.swift in Sources */,
+				AA0000000000000000000041 /* StarRatingView.swift in Sources */,
+				AA0000000000000000000043 /* BucketListView.swift in Sources */,
+				AA0000000000000000000045 /* BucketRestaurantListView.swift in Sources */,
+				AA0000000000000000000047 /* HotelListView.swift in Sources */,
+				AA0000000000000000000049 /* BucketRestaurantDetailView.swift in Sources */,
+				AA000000000000000000004B /* HotelDetailView.swift in Sources */,
+				AA000000000000000000004D /* BucketProgressView.swift in Sources */,
+				AA000000000000000000004F /* BucketRestaurant.swift in Sources */,
+				AA0000000000000000000051 /* HotelStay.swift in Sources */,
+				AA0000000000000000000053 /* WaitTimeRecord.swift in Sources */,
+				AA0000000000000000000055 /* DowntimeRecord.swift in Sources */,
+				AA0000000000000000000057 /* BucketListService.swift in Sources */,
+				AA0000000000000000000059 /* SeedData.swift in Sources */,
+				AA000000000000000000005B /* WaitTimeRecorder.swift in Sources */,
+				AA000000000000000000005D /* WaitTimePredictionService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
