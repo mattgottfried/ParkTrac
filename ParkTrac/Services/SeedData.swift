@@ -9,7 +9,7 @@ struct SeedRestaurant {
     let category: String
 }
 
-let seedRestaurants: [SeedRestaurant] = [
+let allSeedRestaurants: [SeedRestaurant] = [
 
     // MARK: Magic Kingdom
     SeedRestaurant(name: "Be Our Guest Restaurant", park: "Magic Kingdom", resort: "Walt Disney World", category: "Table Service"),
@@ -194,7 +194,7 @@ struct SeedHotel {
     let tier: String
 }
 
-let seedHotels: [SeedHotel] = [
+let allSeedHotels: [SeedHotel] = [
     // MARK: Walt Disney World – Deluxe
     SeedHotel(name: "Disney's Grand Floridian Resort & Spa", resort: "Walt Disney World", tier: "Deluxe"),
     SeedHotel(name: "Disney's Contemporary Resort", resort: "Walt Disney World", tier: "Deluxe"),

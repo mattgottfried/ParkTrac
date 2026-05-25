@@ -17,7 +17,7 @@ actor BucketListService {
         let existing = (try? context.fetch(FetchDescriptor<BucketRestaurant>())) ?? []
         let existingKeys = Set(existing.map { "\($0.name)|\($0.park)" })
 
-        for seed in seedRestaurants {
+        for seed in allSeedRestaurants {
             let key = "\(seed.name)|\(seed.park)"
             guard !existingKeys.contains(key) else { continue }
             let restaurant = BucketRestaurant(
@@ -37,7 +37,7 @@ actor BucketListService {
         let existing = (try? context.fetch(FetchDescriptor<HotelStay>())) ?? []
         let existingNames = Set(existing.map(\.hotelName))
 
-        for seed in seedHotels {
+        for seed in allSeedHotels {
             guard !existingNames.contains(seed.name) else { continue }
             let hotel = HotelStay(
                 hotelName: seed.name,
