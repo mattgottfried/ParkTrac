@@ -5,12 +5,10 @@ struct RideCardView: View {
     let theme: ParkTheme
 
     private var badgeColor: Color {
-        guard ride.isOperating else { return .gray }
-        guard let minutes = ride.waitMinutes else { return .blue }
-        if minutes < 30 { return .green }
-        if minutes < 60 { return Color(red: 1, green: 0.75, blue: 0) }
-        return .red
+        waitTimeColor(minutes: ride.waitMinutes, isOperating: ride.isOperating, status: ride.status)
     }
+
+    private var meta: RideInfo? { rideMetadata[ride.name] }
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -19,9 +17,21 @@ struct RideCardView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(ride.isOperating ? .primary : .secondary)
                     .lineLimit(2)
-                Text(ride.statusDisplay)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(ride.statusDisplay)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    if let info = meta {
+                        Circle()
+                            .fill(info.thrill.color)
+                            .frame(width: 6, height: 6)
+                        if let h = info.heightInches {
+                            Text("\(h)\"")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
             }
             Spacer()
             if ride.isOperating, let minutes = ride.waitMinutes {

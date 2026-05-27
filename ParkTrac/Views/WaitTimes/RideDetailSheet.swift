@@ -4,6 +4,7 @@ struct RideDetailSheet: View {
     let ride: DisplayRide
     let theme: ParkTheme
     let parkGroup: ParkGroup
+    var parkName: String = ""
     @Environment(\.dismiss) private var dismiss
 
     private var badgeColor: Color {
@@ -52,8 +53,15 @@ struct RideDetailSheet: View {
 
                 Divider()
 
+                // Ride info (height, thrill, type)
+                if let info = rideMetadata[ride.name] {
+                    rideInfoSection(info)
+                        .padding(.horizontal)
+                    Divider()
+                }
+
                 // Predictions / closure info
-                RidePredictionView(ride: ride, parkGroup: parkGroup)
+                RidePredictionView(ride: ride, parkGroup: parkGroup, parkName: parkName)
                     .padding(.horizontal)
 
                 Button("Dismiss") { dismiss() }
@@ -65,5 +73,57 @@ struct RideDetailSheet: View {
         }
         .presentationDetents([.fraction(0.6), .large])
         .presentationDragIndicator(.hidden)
+    }
+
+    // MARK: - Ride Info Section
+
+    @ViewBuilder
+    private func rideInfoSection(_ info: RideInfo) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Ride Info")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 10) {
+                // Height requirement
+                infoChip(
+                    label: info.heightInches.map { "\($0)\" min height" } ?? "No height requirement",
+                    systemImage: "ruler",
+                    color: info.heightInches != nil ? .blue : .secondary
+                )
+
+                // Thrill level
+                infoChip(
+                    label: info.thrill.rawValue,
+                    systemImage: info.thrill.systemImage,
+                    color: info.thrill.color
+                )
+            }
+
+            HStack(spacing: 10) {
+                // Ride type
+                infoChip(
+                    label: info.type.rawValue,
+                    systemImage: info.type.systemImage,
+                    color: .indigo
+                )
+
+                // Lightning Lane
+                infoChip(
+                    label: info.lightningLane ? "Lightning Lane" : "Standby Only",
+                    systemImage: info.lightningLane ? "bolt.fill" : "person.2.fill",
+                    color: info.lightningLane ? .yellow : .secondary
+                )
+            }
+        }
+    }
+
+    private func infoChip(label: String, systemImage: String, color: Color) -> some View {
+        Label(label, systemImage: systemImage)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(color)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(color.opacity(0.1), in: Capsule())
     }
 }

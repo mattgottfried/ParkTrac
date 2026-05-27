@@ -61,9 +61,17 @@ final class WaitTimeRecorder {
     }
 
     private func pruneOldRecords(before cutoff: Date, context: ModelContext) {
+        // Prune wait time snapshots
         let predicate = #Predicate<WaitTimeRecord> { $0.recordedAt < cutoff }
         let old = (try? context.fetch(FetchDescriptor<WaitTimeRecord>(predicate: predicate))) ?? []
         for record in old { context.delete(record) }
+
+        // Prune completed downtime records older than the cutoff
+        let dtPredicate = #Predicate<DowntimeRecord> { r in
+            r.downEnd != nil && r.downEnd! < cutoff
+        }
+        let oldDowntime = (try? context.fetch(FetchDescriptor<DowntimeRecord>(predicate: dtPredicate))) ?? []
+        for record in oldDowntime { context.delete(record) }
     }
 
     func minutesDown(for rideId: String, context: ModelContext) -> Int? {

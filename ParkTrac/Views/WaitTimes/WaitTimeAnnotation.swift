@@ -6,17 +6,7 @@ struct WaitTimeAnnotation: View {
     @Binding var selectedRide: DisplayRide?
 
     private var badgeColor: Color {
-        guard ride.isOperating else { return .gray }
-        guard let minutes = ride.waitMinutes else { return .blue }
-        if minutes < 30 { return .green }
-        if minutes < 60 { return Color(red: 1, green: 0.75, blue: 0) }
-        return .red
-    }
-
-    private var label: String {
-        guard ride.isOperating else { return "✕" }
-        guard let minutes = ride.waitMinutes else { return "—" }
-        return "\(minutes)"
+        waitTimeColor(minutes: ride.waitMinutes, isOperating: ride.isOperating, status: ride.status)
     }
 
     var body: some View {
@@ -29,16 +19,8 @@ struct WaitTimeAnnotation: View {
                         .fill(badgeColor)
                         .frame(width: 36, height: 36)
                         .shadow(radius: 2)
-                    VStack(spacing: 0) {
-                        Text(label)
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                        if ride.isOperating && ride.waitMinutes != nil {
-                            Text("min")
-                                .font(.system(size: 7, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.9))
-                        }
-                    }
+
+                    annotationContent
                 }
                 // Small triangle pointer
                 Triangle()
@@ -47,6 +29,32 @@ struct WaitTimeAnnotation: View {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var annotationContent: some View {
+        if ride.status == "DOWN" {
+            Image(systemName: "exclamationmark")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.white)
+        } else if !ride.isOperating {
+            Image(systemName: "xmark")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(.white)
+        } else if let minutes = ride.waitMinutes {
+            VStack(spacing: 0) {
+                Text("\(minutes)")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text("min")
+                    .font(.system(size: 7, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.9))
+            }
+        } else {
+            Text("—")
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+        }
     }
 }
 

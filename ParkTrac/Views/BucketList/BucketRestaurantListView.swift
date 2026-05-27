@@ -2,59 +2,101 @@ import SwiftUI
 import SwiftData
 
 struct BucketRestaurantListView: View {
+    @Environment(AppState.self) private var appState
     @Query(sort: \BucketRestaurant.name) private var allRestaurants: [BucketRestaurant]
-    @State private var selectedPark: String = "All"
+    @State private var searchText: String = ""
     @State private var selectedRestaurant: BucketRestaurant?
 
-    private var parks: [String] {
-        let unique = Set(allRestaurants.map(\.park))
-        return ["All"] + unique.sorted()
+    private var resortRestaurants: [BucketRestaurant] {
+        allRestaurants.filter { $0.resort == appState.selectedResort.rawValue }
     }
 
     private var filtered: [BucketRestaurant] {
-        selectedPark == "All" ? allRestaurants : allRestaurants.filter { $0.park == selectedPark }
+        resortRestaurants
+            .filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
     }
-
-    private var visited: Int { filtered.filter(\.isVisited).count }
 
     var body: some View {
         VStack(spacing: 0) {
             BucketProgressView(
-                visited: allRestaurants.filter(\.isVisited).count,
-                total: allRestaurants.count,
+                visited: resortRestaurants.filter(\.isVisited).count,
+                total: resortRestaurants.count,
                 label: "Restaurants Visited",
                 color: .orange
             )
-            .padding()
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(parks, id: \.self) { park in
-                        Button(park == "All" ? "All Parks" : park) {
-                            selectedPark = park
-                        }
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(selectedPark == park ? .white : .primary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(selectedPark == park ? Color.orange : Color(.systemGray5))
-                        .clipShape(Capsule())
-                    }
-                }
-                .padding(.horizontal)
-            }
+            .padding(.horizontal)
+            .padding(.top, 12)
             .padding(.bottom, 8)
 
-            List {
-                ForEach(filtered) { restaurant in
-                    BucketRestaurantRow(restaurant: restaurant)
-                        .contentShape(Rectangle())
-                        .onTapGesture { selectedRestaurant = restaurant }
+            statsStrip
+                .padding(.bottom, 8)
+
+            Group {
+                if !searchText.isEmpty && filtered.isEmpty {
+                    ContentUnavailableView.search(text: searchText)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List {
+                        ForEach(filtered) { restaurant in
+                            BucketRestaurantRow(restaurant: restaurant)
+                                .contentShape(Rectangle())
+                                .onTapGesture { selectedRestaurant = restaurant }
+                        }
+                    }
+                    .listStyle(.plain)
                 }
             }
-            .listStyle(.plain)
+            .searchable(text: $searchText, prompt: "Search restaurants")
         }
         .sheet(item: $selectedRestaurant) { BucketRestaurantDetailView(restaurant: $0) }
+    }
+
+    // MARK: - Stats strip
+
+    private var statsStrip: some View {
+        let resort = appState.selectedResort.rawValue
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                statCard(
+                    label: "Table Service",
+                    visited: allRestaurants.filter { $0.resort == resort && $0.category == "Table Service" && $0.isVisited }.count,
+                    total: allRestaurants.filter { $0.resort == resort && $0.category == "Table Service" }.count,
+                    color: .green
+                )
+                statCard(
+                    label: "Quick Service",
+                    visited: allRestaurants.filter { $0.resort == resort && $0.category == "Quick Service" && $0.isVisited }.count,
+                    total: allRestaurants.filter { $0.resort == resort && $0.category == "Quick Service" }.count,
+                    color: .orange
+                )
+                statCard(
+                    label: "Character Dining",
+                    visited: allRestaurants.filter { $0.resort == resort && $0.category == "Character Dining" && $0.isVisited }.count,
+                    total: allRestaurants.filter { $0.resort == resort && $0.category == "Character Dining" }.count,
+                    color: .blue
+                )
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private func statCard(label: String, visited: Int, total: Int, color: Color) -> some View {
+        let pct = total > 0 ? Int((Double(visited) / Double(total) * 100).rounded()) : 0
+        return VStack(alignment: .leading, spacing: 3) {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Text("\(visited) / \(total)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(color)
+            Text("\(pct)%")
+                .font(.caption2)
+                .foregroundStyle(color.opacity(0.8))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
@@ -99,10 +141,8 @@ private struct BucketRestaurantRow: View {
 
     private func categoryColor(_ category: String) -> Color {
         switch category {
-        case "Signature Dining": return .purple
         case "Character Dining": return .blue
         case "Table Service":    return .green
-        case "Dinner Show":      return .orange
         default:                 return .gray
         }
     }

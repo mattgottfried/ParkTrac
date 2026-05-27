@@ -15,8 +15,8 @@ struct BucketRestaurantDetailView: View {
         self.restaurant = restaurant
         _isVisited = State(initialValue: restaurant.isVisited)
         _visitDate = State(initialValue: restaurant.visitDate ?? .now)
-        _mattRating = State(initialValue: restaurant.mattRating)
-        _heatherRating = State(initialValue: restaurant.wifeRating)
+        _mattRating = State(initialValue: Int(restaurant.mattRating.rounded()))
+        _heatherRating = State(initialValue: Int(restaurant.wifeRating.rounded()))
         _notes = State(initialValue: restaurant.notes)
     }
 
@@ -85,8 +85,8 @@ struct BucketRestaurantDetailView: View {
     private func save() {
         restaurant.isVisited = isVisited
         restaurant.visitDate = isVisited ? visitDate : nil
-        restaurant.mattRating = isVisited ? mattRating : 0
-        restaurant.wifeRating = isVisited ? heatherRating : 0
+        restaurant.mattRating = isVisited ? Double(mattRating) : 0
+        restaurant.wifeRating = isVisited ? Double(heatherRating) : 0
         restaurant.notes = notes
         dismiss()
     }

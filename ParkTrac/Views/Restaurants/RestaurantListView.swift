@@ -8,6 +8,7 @@ struct RestaurantListView: View {
 
     @State private var showingAdd = false
     @State private var editTarget: Restaurant?
+    @State private var pendingDelete: IndexSet?
 
     var body: some View {
         NavigationStack {
@@ -25,7 +26,7 @@ struct RestaurantListView: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture { editTarget = restaurant }
                         }
-                        .onDelete(perform: deleteRestaurants)
+                        .onDelete { pendingDelete = $0 }
                     }
                     .listStyle(.plain)
                 }
@@ -52,10 +53,22 @@ struct RestaurantListView: View {
             .sheet(item: $editTarget) { restaurant in
                 EditRestaurantView(restaurant: restaurant)
             }
+            .confirmationDialog(
+                "Delete this restaurant?",
+                isPresented: Binding(
+                    get: { pendingDelete != nil },
+                    set: { if !$0 { pendingDelete = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    if let offsets = pendingDelete {
+                        offsets.forEach { modelContext.delete(restaurants[$0]) }
+                    }
+                    pendingDelete = nil
+                }
+                Button("Cancel", role: .cancel) { pendingDelete = nil }
+            }
         }
-    }
-
-    private func deleteRestaurants(at offsets: IndexSet) {
-        offsets.forEach { modelContext.delete(restaurants[$0]) }
     }
 }

@@ -2,35 +2,31 @@ import SwiftUI
 import SwiftData
 
 struct HotelListView: View {
+    @Environment(AppState.self) private var appState
     @Query(sort: \HotelStay.hotelName) private var allHotels: [HotelStay]
-    @State private var selectedResort: String = "All"
     @State private var selectedHotel: HotelStay?
 
-    private var resorts: [String] { ["All", "Walt Disney World", "Universal Orlando"] }
-
-    private var filtered: [HotelStay] {
-        selectedResort == "All" ? allHotels : allHotels.filter { $0.resort == selectedResort }
+    private var resortHotels: [HotelStay] {
+        allHotels.filter { $0.resort == appState.selectedResort.rawValue }
     }
 
     var body: some View {
         VStack(spacing: 0) {
             BucketProgressView(
-                visited: allHotels.filter(\.isVisited).count,
-                total: allHotels.count,
+                visited: resortHotels.filter(\.isVisited).count,
+                total: resortHotels.count,
                 label: "Hotels Stayed",
                 color: .purple
             )
-            .padding()
-
-            Picker("Resort", selection: $selectedResort) {
-                ForEach(resorts, id: \.self) { Text($0).tag($0) }
-            }
-            .pickerStyle(.segmented)
             .padding(.horizontal)
+            .padding(.top, 12)
             .padding(.bottom, 8)
 
+            hotelStatsStrip
+                .padding(.bottom, 8)
+
             List {
-                ForEach(filtered) { hotel in
+                ForEach(resortHotels) { hotel in
                     HotelRow(hotel: hotel)
                         .contentShape(Rectangle())
                         .onTapGesture { selectedHotel = hotel }
@@ -39,6 +35,64 @@ struct HotelListView: View {
             .listStyle(.plain)
         }
         .sheet(item: $selectedHotel) { HotelDetailView(hotel: $0) }
+    }
+
+    // MARK: - Stats strip
+
+    private var hotelStatsStrip: some View {
+        let resort = appState.selectedResort.rawValue
+        let isDisney = appState.selectedResort == .disney
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                if isDisney {
+                    hotelStatCard(label: "Deluxe / DVC",
+                        visited: allHotels.filter { $0.resort == resort && ($0.tier == "Deluxe" || $0.tier == "Disney Vacation Club") && $0.isVisited }.count,
+                        total: allHotels.filter { $0.resort == resort && ($0.tier == "Deluxe" || $0.tier == "Disney Vacation Club") }.count,
+                        color: .purple)
+                    hotelStatCard(label: "Moderate",
+                        visited: allHotels.filter { $0.resort == resort && $0.tier == "Moderate" && $0.isVisited }.count,
+                        total: allHotels.filter { $0.resort == resort && $0.tier == "Moderate" }.count,
+                        color: .orange)
+                    hotelStatCard(label: "Value",
+                        visited: allHotels.filter { $0.resort == resort && $0.tier == "Value" && $0.isVisited }.count,
+                        total: allHotels.filter { $0.resort == resort && $0.tier == "Value" }.count,
+                        color: .green)
+                } else {
+                    hotelStatCard(label: "Premier",
+                        visited: allHotels.filter { $0.resort == resort && $0.tier == "Premier" && $0.isVisited }.count,
+                        total: allHotels.filter { $0.resort == resort && $0.tier == "Premier" }.count,
+                        color: .purple)
+                    hotelStatCard(label: "Preferred",
+                        visited: allHotels.filter { $0.resort == resort && $0.tier == "Preferred" && $0.isVisited }.count,
+                        total: allHotels.filter { $0.resort == resort && $0.tier == "Preferred" }.count,
+                        color: .orange)
+                    hotelStatCard(label: "Standard",
+                        visited: allHotels.filter { $0.resort == resort && $0.tier == "Standard" && $0.isVisited }.count,
+                        total: allHotels.filter { $0.resort == resort && $0.tier == "Standard" }.count,
+                        color: .green)
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private func hotelStatCard(label: String, visited: Int, total: Int, color: Color) -> some View {
+        let pct = total > 0 ? Int((Double(visited) / Double(total) * 100).rounded()) : 0
+        return VStack(alignment: .leading, spacing: 3) {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Text("\(visited) / \(total)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(color)
+            Text("\(pct)%")
+                .font(.caption2)
+                .foregroundStyle(color.opacity(0.8))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 

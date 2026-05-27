@@ -24,7 +24,10 @@ actor BucketListService {
                 name: seed.name,
                 park: seed.park,
                 resort: seed.resort,
-                category: seed.category
+                category: seed.category,
+                isVisited: seed.isVisited,
+                mattRating: seed.mattRating,
+                wifeRating: seed.wifeRating
             )
             context.insert(restaurant)
         }

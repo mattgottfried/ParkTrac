@@ -8,7 +8,7 @@ struct StarRatingView: View {
         HStack(spacing: 4) {
             Text(label)
                 .font(.subheadline)
-                .frame(width: 50, alignment: .leading)
+                .frame(width: 72, alignment: .leading)
             HStack(spacing: 2) {
                 ForEach(1...5, id: \.self) { star in
                     Image(systemName: star <= rating ? "star.fill" : "star")

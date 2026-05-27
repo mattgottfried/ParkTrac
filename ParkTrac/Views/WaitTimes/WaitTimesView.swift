@@ -84,7 +84,7 @@ struct WaitTimesView: View {
             }
         }
         .task {
-            await viewModel.loadRides()
+            await viewModel.loadAllParks()
             viewModel.startAutoRefresh()
         }
         .onDisappear { viewModel.stopAutoRefresh() }

@@ -16,9 +16,16 @@ struct BucketProgressView: View {
                 Text(label)
                     .font(.subheadline.weight(.semibold))
                 Spacer()
-                Text("\(visited) / \(total)")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(color)
+                HStack(spacing: 6) {
+                    Text("\(visited) / \(total)")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(color)
+                    if total > 0 {
+                        Text("(\(Int((Double(visited) / Double(total) * 100).rounded()))%)")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(color.opacity(0.7))
+                    }
+                }
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {

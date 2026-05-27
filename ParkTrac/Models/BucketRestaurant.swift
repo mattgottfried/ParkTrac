@@ -10,14 +10,14 @@ final class BucketRestaurant {
     var category: String
     var isVisited: Bool
     var visitDate: Date?
-    var mattRating: Int
-    var wifeRating: Int
+    var mattRating: Double
+    var wifeRating: Double
     var notes: String
     var isFromAPI: Bool
 
     var averageRating: Double? {
         guard isVisited, mattRating > 0, wifeRating > 0 else { return nil }
-        return Double(mattRating + wifeRating) / 2.0
+        return (mattRating + wifeRating) / 2.0
     }
 
     init(
@@ -25,6 +25,9 @@ final class BucketRestaurant {
         park: String,
         resort: String,
         category: String,
+        isVisited: Bool = false,
+        mattRating: Double = 0,
+        wifeRating: Double = 0,
         isFromAPI: Bool = false
     ) {
         self.id = UUID()
@@ -32,10 +35,10 @@ final class BucketRestaurant {
         self.park = park
         self.resort = resort
         self.category = category
-        self.isVisited = false
+        self.isVisited = isVisited
         self.visitDate = nil
-        self.mattRating = 0
-        self.wifeRating = 0
+        self.mattRating = mattRating
+        self.wifeRating = wifeRating
         self.notes = ""
         self.isFromAPI = isFromAPI
     }

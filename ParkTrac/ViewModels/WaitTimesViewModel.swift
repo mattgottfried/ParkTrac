@@ -4,26 +4,80 @@ import Observation
 
 @Observable
 final class WaitTimesViewModel {
+
+    // MARK: - Blocked attractions (never have standby queues)
+    private let blockedAttractions: Set<String> = [
+        // Magic Kingdom
+        "A Pirate's Adventure ~ Treasures of the Seven Seas",
+        "Casey Jr. Splash 'N' Soak Station",
+        "Cinderella Castle",
+        "Main Street Vehicles",
+        // EPCOT
+        "Advanced Training Lab",
+        "American Heritage Gallery",
+        "Awesome Planet",
+        "Bijutsu-kan Gallery",
+        "Bruce's Shark World",
+        "Disney and Pixar Short Film Festival",
+        "Gallery of Arts and History",
+        "House of the Whispering Willows",
+        "ImageWorks - The \"What If\" Labs",
+        "Impressions de France",
+        "Journey of Water, Inspired by Moana",
+        "Kidcot Fun Stops",
+        "Mexico Folk Art Gallery",
+        "Palais du Cinéma",
+        "Project Tomorrow: Inventing the Wonders of the Future",
+        "SeaBase Aquarium",
+        "Stave Church Gallery",
+        "The American Adventure",
+        // Hollywood Studios
+        "Walt Disney Presents",
+        // Animal Kingdom
+        "Discovery Island Trails",
+        "The Oasis Exhibits",
+        "Tree of Life",
+        "Wilderness Explorers",
+        "Affection Section",
+        "Animal Care at Conservation Station",
+        "Wildlife Express Train",
+        // Islands of Adventure
+        "Camp Jurassic™",
+        "If I Ran The Zoo™",
+        "Jurassic Park Discovery Center™",
+        "Me Ship, The Olive®",
+        "Pteranodon Flyers",
+    ]
+
+    // MARK: - State
+
     var selectedGroup: ParkGroup = .disney {
         didSet {
-            let parks = parksByGroup[selectedGroup] ?? []
-            if let first = parks.first {
-                selectedPark = first
-            } else {
-                selectedPark = nil
-                Task { await loadParksIfNeeded(for: selectedGroup) }
-            }
+            filterPark = nil
+            Task { await loadAllParksInGroup() }
         }
     }
-    var selectedPark: ParkEntity? {
-        didSet { Task { await loadRidesAndLocations() } }
-    }
+
+    /// Which park chip is selected for list filtering (nil = all parks)
+    var filterPark: ParkEntity? = nil
 
     var parksByGroup: [ParkGroup: [ParkEntity]] = [:]
     var currentParks: [ParkEntity] { parksByGroup[selectedGroup] ?? [] }
 
     private var attractionLocations: [String: CLLocationCoordinate2D] = [:]
-    var rides: [DisplayRide] = []
+
+    /// Rides keyed by park ID — all parks in the current group
+    private var ridesByPark: [String: [DisplayRide]] = [:]
+
+    /// Sort preference — set from AppState/Settings
+    var sortAlphabetical: Bool = false
+
+    /// Flat merge of rides for the **current group only** (prevents cross-resort bleed)
+    var allRides: [DisplayRide] {
+        let currentParkIds = Set(currentParks.map(\.id))
+        return Array(ridesByPark.filter { currentParkIds.contains($0.key) }.values.joined())
+    }
+
     var isLoading = false
     var isLoadingParks = false
     var errorMessage: String?
@@ -31,24 +85,51 @@ final class WaitTimesViewModel {
     var lastRefreshed: Date?
 
     private var refreshTask: Task<Void, Never>?
-    var currentParkId: String = ""
+
+    // MARK: - Computed
+
+    // MARK: - Crowd Level (live, no history needed)
+
+    var currentCrowdLevel: CrowdLevel? {
+        let waits = filteredRides.filter { $0.isOperating }.compactMap(\.waitMinutes)
+        guard !waits.isEmpty else { return nil }
+        let avg = Double(waits.reduce(0, +)) / Double(waits.count)
+        return CrowdLevel.from(averageWait: avg)
+    }
+
+    var currentAverageWait: Double? {
+        let waits = filteredRides.filter { $0.isOperating }.compactMap(\.waitMinutes)
+        guard !waits.isEmpty else { return nil }
+        return Double(waits.reduce(0, +)) / Double(waits.count)
+    }
+
+    // MARK: - Filtered rides
 
     var filteredRides: [DisplayRide] {
-        rides
+        allRides
+            .filter { !blockedAttractions.contains($0.name) }
+            .filter { $0.status != "CLOSED" && $0.status != "REFURBISHMENT" }
+            .filter { filterPark == nil || $0.parkId == filterPark?.id }
             .filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
             .sorted { lhs, rhs in
+                if sortAlphabetical {
+                    return lhs.name.localizedCompare(rhs.name) == .orderedAscending
+                }
+                // Default: operating first, then by descending wait time
                 if lhs.isOperating != rhs.isOperating { return lhs.isOperating }
                 return (lhs.waitMinutes ?? -1) > (rhs.waitMinutes ?? -1)
             }
     }
 
+    /// Map annotations: operating rides only (no closed/blocked markers on map)
     var ridesWithLocation: [DisplayRide] {
-        filteredRides.filter { $0.coordinate != nil }
+        allRides
+            .filter { $0.isOperating }
+            .filter { !blockedAttractions.contains($0.name) }
+            .filter { $0.coordinate != nil }
     }
 
-    var selectedParkCoordinate: CLLocationCoordinate2D? {
-        selectedPark?.coordinate
-    }
+    // MARK: - Loading
 
     @MainActor
     func loadAllParks() async {
@@ -57,9 +138,7 @@ final class WaitTimesViewModel {
                 group.addTask { await self.loadParksIfNeeded(for: parkGroup) }
             }
         }
-        if selectedPark == nil, let first = parksByGroup[selectedGroup]?.first {
-            selectedPark = first
-        }
+        await loadAllParksInGroup()
     }
 
     @MainActor
@@ -69,55 +148,62 @@ final class WaitTimesViewModel {
         do {
             let parks = try await ParkAPIService.shared.fetchDestinationChildren(destinationId: group.destinationId)
             parksByGroup[group] = parks
-            if group == selectedGroup && selectedPark == nil {
-                selectedPark = parks.first
-            }
         } catch {
             errorMessage = "Could not load parks: \(error.localizedDescription)"
         }
         isLoadingParks = false
     }
 
+    /// Loads live ride data for every park in the current group in parallel.
     @MainActor
-    func loadRidesAndLocations() async {
-        guard let park = selectedPark else { return }
+    func loadAllParksInGroup() async {
+        guard let parks = parksByGroup[selectedGroup], !parks.isEmpty else { return }
         isLoading = true
         errorMessage = nil
-
-        async let liveTask = ParkAPIService.shared.fetchLiveData(for: park.id)
-        async let locTask: [AttractionEntity] = {
-            if attractionLocations[park.id] != nil {
-                return []
+        await withTaskGroup(of: Void.self) { group in
+            for park in parks {
+                group.addTask { await self.loadRidesForPark(park) }
             }
-            return (try? await ParkAPIService.shared.fetchAttractionChildren(parkId: park.id)) ?? []
-        }()
+        }
+        lastRefreshed = .now
+        isLoading = false
+    }
 
-        do {
-            let (liveEntries, attractions) = try await (liveTask, locTask)
-
+    @MainActor
+    private func loadRidesForPark(_ park: ParkEntity) async {
+        // Fetch locations once per park
+        if attractionLocations[park.id] == nil {
+            let attractions = (try? await ParkAPIService.shared.fetchAttractionChildren(parkId: park.id)) ?? []
             for attraction in attractions {
                 if let coord = attraction.coordinate {
                     attractionLocations[attraction.id] = coord
                 }
             }
-
-            let newRides = liveEntries
-                .filter { $0.entityType == "ATTRACTION" }
-                .map { entry in
-                    DisplayRide(live: entry, location: attractionLocations[entry.id])
-                }
-            rides = newRides
-            lastRefreshed = .now
-            currentParkId = park.id
-        } catch {
-            errorMessage = error.localizedDescription
         }
-        isLoading = false
+
+        guard let liveEntries = try? await ParkAPIService.shared.fetchLiveData(for: park.id) else { return }
+
+        let newRides = liveEntries
+            .filter { $0.entityType == "ATTRACTION" }
+            .map { entry in
+                DisplayRide(live: entry, parkId: park.id, location: attractionLocations[entry.id])
+            }
+        ridesByPark[park.id] = newRides
     }
 
     @MainActor
     func refresh() async {
-        await loadRidesAndLocations()
+        await loadAllParksInGroup()
+    }
+
+    @MainActor
+    func retry() async {
+        errorMessage = nil
+        if parksByGroup[selectedGroup] == nil {
+            await loadAllParks()
+        } else {
+            await loadAllParksInGroup()
+        }
     }
 
     func startAutoRefresh() {
@@ -126,7 +212,7 @@ final class WaitTimesViewModel {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
                 if !Task.isCancelled {
-                    await MainActor.run { Task { await self.loadRidesAndLocations() } }
+                    await MainActor.run { Task { await self.loadAllParksInGroup() } }
                 }
             }
         }
@@ -136,4 +222,6 @@ final class WaitTimesViewModel {
         refreshTask?.cancel()
         refreshTask = nil
     }
+
+    deinit { stopAutoRefresh() }
 }

@@ -1,5 +1,45 @@
 import Foundation
 import CoreLocation
+import SwiftUI
+
+// MARK: - Crowd Level
+
+enum CrowdLevel: String {
+    case ghost    = "Ghost Town"
+    case low      = "Low"
+    case moderate = "Moderate"
+    case high     = "High"
+    case veryHigh = "Very High"
+
+    static func from(averageWait: Double) -> CrowdLevel {
+        switch averageWait {
+        case ..<5:  return .ghost
+        case ..<20: return .low
+        case ..<40: return .moderate
+        case ..<60: return .high
+        default:    return .veryHigh
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .ghost, .low: return .green
+        case .moderate:    return .yellow
+        case .high:        return .orange
+        case .veryHigh:    return .red
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .ghost:    return "person"
+        case .low:      return "person"
+        case .moderate: return "person.2"
+        case .high:     return "person.3"
+        case .veryHigh: return "person.3.fill"
+        }
+    }
+}
 
 // MARK: - Destination Children
 
@@ -92,6 +132,7 @@ struct DisplayRide: Identifiable {
     let waitMinutes: Int?
     let isOperating: Bool
     let coordinate: CLLocationCoordinate2D?
+    let parkId: String
 
     var statusDisplay: String {
         switch status {
@@ -103,12 +144,13 @@ struct DisplayRide: Identifiable {
         }
     }
 
-    init(live: LiveDataEntry, location: CLLocationCoordinate2D?) {
+    init(live: LiveDataEntry, parkId: String, location: CLLocationCoordinate2D?) {
         self.id = live.id
         self.name = live.name
         self.status = live.status
         self.waitMinutes = live.waitMinutes
         self.isOperating = live.isOperating
         self.coordinate = location
+        self.parkId = parkId
     }
 }
