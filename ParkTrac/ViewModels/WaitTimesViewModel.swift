@@ -69,6 +69,12 @@ final class WaitTimesViewModel {
     /// Rides keyed by park ID — all parks in the current group
     private var ridesByPark: [String: [DisplayRide]] = [:]
 
+    /// Shows keyed by park ID
+    private var showsByPark: [String: [DisplayShow]] = [:]
+
+    /// Schedule keyed by park ID
+    var schedulesByPark: [String: [ParkScheduleDay]] = [:]
+
     /// Sort preference — set from AppState/Settings
     var sortAlphabetical: Bool = false
 
@@ -76,6 +82,24 @@ final class WaitTimesViewModel {
     var allRides: [DisplayRide] {
         let currentParkIds = Set(currentParks.map(\.id))
         return Array(ridesByPark.filter { currentParkIds.contains($0.key) }.values.joined())
+    }
+
+    /// Shows for the currently filtered park (or all parks if no filter)
+    var currentShows: [DisplayShow] {
+        let currentParkIds = Set(currentParks.map(\.id))
+        let all = Array(showsByPark.filter { currentParkIds.contains($0.key) }.values.joined())
+        let filtered = filterPark == nil ? all : all.filter { $0.parkId == filterPark?.id }
+        return filtered
+            .filter { !blockedAttractions.contains($0.name) }
+            .filter { $0.status != "CLOSED" }
+            .sorted { ($0.nextShowtime ?? .distantFuture) < ($1.nextShowtime ?? .distantFuture) }
+    }
+
+    /// Today's schedule for the currently selected park (operating hours only)
+    func todaySchedule(for park: ParkEntity) -> [ParkScheduleDay] {
+        guard let days = schedulesByPark[park.id] else { return [] }
+        let todayStr = ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: .now)).prefix(10)
+        return days.filter { $0.date.hasPrefix(todayStr) }
     }
 
     var isLoading = false
@@ -120,6 +144,9 @@ final class WaitTimesViewModel {
                 return (lhs.waitMinutes ?? -1) > (rhs.waitMinutes ?? -1)
             }
     }
+
+    /// Alias for allRides — used by views
+    var rides: [DisplayRide] { allRides }
 
     /// Map annotations: operating rides only (no closed/blocked markers on map)
     var ridesWithLocation: [DisplayRide] {
@@ -189,10 +216,29 @@ final class WaitTimesViewModel {
                 DisplayRide(live: entry, parkId: park.id, location: attractionLocations[entry.id])
             }
         ridesByPark[park.id] = newRides
+
+        // Collect show entities
+        let newShows = liveEntries
+            .filter { $0.entityType == "SHOW" || $0.entityType == "ENTERTAINMENT" }
+            .map { DisplayShow(live: $0, parkId: park.id) }
+        showsByPark[park.id] = newShows
+
+        // Fetch schedule once per day (only if stale or missing)
+        let scheduleKey = park.id
+        if schedulesByPark[scheduleKey] == nil {
+            if let schedule = try? await ParkAPIService.shared.fetchSchedule(parkId: park.id) {
+                schedulesByPark[scheduleKey] = schedule
+            }
+        }
     }
 
     @MainActor
     func refresh() async {
+        await loadAllParksInGroup()
+    }
+
+    @MainActor
+    func loadRides() async {
         await loadAllParksInGroup()
     }
 

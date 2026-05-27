@@ -7,7 +7,7 @@ struct BadgeDefinition: Identifiable {
     let howToEarn: String          // shown when locked
     let systemImage: String
     let color: Color
-    let isEarned: ([BucketRestaurant], [HotelStay]) -> Bool
+    let isEarned: ([BucketRestaurant], [HotelStay], [RideLog]) -> Bool
 }
 
 // MARK: - All Badges
@@ -22,9 +22,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Log your first restaurant visit.",
         systemImage: "fork.knife",
         color: .green,
-        isEarned: { restaurants, _ in
-            restaurants.filter(\.isVisited).count >= 1
-        }
+        isEarned: { restaurants, _, _ in restaurants.filter(\.isVisited).count >= 1 }
     ),
     BadgeDefinition(
         id: "food_explorer",
@@ -33,9 +31,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit 10 restaurants.",
         systemImage: "map.fill",
         color: .green,
-        isEarned: { restaurants, _ in
-            restaurants.filter(\.isVisited).count >= 10
-        }
+        isEarned: { restaurants, _, _ in restaurants.filter(\.isVisited).count >= 10 }
     ),
     BadgeDefinition(
         id: "foodie",
@@ -44,9 +40,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit 25 restaurants.",
         systemImage: "star.fill",
         color: .orange,
-        isEarned: { restaurants, _ in
-            restaurants.filter(\.isVisited).count >= 25
-        }
+        isEarned: { restaurants, _, _ in restaurants.filter(\.isVisited).count >= 25 }
     ),
     BadgeDefinition(
         id: "culinary_master",
@@ -55,9 +49,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit 50 restaurants.",
         systemImage: "crown.fill",
         color: .yellow,
-        isEarned: { restaurants, _ in
-            restaurants.filter(\.isVisited).count >= 50
-        }
+        isEarned: { restaurants, _, _ in restaurants.filter(\.isVisited).count >= 50 }
     ),
 
     // MARK: Dining — category
@@ -68,7 +60,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit all Character Dining restaurants.",
         systemImage: "theatermasks.fill",
         color: .purple,
-        isEarned: { restaurants, _ in
+        isEarned: { restaurants, _, _ in
             let cd = restaurants.filter { $0.category == "Character Dining" }
             return !cd.isEmpty && cd.allSatisfy(\.isVisited)
         }
@@ -80,7 +72,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit 10 Table Service restaurants.",
         systemImage: "tablecells.fill",
         color: .blue,
-        isEarned: { restaurants, _ in
+        isEarned: { restaurants, _, _ in
             restaurants.filter { $0.category == "Table Service" && $0.isVisited }.count >= 10
         }
     ),
@@ -91,7 +83,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit 10 Quick Service restaurants.",
         systemImage: "bolt.fill",
         color: .yellow,
-        isEarned: { restaurants, _ in
+        isEarned: { restaurants, _, _ in
             restaurants.filter { $0.category == "Quick Service" && $0.isVisited }.count >= 10
         }
     ),
@@ -104,7 +96,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit 5 restaurants in EPCOT.",
         systemImage: "globe.americas.fill",
         color: .cyan,
-        isEarned: { restaurants, _ in
+        isEarned: { restaurants, _, _ in
             restaurants.filter { $0.park == "EPCOT" && $0.isVisited }.count >= 5
         }
     ),
@@ -115,7 +107,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit 5 restaurants at Disney Springs.",
         systemImage: "building.2.fill",
         color: .teal,
-        isEarned: { restaurants, _ in
+        isEarned: { restaurants, _, _ in
             restaurants.filter { $0.park == "Disney Springs" && $0.isVisited }.count >= 5
         }
     ),
@@ -128,7 +120,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Rate 5 restaurants with an average of 5 stars.",
         systemImage: "star.circle.fill",
         color: .yellow,
-        isEarned: { restaurants, _ in
+        isEarned: { restaurants, _, _ in
             restaurants.filter { ($0.averageRating ?? 0) >= 5.0 }.count >= 5
         }
     ),
@@ -141,9 +133,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Log your first hotel stay.",
         systemImage: "house.fill",
         color: .blue,
-        isEarned: { _, hotels in
-            hotels.filter(\.isVisited).count >= 1
-        }
+        isEarned: { _, hotels, _ in hotels.filter(\.isVisited).count >= 1 }
     ),
     BadgeDefinition(
         id: "resort_hopper",
@@ -152,9 +142,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Stay at 3 different hotels.",
         systemImage: "suitcase.fill",
         color: .indigo,
-        isEarned: { _, hotels in
-            hotels.filter(\.isVisited).count >= 3
-        }
+        isEarned: { _, hotels, _ in hotels.filter(\.isVisited).count >= 3 }
     ),
     BadgeDefinition(
         id: "hotel_connoisseur",
@@ -163,9 +151,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Stay at 5 different hotels.",
         systemImage: "building.columns.fill",
         color: .purple,
-        isEarned: { _, hotels in
-            hotels.filter(\.isVisited).count >= 5
-        }
+        isEarned: { _, hotels, _ in hotels.filter(\.isVisited).count >= 5 }
     ),
 
     // MARK: Hotels — tier
@@ -176,9 +162,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Stay at any Disney Deluxe resort.",
         systemImage: "sparkles",
         color: .yellow,
-        isEarned: { _, hotels in
-            hotels.contains { $0.tier == "Deluxe" && $0.isVisited }
-        }
+        isEarned: { _, hotels, _ in hotels.contains { $0.tier == "Deluxe" && $0.isVisited } }
     ),
     BadgeDefinition(
         id: "value_savvy",
@@ -187,9 +171,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Stay at any Value resort.",
         systemImage: "dollarsign.circle.fill",
         color: .green,
-        isEarned: { _, hotels in
-            hotels.contains { $0.tier == "Value" && $0.isVisited }
-        }
+        isEarned: { _, hotels, _ in hotels.contains { $0.tier == "Value" && $0.isVisited } }
     ),
     BadgeDefinition(
         id: "universal_vip",
@@ -198,7 +180,7 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Stay at a Universal Premier hotel (Portofino Bay, Hard Rock, or Royal Pacific).",
         systemImage: "camera.fill",
         color: .orange,
-        isEarned: { _, hotels in
+        isEarned: { _, hotels, _ in
             hotels.contains { $0.resort == "Universal Orlando" && $0.tier == "Premier" && $0.isVisited }
         }
     ),
@@ -211,9 +193,10 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Visit at least one restaurant at each resort.",
         systemImage: "arrow.left.arrow.right",
         color: .mint,
-        isEarned: { restaurants, _ in
-            let visitedResorts = Set(restaurants.filter(\.isVisited).map(\.resort))
-            return visitedResorts.contains("Walt Disney World") && visitedResorts.contains("Universal Orlando")
+        isEarned: { restaurants, _, _ in
+            let visited: [BucketRestaurant] = restaurants.filter(\.isVisited)
+            let resorts: Set<String> = Set(visited.map(\.resort))
+            return resorts.contains("Walt Disney World") && resorts.contains("Universal Orlando")
         }
     ),
     BadgeDefinition(
@@ -223,11 +206,44 @@ let allBadges: [BadgeDefinition] = [
         howToEarn: "Stay at 3 Universal and 3 Disney hotels.",
         systemImage: "figure.walk.motion",
         color: .cyan,
-        isEarned: { _, hotels in
-            let visitedHotels = hotels.filter(\.isVisited)
-            let disney = visitedHotels.filter { $0.resort == "Walt Disney World" }.count
-            let universal = visitedHotels.filter { $0.resort == "Universal Orlando" }.count
+        isEarned: { _, hotels, _ in
+            let visited  = hotels.filter(\.isVisited)
+            let disney   = visited.filter { $0.resort == "Walt Disney World" }.count
+            let universal = visited.filter { $0.resort == "Universal Orlando" }.count
             return disney >= 3 && universal >= 3
+        }
+    ),
+
+    // MARK: Ride Log badges
+    BadgeDefinition(
+        id: "first_ride_log",
+        title: "First Ride",
+        description: "Logged your first ride with Rode It!",
+        howToEarn: "Tap \u{201C}Rode It!\u{201D} on any attraction.",
+        systemImage: "ticket.fill",
+        color: .green,
+        isEarned: { _, _, rides in !rides.isEmpty }
+    ),
+    BadgeDefinition(
+        id: "century_rider",
+        title: "Century Rider",
+        description: "Logged 100 total rides.",
+        howToEarn: "Log 100 rides with Rode It!",
+        systemImage: "100.circle.fill",
+        color: .orange,
+        isEarned: { _, _, rides in rides.count >= 100 }
+    ),
+    BadgeDefinition(
+        id: "ride_repeat",
+        title: "Repeat Rider",
+        description: "Rode the same attraction 10 times.",
+        howToEarn: "Ride any single attraction 10 or more times.",
+        systemImage: "arrow.clockwise.circle.fill",
+        color: .purple,
+        isEarned: { _, _, rides in
+            var counts: [String: Int] = [:]
+            for log in rides { counts[log.rideId, default: 0] += 1 }
+            return counts.values.contains { $0 >= 10 }
         }
     ),
 ]

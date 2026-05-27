@@ -100,6 +100,7 @@ struct LiveDataEntry: Codable, Identifiable {
     let entityType: String
     let status: String?
     let queue: QueueData?
+    let showtimes: [Showtime]?
 
     var waitMinutes: Int? { queue?.STANDBY?.waitTime }
     var isOperating: Bool { status == "OPERATING" }
@@ -121,6 +122,108 @@ struct QueueData: Codable {
 
 struct StandbyQueue: Codable {
     let waitTime: Int?
+}
+
+// MARK: - Show / Entertainment
+
+struct Showtime: Codable {
+    let startTime: String?   // ISO8601 string from API
+    let endTime: String?
+    let type: String?
+
+    private static let formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static let formatterNoFrac: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    var startDate: Date? {
+        guard let s = startTime else { return nil }
+        return Self.formatter.date(from: s) ?? Self.formatterNoFrac.date(from: s)
+    }
+
+    var endDate: Date? {
+        guard let s = endTime else { return nil }
+        return Self.formatter.date(from: s) ?? Self.formatterNoFrac.date(from: s)
+    }
+}
+
+struct DisplayShow: Identifiable {
+    let id: String
+    let name: String
+    let parkId: String
+    let status: String
+    let showtimes: [Showtime]
+
+    var nextShowtime: Date? {
+        let now = Date()
+        return showtimes.compactMap(\.startDate).filter { $0 > now }.min()
+    }
+
+    var isOperating: Bool { status == "OPERATING" }
+
+    var statusDisplay: String {
+        switch status {
+        case "OPERATING": return "Operating"
+        case "CLOSED":    return "Closed"
+        case "DOWN":      return "Down"
+        default:          return status
+        }
+    }
+
+    init(live: LiveDataEntry, parkId: String) {
+        self.id        = live.id
+        self.name      = live.name
+        self.parkId    = parkId
+        self.status    = live.status ?? "CLOSED"
+        self.showtimes = live.showtimes ?? []
+    }
+}
+
+// MARK: - Park Schedule
+
+struct ScheduleResponse: Codable {
+    let schedule: [ParkScheduleDay]
+}
+
+struct ParkScheduleDay: Codable, Identifiable {
+    let date: String
+    let openingTime: String?
+    let closingTime: String?
+    let type: String?
+
+    var id: String { date + (type ?? "") }
+
+    private static let formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static let formatterNoFrac: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    var openingDate: Date? {
+        guard let s = openingTime else { return nil }
+        return Self.formatter.date(from: s) ?? Self.formatterNoFrac.date(from: s)
+    }
+
+    var closingDate: Date? {
+        guard let s = closingTime else { return nil }
+        return Self.formatter.date(from: s) ?? Self.formatterNoFrac.date(from: s)
+    }
+
+    var isExtraHours: Bool { type == "EXTRA_HOURS" }
+    var isTicketedEvent: Bool { type == "TICKETED_EVENT" }
 }
 
 // MARK: - Display Model (live data + GPS merged)

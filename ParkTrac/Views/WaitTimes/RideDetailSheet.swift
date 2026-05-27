@@ -1,11 +1,21 @@
 import SwiftUI
+import SwiftData
 
 struct RideDetailSheet: View {
     let ride: DisplayRide
     let theme: ParkTheme
     let parkGroup: ParkGroup
     var parkName: String = ""
+
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    @Query private var allRideLogs: [RideLog]
+
+    @State private var showLogSheet = false
+
+    private var rideCount: Int {
+        allRideLogs.filter { $0.rideId == ride.id }.count
+    }
 
     private var badgeColor: Color {
         guard ride.isOperating else { return .gray }
@@ -64,6 +74,29 @@ struct RideDetailSheet: View {
                 RidePredictionView(ride: ride, parkGroup: parkGroup, parkName: parkName)
                     .padding(.horizontal)
 
+                Divider()
+
+                // Rode It! section
+                VStack(spacing: 10) {
+                    Button {
+                        showLogSheet = true
+                    } label: {
+                        Label("Rode It!", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+
+                    if rideCount > 0 {
+                        Text("You've ridden this \(rideCount) time\(rideCount == 1 ? "" : "s")")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+
                 Button("Dismiss") { dismiss() }
                     .buttonStyle(.borderedProminent)
                     .tint(theme.accentColor)
@@ -73,6 +106,15 @@ struct RideDetailSheet: View {
         }
         .presentationDetents([.fraction(0.6), .large])
         .presentationDragIndicator(.hidden)
+        .sheet(isPresented: $showLogSheet) {
+            LogRideSheet(
+                ride: ride,
+                parkName: parkName,
+                resort: parkGroup.rawValue
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+        }
     }
 
     // MARK: - Ride Info Section
@@ -85,14 +127,11 @@ struct RideDetailSheet: View {
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 10) {
-                // Height requirement
                 infoChip(
                     label: info.heightInches.map { "\($0)\" min height" } ?? "No height requirement",
                     systemImage: "ruler",
                     color: info.heightInches != nil ? .blue : .secondary
                 )
-
-                // Thrill level
                 infoChip(
                     label: info.thrill.rawValue,
                     systemImage: info.thrill.systemImage,
@@ -101,14 +140,11 @@ struct RideDetailSheet: View {
             }
 
             HStack(spacing: 10) {
-                // Ride type
                 infoChip(
                     label: info.type.rawValue,
                     systemImage: info.type.systemImage,
                     color: .indigo
                 )
-
-                // Lightning Lane
                 infoChip(
                     label: info.lightningLane ? "Lightning Lane" : "Standby Only",
                     systemImage: info.lightningLane ? "bolt.fill" : "person.2.fill",
@@ -125,5 +161,105 @@ struct RideDetailSheet: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(color.opacity(0.1), in: Capsule())
+    }
+}
+
+// MARK: - Log Ride Confirmation Sheet
+
+struct LogRideSheet: View {
+    let ride: DisplayRide
+    let parkName: String
+    let resort: String
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+
+    @State private var waitMinutes: Int? = nil
+    @State private var notes = ""
+    @State private var riddenAt = Date()
+    @State private var saved = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Ride") {
+                    LabeledContent("Attraction", value: ride.name)
+                    LabeledContent("Park", value: parkName)
+                    DatePicker("Date & Time", selection: $riddenAt, displayedComponents: [.date, .hourAndMinute])
+                }
+
+                Section("Wait Time (optional)") {
+                    if let current = ride.waitMinutes, ride.isOperating {
+                        HStack {
+                            Text("Current wait: \(current) min")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Button("Use this") { waitMinutes = current }
+                                .font(.caption)
+                        }
+                    }
+
+                    Stepper(
+                        waitMinutes.map { "\($0) minutes" } ?? "Not recorded",
+                        value: Binding(
+                            get: { waitMinutes ?? 0 },
+                            set: { waitMinutes = $0 == 0 ? nil : $0 }
+                        ),
+                        in: 0...300,
+                        step: 5
+                    )
+                }
+
+                Section("Notes (optional)") {
+                    TextField("e.g. front row, single rider…", text: $notes, axis: .vertical)
+                        .lineLimit(3...5)
+                }
+            }
+            .navigationTitle("Log Ride")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { saveLog() }
+                        .fontWeight(.semibold)
+                }
+            }
+            .overlay {
+                if saved {
+                    VStack {
+                        Spacer()
+                        Label("Ride logged!", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding()
+                            .background(.green, in: Capsule())
+                            .padding(.bottom, 32)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.spring(response: 0.4), value: saved)
+                }
+            }
+        }
+    }
+
+    private func saveLog() {
+        let log = RideLog(
+            rideId: ride.id,
+            rideName: ride.name,
+            parkId: ride.parkId,
+            parkName: parkName,
+            resort: resort,
+            riddenAt: riddenAt,
+            waitMinutes: waitMinutes,
+            notes: notes
+        )
+        context.insert(log)
+        try? context.save()
+
+        withAnimation { saved = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }
     }
 }

@@ -4,7 +4,10 @@ import SwiftData
 struct MyDiningView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \BucketRestaurant.name) private var all: [BucketRestaurant]
+    @Query(sort: \DiningReservation.date) private var allReservations: [DiningReservation]
+
     @State private var selectedRestaurant: BucketRestaurant?
+    @State private var showAddReservation = false
 
     private var resortVisited: [BucketRestaurant] {
         all
@@ -16,48 +19,239 @@ struct MyDiningView: View {
         all.filter { $0.resort == appState.selectedResort.rawValue }.count
     }
 
+    private var upcomingReservations: [DiningReservation] {
+        let now = Date()
+        return allReservations
+            .filter { $0.resort == appState.selectedResort.rawValue && $0.date >= now && !$0.isCompleted }
+            .sorted { $0.date < $1.date }
+    }
+
+    private var pastReservations: [DiningReservation] {
+        let now = Date()
+        return allReservations
+            .filter { $0.resort == appState.selectedResort.rawValue && ($0.date < now || $0.isCompleted) }
+            .sorted { $0.date > $1.date }
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                BucketProgressView(
-                    visited: resortVisited.count,
-                    total: resortTotal,
-                    label: "Restaurants Visited",
-                    color: .orange
-                )
-                .padding(.horizontal)
-                .padding(.top, 12)
-                .padding(.bottom, 12)
+            List {
+                // Upcoming Reservations section
+                Section {
+                    if upcomingReservations.isEmpty {
+                        Text("No upcoming reservations")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .listRowBackground(Color.clear)
+                    } else {
+                        ForEach(upcomingReservations) { res in
+                            ReservationRow(reservation: res)
+                        }
+                        .onDelete { offsets in
+                            deleteReservations(upcomingReservations, at: offsets)
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Text("Upcoming Reservations")
+                        Spacer()
+                        Button {
+                            showAddReservation = true
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundStyle(.blue)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
 
-                if resortVisited.isEmpty {
-                    ContentUnavailableView(
-                        "Nothing visited yet",
-                        systemImage: "fork.knife",
-                        description: Text("Mark restaurants as visited in the Bucket List tab.")
+                // Past reservations (collapsible)
+                if !pastReservations.isEmpty {
+                    Section("Past Reservations") {
+                        ForEach(pastReservations.prefix(5)) { res in
+                            ReservationRow(reservation: res)
+                                .opacity(0.6)
+                        }
+                        .onDelete { offsets in
+                            deleteReservations(Array(pastReservations.prefix(5)), at: offsets)
+                        }
+                    }
+                }
+
+                // Visited Restaurants
+                Section {
+                    BucketProgressView(
+                        visited: resortVisited.count,
+                        total: resortTotal,
+                        label: "Restaurants Visited",
+                        color: .orange
                     )
-                } else {
-                    List {
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+
+                    if resortVisited.isEmpty {
+                        Text("Mark restaurants as visited in the Bucket List tab.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
                         ForEach(resortVisited) { restaurant in
                             DiningRow(restaurant: restaurant)
                                 .contentShape(Rectangle())
                                 .onTapGesture { selectedRestaurant = restaurant }
                         }
                     }
-                    .listStyle(.plain)
+                } header: {
+                    Text("Visited Restaurants")
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("My Dining")
             .sheet(item: $selectedRestaurant) { BucketRestaurantDetailView(restaurant: $0) }
+            .sheet(isPresented: $showAddReservation) {
+                AddReservationSheet(resort: appState.selectedResort.rawValue)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+        }
+    }
+
+    @Environment(\.modelContext) private var context
+
+    private func deleteReservations(_ list: [DiningReservation], at offsets: IndexSet) {
+        for index in offsets {
+            context.delete(list[index])
         }
     }
 }
+
+// MARK: - Reservation Row
+
+private struct ReservationRow: View {
+    let reservation: DiningReservation
+
+    private static let dateFmt: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f
+    }()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(reservation.restaurantName)
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Text(Self.dateFmt.string(from: reservation.date))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 12) {
+                // Party size
+                Label("\(reservation.partySize)", systemImage: "person.2.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                // Confirmation number
+                if !reservation.confirmationNumber.isEmpty {
+                    Button {
+                        UIPasteboard.general.string = reservation.confirmationNumber
+                    } label: {
+                        Label(reservation.confirmationNumber, systemImage: "doc.on.doc")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            if !reservation.notes.isEmpty {
+                Text(reservation.notes)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+// MARK: - Add Reservation Sheet
+
+struct AddReservationSheet: View {
+    let resort: String
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+
+    @State private var restaurantName = ""
+    @State private var date = Date()
+    @State private var partySize = 2
+    @State private var confirmationNumber = ""
+    @State private var notes = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Restaurant") {
+                    TextField("Restaurant name", text: $restaurantName)
+                }
+
+                Section("Details") {
+                    DatePicker("Date & Time", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                    Stepper("Party of \(partySize)", value: $partySize, in: 1...20)
+                }
+
+                Section("Confirmation") {
+                    TextField("Confirmation #", text: $confirmationNumber)
+                        .keyboardType(.asciiCapable)
+                }
+
+                Section("Notes") {
+                    TextField("Special requests, notes…", text: $notes, axis: .vertical)
+                        .lineLimit(3...5)
+                }
+            }
+            .navigationTitle("Add Reservation")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { save() }
+                        .fontWeight(.semibold)
+                        .disabled(restaurantName.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+    }
+
+    private func save() {
+        let res = DiningReservation(
+            restaurantName: restaurantName.trimmingCharacters(in: .whitespaces),
+            resort: resort,
+            date: date,
+            partySize: partySize,
+            confirmationNumber: confirmationNumber.trimmingCharacters(in: .whitespaces),
+            notes: notes.trimmingCharacters(in: .whitespaces)
+        )
+        context.insert(res)
+        try? context.save()
+        dismiss()
+    }
+}
+
+// MARK: - Dining Row (unchanged)
 
 private struct DiningRow: View {
     let restaurant: BucketRestaurant
 
     var body: some View {
         HStack(spacing: 12) {
-            // Rating circle
             if let avg = restaurant.averageRating {
                 ZStack {
                     Circle()

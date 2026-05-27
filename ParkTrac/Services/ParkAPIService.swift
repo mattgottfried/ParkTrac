@@ -49,6 +49,16 @@ actor ParkAPIService {
         }
     }
 
+    func fetchSchedule(parkId: String) async throws -> [ParkScheduleDay] {
+        let url = base.appendingPathComponent("entity/\(parkId)/schedule")
+        let data = try await get(url)
+        do {
+            return try decoder.decode(ScheduleResponse.self, from: data).schedule
+        } catch {
+            throw ParkAPIError.decodingFailed(error)
+        }
+    }
+
     private func get(_ url: URL) async throws -> Data {
         let (data, response) = try await URLSession.shared.data(from: url)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {

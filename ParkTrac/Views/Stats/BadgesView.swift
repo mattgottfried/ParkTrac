@@ -4,10 +4,11 @@ import SwiftData
 struct BadgesView: View {
     @Query private var allRestaurants: [BucketRestaurant]
     @Query private var allHotels: [HotelStay]
+    @Query private var allRideLogs: [RideLog]
     @State private var selectedBadge: BadgeDefinition?
 
     private var earned: Int {
-        allBadges.filter { $0.isEarned(allRestaurants, allHotels) }.count
+        allBadges.filter { $0.isEarned(allRestaurants, allHotels, allRideLogs) }.count
     }
 
     private let columns = [GridItem(.flexible()), GridItem(.flexible())]
@@ -45,7 +46,7 @@ struct BadgesView: View {
                 // Badge grid
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(allBadges) { badge in
-                        let isEarned = badge.isEarned(allRestaurants, allHotels)
+                        let isEarned = badge.isEarned(allRestaurants, allHotels, allRideLogs)
                         BadgeCardView(badge: badge, isEarned: isEarned)
                             .onTapGesture { selectedBadge = badge }
                     }
@@ -58,7 +59,7 @@ struct BadgesView: View {
         .navigationTitle("Badges")
         .navigationBarTitleDisplayMode(.large)
         .sheet(item: $selectedBadge) { badge in
-            BadgeDetailView(badge: badge, isEarned: badge.isEarned(allRestaurants, allHotels))
+            BadgeDetailView(badge: badge, isEarned: badge.isEarned(allRestaurants, allHotels, allRideLogs))
         }
     }
 }

@@ -4,24 +4,16 @@ import SwiftData
 struct StatsView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \BucketRestaurant.name) private var allRestaurants: [BucketRestaurant]
-    @Query(sort: \HotelStay.hotelName) private var allHotels: [HotelStay]
+    @Query(sort: \HotelStay.hotelName)   private var allHotels: [HotelStay]
+    @Query(sort: \RideLog.riddenAt, order: .reverse) private var allRideLogs: [RideLog]
 
     private var resort: String { appState.selectedResort.rawValue }
 
-    private var resortRestaurants: [BucketRestaurant] {
-        allRestaurants.filter { $0.resort == resort }
-    }
-    private var visitedRestaurants: [BucketRestaurant] {
-        resortRestaurants.filter(\.isVisited)
-    }
-    private var resortHotels: [HotelStay] {
-        allHotels.filter { $0.resort == resort }
-    }
-    private var visitedHotels: [HotelStay] {
-        resortHotels.filter(\.isVisited)
-    }
+    // MARK: - Restaurant Stats
 
-    // Computed stats
+    private var resortRestaurants: [BucketRestaurant] { allRestaurants.filter { $0.resort == resort } }
+    private var visitedRestaurants: [BucketRestaurant] { resortRestaurants.filter(\.isVisited) }
+
     private var avgMattRestaurant: Double? {
         let rated = visitedRestaurants.filter { $0.mattRating > 0 }
         guard !rated.isEmpty else { return nil }
@@ -37,9 +29,12 @@ struct StatsView: View {
             .max { ($0.averageRating ?? 0) < ($1.averageRating ?? 0) }
     }
 
-    private var totalNights: Int {
-        visitedHotels.compactMap(\.nightsStayed).reduce(0, +)
-    }
+    // MARK: - Hotel Stats
+
+    private var resortHotels: [HotelStay] { allHotels.filter { $0.resort == resort } }
+    private var visitedHotels: [HotelStay] { resortHotels.filter(\.isVisited) }
+
+    private var totalNights: Int { visitedHotels.compactMap(\.nightsStayed).reduce(0, +) }
     private var avgMattHotel: Double? {
         let rated = visitedHotels.filter { $0.mattRating > 0 }
         guard !rated.isEmpty else { return nil }
@@ -55,13 +50,45 @@ struct StatsView: View {
             .max { ($0.averageRating ?? 0) < ($1.averageRating ?? 0) }
     }
 
-    // Badges
+    // MARK: - Ride Stats
+
+    private var resortRideLogs: [RideLog] { allRideLogs.filter { $0.resort == resort } }
+
+    private var rideLogsThisYear: [RideLog] {
+        let startOfYear = Calendar.current.date(from: Calendar.current.dateComponents([.year], from: .now))!
+        return resortRideLogs.filter { $0.riddenAt >= startOfYear }
+    }
+
+    private var visitDays: [VisitDay] {
+        let cal = Calendar.current
+        var byDay: [Date: [RideLog]] = [:]
+        for log in resortRideLogs {
+            let day = cal.startOfDay(for: log.riddenAt)
+            byDay[day, default: []].append(log)
+        }
+        return byDay.map { VisitDay(id: $0.key, resort: resort, entries: $0.value) }
+            .sorted { $0.id > $1.id }
+    }
+
+    private var topRides: [(name: String, count: Int)] {
+        var counts: [String: Int] = [:]
+        for log in resortRideLogs { counts[log.rideName, default: 0] += 1 }
+        return counts.map { (name: $0.key, count: $0.value) }
+            .sorted { $0.count > $1.count }
+            .prefix(5)
+            .map { $0 }
+    }
+
+    // MARK: - Badges
+
     private var earnedBadges: [BadgeDefinition] {
-        allBadges.filter { $0.isEarned(allRestaurants, allHotels) }
+        allBadges.filter { $0.isEarned(allRestaurants, allHotels, allRideLogs) }
     }
     private var nextBadges: [BadgeDefinition] {
-        allBadges.filter { !$0.isEarned(allRestaurants, allHotels) }.prefix(4).map { $0 }
+        allBadges.filter { !$0.isEarned(allRestaurants, allHotels, allRideLogs) }.prefix(4).map { $0 }
     }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -77,19 +104,12 @@ struct StatsView: View {
                             color: .orange
                         )
                         .padding(.horizontal, -4)
-
-                        // Category breakdown
                         categoryRow(restaurants: resortRestaurants)
-
                         Divider()
-
-                        // Ratings
                         if avgMattRestaurant != nil || avgHeatRestaurant != nil {
                             ratingsRow(matt: avgMattRestaurant, heat: avgHeatRestaurant)
                             Divider()
                         }
-
-                        // Top rated
                         if let top = topRestaurant {
                             topItemRow(label: "Top Rated", name: top.name, rating: top.averageRating)
                         }
@@ -104,7 +124,6 @@ struct StatsView: View {
                             color: .purple
                         )
                         .padding(.horizontal, -4)
-
                         if totalNights > 0 {
                             HStack {
                                 Label("\(totalNights) total nights", systemImage: "moon.fill")
@@ -114,16 +133,57 @@ struct StatsView: View {
                             }
                             Divider()
                         }
-
                         if avgMattHotel != nil || avgHeatHotel != nil {
                             ratingsRow(matt: avgMattHotel, heat: avgHeatHotel)
                             Divider()
                         }
-
                         if let top = topHotel {
                             topItemRow(label: "Top Rated", name: top.hotelName, rating: top.averageRating)
                         }
                     }
+
+                    // Rides card
+                    if !resortRideLogs.isEmpty {
+                        statsCard(title: "Rides", systemImage: "figure.jumprope", color: .teal) {
+                            HStack(spacing: 16) {
+                                rideStatChip(value: "\(resortRideLogs.count)", label: "All Time", color: .teal)
+                                rideStatChip(value: "\(rideLogsThisYear.count)", label: "This Year", color: .blue)
+                                rideStatChip(value: "\(visitDays.count)", label: "Visits", color: .green)
+                            }
+
+                            if !topRides.isEmpty {
+                                Divider()
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Most Ridden")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                    ForEach(topRides, id: \.name) { ride in
+                                        HStack {
+                                            Text(ride.name).font(.caption).lineLimit(1)
+                                            Spacer()
+                                            Text("×\(ride.count)")
+                                                .font(.caption.weight(.bold))
+                                                .foregroundStyle(.teal)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Divider()
+                            HStack {
+                                NavigationLink("Ride Counter") { RideCounterView() }
+                                    .font(.caption.weight(.medium))
+                                Text("·").foregroundStyle(.secondary)
+                                NavigationLink("Visit History") { VisitHistoryView() }
+                                    .font(.caption.weight(.medium))
+                                Spacer()
+                            }
+                            .foregroundStyle(.teal)
+                        }
+                    }
+
+                    // Crowd Calendar card
+                    CrowdCalendarCard(resort: appState.selectedResort)
 
                     // Badges teaser
                     badgesTeaser
@@ -149,7 +209,6 @@ struct StatsView: View {
             Label(title, systemImage: systemImage)
                 .font(.headline)
                 .foregroundStyle(color)
-
             content()
         }
         .padding()
@@ -166,7 +225,7 @@ struct StatsView: View {
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(categories, id: \.0) { name, color in
-                    let total = restaurants.filter { $0.category == name }.count
+                    let total   = restaurants.filter { $0.category == name }.count
                     let visited = restaurants.filter { $0.category == name && $0.isVisited }.count
                     if total > 0 {
                         VStack(alignment: .leading, spacing: 3) {
@@ -189,21 +248,15 @@ struct StatsView: View {
 
     private func ratingsRow(matt: Double?, heat: Double?) -> some View {
         HStack(spacing: 16) {
-            if let m = matt {
-                ratingChip(label: "Matt", rating: m)
-            }
-            if let h = heat {
-                ratingChip(label: "Heather", rating: h)
-            }
+            if let m = matt { ratingChip(label: "Matt", rating: m) }
+            if let h = heat { ratingChip(label: "Heather", rating: h) }
             Spacer()
         }
     }
 
     private func ratingChip(label: String, rating: Double) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            Text(label).font(.caption2).foregroundStyle(.secondary)
             HStack(spacing: 4) {
                 StarDisplayView(rating: rating)
                 Text(String(format: "%.1f", rating))
@@ -216,18 +269,22 @@ struct StatsView: View {
     private func topItemRow(label: String, name: String, rating: Double?) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Text(name)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(1)
+                Text(label).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                Text(name).font(.subheadline.weight(.medium)).lineLimit(1)
             }
             Spacer()
-            if let r = rating {
-                StarDisplayView(rating: r)
-            }
+            if let r = rating { StarDisplayView(rating: r) }
         }
+    }
+
+    private func rideStatChip(value: String, label: String, color: Color) -> some View {
+        VStack(spacing: 3) {
+            Text(value).font(.title3.weight(.bold)).foregroundStyle(color)
+            Text(label).font(.caption2).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+        .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
     }
 
     @ViewBuilder
@@ -238,18 +295,14 @@ struct StatsView: View {
                     .font(.headline)
                     .foregroundStyle(.yellow)
                 Spacer()
-                NavigationLink("See All") {
-                    BadgesView()
-                }
-                .font(.subheadline)
+                NavigationLink("See All") { BadgesView() }
+                    .font(.subheadline)
             }
 
-            // Earned count
             Text("\(earnedBadges.count) of \(allBadges.count) earned")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            // Next to earn
             if !nextBadges.isEmpty {
                 Text("Next to earn")
                     .font(.caption.weight(.semibold))
