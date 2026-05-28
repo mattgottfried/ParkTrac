@@ -176,6 +176,9 @@ struct StatsView: View {
                                 Text("·").foregroundStyle(.secondary)
                                 NavigationLink("Visit History") { VisitHistoryView() }
                                     .font(.caption.weight(.medium))
+                                Text("·").foregroundStyle(.secondary)
+                                NavigationLink("My Day") { DayPlannerView() }
+                                    .font(.caption.weight(.medium))
                                 Spacer()
                             }
                             .foregroundStyle(.teal)

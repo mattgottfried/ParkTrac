@@ -23,11 +23,6 @@ struct ContentView: View {
                         Label("Bucket List", systemImage: "checklist")
                     }
 
-                DayPlannerView()
-                    .tabItem {
-                        Label("My Day", systemImage: "calendar")
-                    }
-
                 StatsView()
                     .tabItem {
                         Label("Stats", systemImage: "chart.bar.fill")
