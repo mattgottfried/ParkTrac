@@ -33,12 +33,12 @@ struct WaitTimesView: View {
                     HStack(spacing: 8) {
                         ForEach(viewModel.currentParks) { park in
                             let isSelected = viewModel.filterPark?.id == park.id
-                            Button(park.name) {
-                                viewModel.filterPark = isSelected ? nil : park
+                            Button(action: { viewModel.filterPark = isSelected ? nil : park }) {
+                                Text(park.name)
+                                    .fontWeight(isSelected ? .semibold : .regular)
                             }
                             .buttonStyle(.bordered)
                             .tint(isSelected ? Color.blue : Color.secondary)
-                            .fontWeight(isSelected ? .semibold : .regular)
                         }
                     }
                     .padding(.horizontal)
