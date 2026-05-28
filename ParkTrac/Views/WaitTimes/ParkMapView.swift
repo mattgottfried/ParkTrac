@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import SwiftData
 
 // MARK: - Ride Annotation Model
 
@@ -217,9 +218,13 @@ struct StyledMapUIView: UIViewRepresentable {
 
 // MARK: - Main Park Map View
 
+// MARK: - Show Tab enum
+private enum BottomTab { case rides, shows }
+
 struct ParkMapView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.scenePhase) private var scenePhaseValue
+    @Environment(\.modelContext) private var modelContext
     @State private var viewModel = WaitTimesViewModel()
     @State private var locationService = LocationService()
     @State private var region: MKCoordinateRegion = ParkGroup.disney.defaultRegion
@@ -227,6 +232,8 @@ struct ParkMapView: View {
     @State private var panelExpanded: Bool = false
     @State private var mapStyleIsHybrid: Bool = false
     @State private var lastAutoZoomedParkId: String? = nil
+    @State private var showTab: BottomTab = .rides
+    @State private var showMustDoOnly: Bool = false
 
     var theme: ParkTheme { viewModel.selectedGroup.theme }
 
@@ -263,13 +270,28 @@ struct ParkMapView: View {
                         HStack(spacing: 8) {
                             Button("All Parks") {
                                 viewModel.filterPark = nil
+                                showMustDoOnly = false
                             }
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(viewModel.filterPark == nil
+                            .foregroundStyle(viewModel.filterPark == nil && !showMustDoOnly
                                 ? theme.annotationTextColor : .primary)
                             .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(viewModel.filterPark == nil
+                            .background(viewModel.filterPark == nil && !showMustDoOnly
                                 ? theme.primaryColor : Color(.systemBackground).opacity(0.85))
+                            .clipShape(Capsule()).shadow(radius: 1)
+
+                            Button {
+                                showMustDoOnly.toggle()
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: showMustDoOnly ? "star.fill" : "star")
+                                    Text("Must Do")
+                                }
+                            }
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(showMustDoOnly ? theme.annotationTextColor : .primary)
+                            .padding(.horizontal, 12).padding(.vertical, 6)
+                            .background(showMustDoOnly ? Color.yellow : Color(.systemBackground).opacity(0.85))
                             .clipShape(Capsule()).shadow(radius: 1)
 
                             ForEach(viewModel.currentParks) { park in
@@ -338,6 +360,9 @@ struct ParkMapView: View {
         .onChange(of: appState.defaultMapIsSatellite)   { _, val in mapStyleIsHybrid = val }
         .onChange(of: locationService.userCoordinate?.latitude) { _, _ in autoZoomIfInsidePark() }
         .onChange(of: viewModel.currentParks) { _, _ in autoZoomIfInsidePark() }
+        .onChange(of: viewModel.lastRefreshed) { _, _ in
+            NotificationService.shared.checkAlerts(rides: viewModel.allRides, context: modelContext)
+        }
         .sheet(item: $selectedRide) { ride in
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
             RideDetailSheet(ride: ride, theme: theme, parkGroup: viewModel.selectedGroup, parkName: parkName)
@@ -408,6 +433,12 @@ struct ParkMapView: View {
         .padding(.horizontal).padding(.top, 4).padding(.bottom, 6)
     }
 
+    private var displayedRides: [DisplayRide] {
+        viewModel.filteredRides.filter { ride in
+            !showMustDoOnly || appState.wishList.contains(ride.id)
+        }
+    }
+
     private var rideListPanel: some View {
         VStack(spacing: 0) {
             Capsule()
@@ -421,10 +452,35 @@ struct ParkMapView: View {
                 })
 
             panelHeader
-            searchBar
+
+            // Park Hours Header
+            if let park = viewModel.filterPark ?? viewModel.currentParks.first {
+                ParkHoursHeaderView(
+                    park: park,
+                    schedule: viewModel.todaySchedule(for: park),
+                    theme: theme
+                )
+                .padding(.horizontal)
+            }
+
+            // Rides / Shows segmented control
+            Picker("Tab", selection: $showTab) {
+                Text("Rides").tag(BottomTab.rides)
+                Text("Shows").tag(BottomTab.shows)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.top, 4)
+
+            if showTab == .rides {
+                searchBar
+            }
+
             Divider()
 
-            if viewModel.isLoadingParks || (viewModel.isLoading && viewModel.allRides.isEmpty) {
+            if showTab == .shows {
+                ShowsListView(shows: viewModel.currentShows, theme: theme)
+            } else if viewModel.isLoadingParks || (viewModel.isLoading && viewModel.allRides.isEmpty) {
                 ProgressView("Loading…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let errorMsg = viewModel.errorMessage {
                 VStack(spacing: 16) {
@@ -433,15 +489,18 @@ struct ParkMapView: View {
                     Button("Try Again") { Task { await viewModel.retry() } }.buttonStyle(.borderedProminent)
                 }
                 .padding().frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if viewModel.filteredRides.isEmpty {
+            } else if displayedRides.isEmpty {
                 ContentUnavailableView(
-                    "No Rides", systemImage: "figure.walk",
-                    description: Text(viewModel.searchText.isEmpty
-                        ? "Loading wait times…" : "No rides match \"\(viewModel.searchText)\"."))
+                    showMustDoOnly ? "No Must-Do Rides" : "No Rides",
+                    systemImage: showMustDoOnly ? "star" : "figure.walk",
+                    description: Text(showMustDoOnly
+                        ? "Star rides in their detail page to add to your Must-Do list."
+                        : (viewModel.searchText.isEmpty ? "Loading wait times…" : "No rides match \"\(viewModel.searchText)\"."))
+                )
             } else {
                 ScrollView {
                     LazyVStack(spacing: 8) {
-                        ForEach(viewModel.filteredRides) { ride in
+                        ForEach(displayedRides) { ride in
                             RideCardView(ride: ride, theme: theme)
                                 .onTapGesture { selectedRide = ride }
                         }

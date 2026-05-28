@@ -182,6 +182,12 @@ struct StatsView: View {
                         }
                     }
 
+                    // Weather card
+                    WeatherCardView(resort: appState.selectedResort)
+
+                    // Spending card
+                    spendingCard
+
                     // Crowd Calendar card
                     CrowdCalendarCard(resort: appState.selectedResort)
 
@@ -285,6 +291,22 @@ struct StatsView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 6)
         .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var spendingCard: some View {
+        statsCard(title: "Spending", systemImage: "dollarsign.circle.fill", color: .green) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Track food, merch & Lightning Lane spending")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                NavigationLink("Open") { SpendingView() }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.green)
+            }
+        }
     }
 
     @ViewBuilder

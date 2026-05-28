@@ -9,9 +9,12 @@ struct RideDetailSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
+    @Environment(AppState.self) private var appState
     @Query private var allRideLogs: [RideLog]
+    @Query private var allAlerts: [RideAlert]
 
     @State private var showLogSheet = false
+    @State private var showAlertSheet = false
 
     private var rideCount: Int {
         allRideLogs.filter { $0.rideId == ride.id }.count
@@ -76,23 +79,70 @@ struct RideDetailSheet: View {
 
                 Divider()
 
-                // Rode It! section
+                // Rode It! + Wish List section
                 VStack(spacing: 10) {
-                    Button {
-                        showLogSheet = true
-                    } label: {
-                        Label("Rode It!", systemImage: "checkmark.circle.fill")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 4)
+                    HStack(spacing: 12) {
+                        Button {
+                            showLogSheet = true
+                        } label: {
+                            Label("Rode It!", systemImage: "checkmark.circle.fill")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+
+                        Button {
+                            appState.toggleWish(ride.id)
+                        } label: {
+                            Image(systemName: appState.wishList.contains(ride.id) ? "star.fill" : "star")
+                                .font(.system(size: 20))
+                                .foregroundStyle(appState.wishList.contains(ride.id) ? .yellow : .secondary)
+                                .padding(10)
+                                .background(Color(.systemFill), in: Circle())
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
 
                     if rideCount > 0 {
                         Text("You've ridden this \(rideCount) time\(rideCount == 1 ? "" : "s")")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+
+                Divider()
+
+                // Alert section
+                VStack(spacing: 10) {
+                    let existingAlert = allAlerts.first(where: { $0.rideId == ride.id && $0.isActive })
+                    if let alert = existingAlert {
+                        HStack {
+                            Label("Alert: ≤\(alert.thresholdMinutes) min", systemImage: "bell.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(.blue)
+                            Spacer()
+                            Button("Cancel") {
+                                alert.isActive = false
+                                try? context.save()
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                        }
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                    } else {
+                        Button {
+                            showAlertSheet = true
+                        } label: {
+                            Label("Set Wait Alert", systemImage: "bell.badge")
+                                .font(.subheadline.weight(.medium))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.bordered)
                     }
                 }
                 .padding(.horizontal)
@@ -114,6 +164,9 @@ struct RideDetailSheet: View {
             )
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showAlertSheet) {
+            SetAlertSheet(ride: ride)
         }
     }
 

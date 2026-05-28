@@ -51,6 +51,22 @@ struct SettingsView: View {
                     Text("Resort")
                 }
 
+                // MARK: Tools
+                Section {
+                    NavigationLink {
+                        HeightCheckerView()
+                    } label: {
+                        Label("Height Checker", systemImage: "ruler")
+                    }
+                    NavigationLink {
+                        CharacterFinderView()
+                    } label: {
+                        Label("Character Finder", systemImage: "figure.wave")
+                    }
+                } header: {
+                    Text("Tools")
+                }
+
                 // MARK: About
                 Section {
                     HStack {

@@ -13,6 +13,9 @@ struct ParkTracApp: App {
             DowntimeRecord.self,
             RideLog.self,
             DiningReservation.self,
+            RideAlert.self,
+            PlanItem.self,
+            PurchaseLog.self,
         ])
         return try! ModelContainer(for: schema)
     }()

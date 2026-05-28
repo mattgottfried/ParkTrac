@@ -62,6 +62,19 @@
 		AA0000000000000000000119 /* CrowdCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000118 /* CrowdCalendarView.swift */; };
 		AA000000000000000000011B /* RideCounterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011A /* RideCounterView.swift */; };
 		AA000000000000000000011D /* VisitHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011C /* VisitHistoryView.swift */; };
+		AA000000000000000000011F /* RideAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011E /* RideAlert.swift */; };
+		AA0000000000000000000121 /* PlanItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000120 /* PlanItem.swift */; };
+		AA0000000000000000000123 /* PurchaseLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000122 /* PurchaseLog.swift */; };
+		AA0000000000000000000125 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000124 /* NotificationService.swift */; };
+		AA0000000000000000000127 /* CharacterData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000126 /* CharacterData.swift */; };
+		AA0000000000000000000129 /* ShowsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000128 /* ShowsListView.swift */; };
+		AA000000000000000000012B /* SetAlertSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000012A /* SetAlertSheet.swift */; };
+		AA000000000000000000012D /* CharacterFinderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000012C /* CharacterFinderView.swift */; };
+		AA000000000000000000012F /* DayPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000012E /* DayPlannerView.swift */; };
+		AA0000000000000000000131 /* AddPlanItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000130 /* AddPlanItemView.swift */; };
+		AA0000000000000000000133 /* WeatherCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000132 /* WeatherCardView.swift */; };
+		AA0000000000000000000135 /* SpendingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000134 /* SpendingView.swift */; };
+		AA0000000000000000000137 /* HeightCheckerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000136 /* HeightCheckerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -121,6 +134,19 @@
 		AA0000000000000000000118 /* CrowdCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrowdCalendarView.swift; sourceTree = "<group>"; };
 		AA000000000000000000011A /* RideCounterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideCounterView.swift; sourceTree = "<group>"; };
 		AA000000000000000000011C /* VisitHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitHistoryView.swift; sourceTree = "<group>"; };
+		AA000000000000000000011E /* RideAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAlert.swift; sourceTree = "<group>"; };
+		AA0000000000000000000120 /* PlanItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanItem.swift; sourceTree = "<group>"; };
+		AA0000000000000000000122 /* PurchaseLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseLog.swift; sourceTree = "<group>"; };
+		AA0000000000000000000124 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000126 /* CharacterData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterData.swift; sourceTree = "<group>"; };
+		AA0000000000000000000128 /* ShowsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowsListView.swift; sourceTree = "<group>"; };
+		AA000000000000000000012A /* SetAlertSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetAlertSheet.swift; sourceTree = "<group>"; };
+		AA000000000000000000012C /* CharacterFinderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterFinderView.swift; sourceTree = "<group>"; };
+		AA000000000000000000012E /* DayPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPlannerView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000130 /* AddPlanItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPlanItemView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000132 /* WeatherCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCardView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000134 /* SpendingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000136 /* HeightCheckerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeightCheckerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -179,6 +205,9 @@
 				AA0000000000000000000104 /* BadgeDefinition.swift */,
 				AA0000000000000000000112 /* RideLog.swift */,
 				AA0000000000000000000114 /* DiningReservation.swift */,
+				AA000000000000000000011E /* RideAlert.swift */,
+				AA0000000000000000000120 /* PlanItem.swift */,
+				AA0000000000000000000122 /* PurchaseLog.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -196,6 +225,8 @@
 				AA00000000000000000000FC /* LocationService.swift */,
 				AA0000000000000000000102 /* RideMetadata.swift */,
 				AA0000000000000000000116 /* CrowdCalendarService.swift */,
+				AA0000000000000000000124 /* NotificationService.swift */,
+				AA0000000000000000000126 /* CharacterData.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -216,6 +247,7 @@
 				AA0000000000000000000067 /* BucketList */,
 				AA0000000000000000000068 /* Settings */,
 				AA0000000000000000000069 /* Stats */,
+				AA000000000000000000013A /* Planner */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -234,6 +266,9 @@
 				AA000000000000000000010C /* WaitBadgeView.swift */,
 				AA000000000000000000010E /* WaitTimesView.swift */,
 				AA0000000000000000000110 /* ParkHoursHeaderView.swift */,
+				AA0000000000000000000128 /* ShowsListView.swift */,
+				AA000000000000000000012A /* SetAlertSheet.swift */,
+				AA000000000000000000012C /* CharacterFinderView.swift */,
 			);
 			path = WaitTimes;
 			sourceTree = "<group>";
@@ -268,6 +303,7 @@
 			isa = PBXGroup;
 			children = (
 				AA00000000000000000000FE /* SettingsView.swift */,
+				AA0000000000000000000136 /* HeightCheckerView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -280,8 +316,19 @@
 				AA0000000000000000000118 /* CrowdCalendarView.swift */,
 				AA000000000000000000011A /* RideCounterView.swift */,
 				AA000000000000000000011C /* VisitHistoryView.swift */,
+				AA0000000000000000000132 /* WeatherCardView.swift */,
+				AA0000000000000000000134 /* SpendingView.swift */,
 			);
 			path = Stats;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000013A /* Planner */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000012E /* DayPlannerView.swift */,
+				AA0000000000000000000130 /* AddPlanItemView.swift */,
+			);
+			path = Planner;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -407,6 +454,19 @@
 					AA0000000000000000000119 /* CrowdCalendarView.swift in Sources */,
 					AA000000000000000000011B /* RideCounterView.swift in Sources */,
 					AA000000000000000000011D /* VisitHistoryView.swift in Sources */,
+					AA000000000000000000011F /* RideAlert.swift in Sources */,
+					AA0000000000000000000121 /* PlanItem.swift in Sources */,
+					AA0000000000000000000123 /* PurchaseLog.swift in Sources */,
+					AA0000000000000000000125 /* NotificationService.swift in Sources */,
+					AA0000000000000000000127 /* CharacterData.swift in Sources */,
+					AA0000000000000000000129 /* ShowsListView.swift in Sources */,
+					AA000000000000000000012B /* SetAlertSheet.swift in Sources */,
+					AA000000000000000000012D /* CharacterFinderView.swift in Sources */,
+					AA000000000000000000012F /* DayPlannerView.swift in Sources */,
+					AA0000000000000000000131 /* AddPlanItemView.swift in Sources */,
+					AA0000000000000000000133 /* WeatherCardView.swift in Sources */,
+					AA0000000000000000000135 /* SpendingView.swift in Sources */,
+					AA0000000000000000000137 /* HeightCheckerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
