@@ -32,12 +32,13 @@ struct WaitTimesView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(viewModel.currentParks) { park in
+                            let isSelected = viewModel.filterPark?.id == park.id
                             Button(park.name) {
-                                viewModel.filterPark = viewModel.filterPark?.id == park.id ? nil : park
+                                viewModel.filterPark = isSelected ? nil : park
                             }
                             .buttonStyle(.bordered)
-                            .tint(viewModel.filterPark?.id == park.id ? .blue : .secondary)
-                            .fontWeight(viewModel.filterPark?.id == park.id ? .semibold : .regular)
+                            .tint(isSelected ? Color.blue : Color.secondary)
+                            .fontWeight(isSelected ? .semibold : .regular)
                         }
                     }
                     .padding(.horizontal)
@@ -280,7 +281,7 @@ struct ShowDetailSheet: View {
         HStack {
             Image(systemName: isPast ? "clock.badge.checkmark" : "play.circle.fill")
                 .font(.body)
-                .foregroundStyle(isPast ? .secondary : .purple)
+                .foregroundStyle(isPast ? Color.secondary : Color.purple)
 
             if let start = showtime.startDate {
                 Text(Self.timeFmt.string(from: start))

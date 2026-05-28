@@ -258,7 +258,7 @@ final class WaitTimesViewModel {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
                 if !Task.isCancelled {
-                    await MainActor.run { Task { await self.loadAllParksInGroup() } }
+                    await self.loadAllParksInGroup()
                 }
             }
         }

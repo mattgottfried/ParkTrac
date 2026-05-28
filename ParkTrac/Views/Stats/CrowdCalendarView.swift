@@ -243,7 +243,7 @@ struct DayCell: View {
 
             Text("\(Calendar.current.component(.day, from: date))")
                 .font(.system(size: 11, weight: isToday ? .bold : .regular))
-                .foregroundStyle(isPast ? .secondary : .white)
+                .foregroundStyle(isPast ? Color.secondary : Color.white)
         }
         .frame(height: 30)
     }
