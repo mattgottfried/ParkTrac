@@ -51,12 +51,13 @@ struct WaitTimesView: View {
                     Spacer()
                 } else if viewModel.filteredRides.isEmpty && !viewModel.isLoading {
                     Spacer()
+                    let noRidesMsg = viewModel.searchText.isEmpty
+                        ? "No attraction data available."
+                        : "No rides match \"\(viewModel.searchText)\"."
                     ContentUnavailableView(
                         "No Rides Found",
                         systemImage: "magnifyingglass",
-                        description: Text(viewModel.searchText.isEmpty
-                            ? "No attraction data available."
-                            : "No rides match \"\(viewModel.searchText)\".")
+                        description: Text(noRidesMsg)
                     )
                     Spacer()
                 } else {
@@ -231,7 +232,7 @@ struct ShowDetailSheet: View {
 
                     Label(show.statusDisplay, systemImage: show.isOperating ? "checkmark.circle.fill" : "xmark.circle.fill")
                         .font(.subheadline)
-                        .foregroundStyle(show.isOperating ? .green : .secondary)
+                        .foregroundStyle(show.isOperating ? Color.green : Color.secondary)
                 }
 
                 Divider()
@@ -286,7 +287,7 @@ struct ShowDetailSheet: View {
             if let start = showtime.startDate {
                 Text(Self.timeFmt.string(from: start))
                     .font(.subheadline.weight(isPast ? .regular : .semibold))
-                    .foregroundStyle(isPast ? .secondary : .primary)
+                    .foregroundStyle(isPast ? Color.secondary : Color.primary)
 
                 if let end = showtime.endDate {
                     let dur = end.timeIntervalSince(start)
