@@ -102,7 +102,7 @@ private struct HotelRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: hotel.isVisited ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(hotel.isVisited ? .purple : .secondary)
+                .foregroundStyle(hotel.isVisited ? Color.purple : Color.secondary)
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 3) {

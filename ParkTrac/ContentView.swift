@@ -116,7 +116,7 @@ private struct ResortPickerSheet: View {
                 Text(resort.rawValue)
                     .font(.subheadline.weight(.semibold))
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(isSelected ? .white : .primary)
+                    .foregroundStyle(isSelected ? Color.white : Color.primary)
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")

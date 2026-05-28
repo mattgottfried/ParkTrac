@@ -106,7 +106,7 @@ private struct BucketRestaurantRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: restaurant.isVisited ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(restaurant.isVisited ? .green : .secondary)
+                .foregroundStyle(restaurant.isVisited ? Color.green : Color.secondary)
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 3) {
