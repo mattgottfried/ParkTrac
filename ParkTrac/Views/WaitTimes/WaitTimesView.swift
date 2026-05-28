@@ -33,9 +33,9 @@ struct WaitTimesView: View {
                     HStack(spacing: 8) {
                         ForEach(viewModel.currentParks) { park in
                             let isSelected = viewModel.filterPark?.id == park.id
+                            let weight: Font.Weight = isSelected ? .semibold : .regular
                             Button(action: { viewModel.filterPark = isSelected ? nil : park }) {
-                                Text(park.name)
-                                    .fontWeight(isSelected ? .semibold : .regular)
+                                Text(park.name).fontWeight(weight)
                             }
                             .buttonStyle(.bordered)
                             .tint(isSelected ? Color.blue : Color.secondary)
@@ -285,8 +285,9 @@ struct ShowDetailSheet: View {
                 .foregroundStyle(isPast ? Color.secondary : Color.purple)
 
             if let start = showtime.startDate {
+                let timeWeight: Font.Weight = isPast ? .regular : .semibold
                 Text(Self.timeFmt.string(from: start))
-                    .font(.subheadline.weight(isPast ? .regular : .semibold))
+                    .font(.subheadline.weight(timeWeight))
                     .foregroundStyle(isPast ? Color.secondary : Color.primary)
 
                 if let end = showtime.endDate {
