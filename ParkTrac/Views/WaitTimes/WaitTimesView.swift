@@ -34,7 +34,9 @@ struct WaitTimesView: View {
                         ForEach(viewModel.currentParks) { park in
                             let isSelected = viewModel.filterPark?.id == park.id
                             let weight: Font.Weight = isSelected ? .semibold : .regular
-                            Button(action: { viewModel.filterPark = isSelected ? nil : park }) {
+                            Button(action: {
+                                if isSelected { viewModel.filterPark = nil } else { viewModel.filterPark = park }
+                            }) {
                                 Text(park.name).fontWeight(weight)
                             }
                             .buttonStyle(.bordered)
