@@ -1,6 +1,27 @@
 import SwiftUI
 import Observation
 
+// MARK: - Pass Tier Enums
+
+enum DisneyPassTier: String, CaseIterable, Codable {
+    case none       = "None"
+    case pixieDust  = "Pixie Dust Pass"
+    case pirate     = "Pirate Pass"
+    case sorcerer   = "Sorcerer Pass"
+    case incredi    = "Incredi-Pass"
+}
+
+enum UniversalPassTier: String, CaseIterable, Codable {
+    case none       = "None"
+    case seasonal   = "Seasonal Pass"
+    case select     = "Select Pass"
+    case power      = "Power Pass"
+    case preferred  = "Preferred Pass"
+    case premier    = "Premier Pass"
+}
+
+// MARK: - AppState
+
 @Observable
 final class AppState {
     var selectedResort: ParkGroup {
@@ -23,12 +44,69 @@ final class AppState {
         }
     }
 
+    // MARK: - Annual Pass
+
+    var disneyPassTier: DisneyPassTier {
+        didSet { UserDefaults.standard.set(disneyPassTier.rawValue, forKey: "disneyPassTier") }
+    }
+    var disneyPassExpiry: Date? {
+        didSet {
+            if let d = disneyPassExpiry {
+                UserDefaults.standard.set(d.timeIntervalSince1970, forKey: "disneyPassExpiry")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "disneyPassExpiry")
+            }
+        }
+    }
+    var universalPassTier: UniversalPassTier {
+        didSet { UserDefaults.standard.set(universalPassTier.rawValue, forKey: "universalPassTier") }
+    }
+    var universalPassExpiry: Date? {
+        didSet {
+            if let d = universalPassExpiry {
+                UserDefaults.standard.set(d.timeIntervalSince1970, forKey: "universalPassExpiry")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "universalPassExpiry")
+            }
+        }
+    }
+
+    // MARK: - Today's Guests (keyed by date, auto-resets)
+
+    var todayGuestIds: [String] {
+        get {
+            let key = todayGuestKey
+            return UserDefaults.standard.stringArray(forKey: key) ?? []
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: todayGuestKey)
+        }
+    }
+
+    private var todayGuestKey: String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        return "todayGuests-\(fmt.string(from: .now))"
+    }
+
     init() {
         let saved = UserDefaults.standard.string(forKey: "selectedResortRaw") ?? ""
         self.selectedResort    = ParkGroup(rawValue: saved) ?? .disney
         self.defaultMapIsSatellite   = UserDefaults.standard.bool(forKey: "defaultMapIsSatellite")
         self.sortRidesAlphabetically = UserDefaults.standard.bool(forKey: "sortRidesAlphabetically")
         self.wishList = Set(UserDefaults.standard.stringArray(forKey: "wishList") ?? [])
+
+        let disneyRaw = UserDefaults.standard.string(forKey: "disneyPassTier") ?? ""
+        self.disneyPassTier = DisneyPassTier(rawValue: disneyRaw) ?? .none
+        let universalRaw = UserDefaults.standard.string(forKey: "universalPassTier") ?? ""
+        self.universalPassTier = UniversalPassTier(rawValue: universalRaw) ?? .none
+
+        if UserDefaults.standard.object(forKey: "disneyPassExpiry") != nil {
+            self.disneyPassExpiry = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "disneyPassExpiry"))
+        }
+        if UserDefaults.standard.object(forKey: "universalPassExpiry") != nil {
+            self.universalPassExpiry = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "universalPassExpiry"))
+        }
     }
 
     func toggleWish(_ rideId: String) {
