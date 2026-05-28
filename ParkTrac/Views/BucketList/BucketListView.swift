@@ -6,6 +6,7 @@ enum BucketTab: String, CaseIterable {
 }
 
 struct BucketListView: View {
+    @Environment(AppState.self) private var appState
     @State private var selectedTab: BucketTab = .restaurants
 
     var body: some View {
@@ -28,6 +29,9 @@ struct BucketListView: View {
             }
             .navigationTitle("Bucket List")
             .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(appState.selectedResort.theme.primaryColor, for: .navigationBar)
+            .toolbarColorScheme(appState.selectedResort.theme.preferredColorScheme == .dark ? .dark : .light, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }

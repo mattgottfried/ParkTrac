@@ -51,6 +51,17 @@ struct SettingsView: View {
                     Text("Resort")
                 }
 
+                // MARK: Annual Passes
+                Section {
+                    NavigationLink {
+                        AnnualPassView()
+                    } label: {
+                        Label("Annual Passes", systemImage: "creditcard.fill")
+                    }
+                } header: {
+                    Text("Passes")
+                }
+
                 // MARK: Tools
                 Section {
                     NavigationLink {
@@ -80,6 +91,9 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .toolbarBackground(appState.selectedResort.theme.primaryColor, for: .navigationBar)
+            .toolbarColorScheme(appState.selectedResort.theme.preferredColorScheme == .dark ? .dark : .light, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }

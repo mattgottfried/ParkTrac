@@ -66,6 +66,7 @@ struct CrowdCalendarCard: View {
 struct CrowdCalendarView: View {
     let resort: ParkGroup
 
+    @Environment(AppState.self) private var appState
     @State private var selectedDate: Date? = nil
     @State private var displayedMonth: Date = Calendar.current.startOfMonth(for: .now)
 
@@ -108,7 +109,8 @@ struct CrowdCalendarView: View {
 
                     // Day cells
                     ForEach(daysInMonth, id: \.self) { date in
-                        DayCell(date: date, resort: resort, isSelected: selectedDate.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false)
+                        DayCell(date: date, resort: resort, isSelected: selectedDate.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false,
+                                disneyTier: appState.disneyPassTier, universalTier: appState.universalPassTier)
                             .onTapGesture { selectedDate = date }
                     }
                 }
@@ -189,6 +191,7 @@ struct MiniCalendarGrid: View {
     let resort: ParkGroup
     @Binding var selectedDate: Date?
     var weeks: Int = 5
+    @Environment(AppState.self) private var appState
 
     private var dates: [Date] {
         let cal = Calendar.current
@@ -207,7 +210,9 @@ struct MiniCalendarGrid: View {
                 DayCell(
                     date: date,
                     resort: resort,
-                    isSelected: selectedDate.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false
+                    isSelected: selectedDate.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false,
+                    disneyTier: appState.disneyPassTier,
+                    universalTier: appState.universalPassTier
                 )
                 .onTapGesture { selectedDate = date }
             }
@@ -221,6 +226,8 @@ struct DayCell: View {
     let date: Date
     let resort: ParkGroup
     let isSelected: Bool
+    var disneyTier: DisneyPassTier = .none
+    var universalTier: UniversalPassTier = .none
 
     private var level: CrowdLevel { CrowdCalendarService.crowdLevel(for: date, resort: resort) }
     private var isToday: Bool { Calendar.current.isDateInToday(date) }
@@ -244,6 +251,15 @@ struct DayCell: View {
             Text("\(Calendar.current.component(.day, from: date))")
                 .font(.system(size: 11, weight: isToday ? .bold : .regular))
                 .foregroundStyle(isPast ? Color.secondary : Color.white)
+        }
+        .overlay(alignment: .topTrailing) {
+            if resort == .disney && BlockOutService.isBlockedOut(date, disney: disneyTier) ||
+               resort == .universal && BlockOutService.isBlockedOut(date, universal: universalTier) {
+                Image(systemName: "nosign")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .background(Color.red.opacity(0.8), in: Circle())
+            }
         }
         .frame(height: 30)
     }

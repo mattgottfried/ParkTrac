@@ -75,6 +75,10 @@
 		AA0000000000000000000133 /* WeatherCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000132 /* WeatherCardView.swift */; };
 		AA0000000000000000000135 /* SpendingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000134 /* SpendingView.swift */; };
 		AA0000000000000000000137 /* HeightCheckerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000136 /* HeightCheckerView.swift */; };
+		AA0000000000000000000139 /* TodayBlockOutBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000138 /* TodayBlockOutBanner.swift */; };
+		AA000000000000000000013C /* AnnualPassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013B /* AnnualPassView.swift */; };
+		AA000000000000000000013E /* APOffersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013D /* APOffersView.swift */; };
+		AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013F /* GuestPickerSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -147,6 +151,10 @@
 		AA0000000000000000000132 /* WeatherCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCardView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000134 /* SpendingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000136 /* HeightCheckerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeightCheckerView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000138 /* TodayBlockOutBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayBlockOutBanner.swift; sourceTree = "<group>"; };
+		AA000000000000000000013B /* AnnualPassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnualPassView.swift; sourceTree = "<group>"; };
+		AA000000000000000000013D /* APOffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersView.swift; sourceTree = "<group>"; };
+		AA000000000000000000013F /* GuestPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestPickerSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -239,6 +247,14 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
+		AA0000000000000000000141 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000138 /* TodayBlockOutBanner.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
 		AA0000000000000000000064 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -248,6 +264,7 @@
 				AA0000000000000000000068 /* Settings */,
 				AA0000000000000000000069 /* Stats */,
 				AA000000000000000000013A /* Planner */,
+				AA0000000000000000000141 /* Home */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -304,6 +321,7 @@
 			children = (
 				AA00000000000000000000FE /* SettingsView.swift */,
 				AA0000000000000000000136 /* HeightCheckerView.swift */,
+				AA000000000000000000013B /* AnnualPassView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -318,6 +336,7 @@
 				AA000000000000000000011C /* VisitHistoryView.swift */,
 				AA0000000000000000000132 /* WeatherCardView.swift */,
 				AA0000000000000000000134 /* SpendingView.swift */,
+				AA000000000000000000013D /* APOffersView.swift */,
 			);
 			path = Stats;
 			sourceTree = "<group>";
@@ -327,6 +346,7 @@
 			children = (
 				AA000000000000000000012E /* DayPlannerView.swift */,
 				AA0000000000000000000130 /* AddPlanItemView.swift */,
+				AA000000000000000000013F /* GuestPickerSheet.swift */,
 			);
 			path = Planner;
 			sourceTree = "<group>";
@@ -467,6 +487,10 @@
 					AA0000000000000000000133 /* WeatherCardView.swift in Sources */,
 					AA0000000000000000000135 /* SpendingView.swift in Sources */,
 					AA0000000000000000000137 /* HeightCheckerView.swift in Sources */,
+				AA0000000000000000000139 /* TodayBlockOutBanner.swift in Sources */,
+				AA000000000000000000013C /* AnnualPassView.swift in Sources */,
+				AA000000000000000000013E /* APOffersView.swift in Sources */,
+				AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

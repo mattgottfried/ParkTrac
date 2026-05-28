@@ -49,4 +49,17 @@ final class NotificationService {
     func cancelLLReminder(passId: String) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["ll-\(passId)"])
     }
+
+    func schedulePassRenewalReminder(resort: String, passName: String, date: Date) {
+        guard date > .now else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "🎟 Pass renewal reminder"
+        content.body = "\(resort) \(passName) expires in 30 days. Time to renew!"
+        content.sound = .default
+        let trigger = UNCalendarNotificationTrigger(
+            dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date),
+            repeats: false)
+        let request = UNNotificationRequest(identifier: "passRenewal-\(resort)-\(passName)", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+    }
 }

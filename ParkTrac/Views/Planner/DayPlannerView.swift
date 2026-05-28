@@ -7,6 +7,7 @@ struct DayPlannerView: View {
 
     @Query(sort: \PlanItem.sortOrder) private var allItems: [PlanItem]
     @State private var showAddSheet = false
+    @State private var showGuestPicker = false
 
     private var today: Date { Calendar.current.startOfDay(for: .now) }
     private var resort: String { appState.selectedResort.rawValue }
@@ -39,6 +40,24 @@ struct DayPlannerView: View {
                     }
                 }
 
+                // Who's Coming section
+                Section {
+                    if appState.todayGuestIds.isEmpty {
+                        Button { showGuestPicker = true } label: {
+                            Label("Add Guests", systemImage: "person.badge.plus")
+                        }
+                    } else {
+                        HStack {
+                            Label("\(appState.todayGuestIds.count) guest\(appState.todayGuestIds.count == 1 ? "" : "s") coming", systemImage: "person.2.fill")
+                            Spacer()
+                            Button("Edit") { showGuestPicker = true }
+                                .font(.caption)
+                        }
+                    }
+                } header: {
+                    Text("Who's Coming?")
+                }
+
                 if planItems.isEmpty && llPasses.isEmpty {
                     ContentUnavailableView("No Plans Yet", systemImage: "calendar.badge.plus",
                         description: Text("Tap + to add rides, shows, or dining to today's plan."))
@@ -65,6 +84,9 @@ struct DayPlannerView: View {
             }
             .sheet(isPresented: $showAddSheet) {
                 AddPlanItemView(resort: resort)
+            }
+            .sheet(isPresented: $showGuestPicker) {
+                GuestPickerSheet()
             }
         }
     }

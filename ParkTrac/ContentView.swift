@@ -6,6 +6,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             ResortBannerView(appState: appState)
+            TodayBlockOutBanner(appState: appState)
 
             TabView {
                 ParkMapView()
@@ -33,6 +34,8 @@ struct ContentView: View {
                         Label("Settings", systemImage: "gearshape.fill")
                     }
             }
+            .preferredColorScheme(appState.selectedResort.theme.preferredColorScheme)
+            .tint(appState.selectedResort.theme.tabBarTint)
         }
         .environment(appState)
         .sheet(isPresented: $appState.showResortPicker) {

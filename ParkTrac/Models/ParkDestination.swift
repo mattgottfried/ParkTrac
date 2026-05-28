@@ -32,13 +32,21 @@ enum ParkGroup: String, CaseIterable, Identifiable {
             return ParkTheme(
                 primaryColor: Color(red: 0/255, green: 60/255, blue: 113/255),
                 accentColor: Color(red: 253/255, green: 185/255, blue: 19/255),
-                annotationTextColor: .white
+                annotationTextColor: .white,
+                cardBackground: Color(.systemBackground),
+                cardShadowOpacity: 0.08,
+                preferredColorScheme: .light,
+                tabBarTint: Color(red: 0/255, green: 60/255, blue: 113/255)
             )
         case .universal:
             return ParkTheme(
                 primaryColor: Color(red: 20/255, green: 20/255, blue: 20/255),
                 accentColor: Color(red: 252/255, green: 190/255, blue: 17/255),
-                annotationTextColor: .white
+                annotationTextColor: .white,
+                cardBackground: Color(.secondarySystemGroupedBackground),
+                cardShadowOpacity: 0.0,
+                preferredColorScheme: .dark,
+                tabBarTint: Color(red: 252/255, green: 190/255, blue: 17/255)
             )
         }
     }
@@ -48,4 +56,8 @@ struct ParkTheme {
     let primaryColor: Color
     let accentColor: Color
     let annotationTextColor: Color
+    let cardBackground: Color
+    let cardShadowOpacity: Double
+    let preferredColorScheme: ColorScheme
+    let tabBarTint: Color
 }

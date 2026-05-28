@@ -194,6 +194,19 @@ struct StatsView: View {
                     // Crowd Calendar card
                     CrowdCalendarCard(resort: appState.selectedResort)
 
+                    // AP Offers teaser
+                    statsCard(title: "AP Offers", systemImage: "tag.fill", color: .blue) {
+                        HStack {
+                            Text("Perks & discounts for your passes")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            NavigationLink("View All") { APOffersView() }
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.blue)
+                        }
+                    }
+
                     // Badges teaser
                     badgesTeaser
                 }
@@ -203,6 +216,9 @@ struct StatsView: View {
             }
             .navigationTitle("Stats")
             .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(appState.selectedResort.theme.primaryColor, for: .navigationBar)
+            .toolbarColorScheme(appState.selectedResort.theme.preferredColorScheme == .dark ? .dark : .light, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 
@@ -221,8 +237,9 @@ struct StatsView: View {
             content()
         }
         .padding()
-        .background(.ultraThinMaterial)
+        .background(appState.selectedResort.theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(appState.selectedResort.theme.cardShadowOpacity), radius: 6, x: 0, y: 2)
     }
 
     private func categoryRow(restaurants: [BucketRestaurant]) -> some View {
@@ -358,7 +375,8 @@ struct StatsView: View {
             }
         }
         .padding()
-        .background(.ultraThinMaterial)
+        .background(appState.selectedResort.theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(appState.selectedResort.theme.cardShadowOpacity), radius: 6, x: 0, y: 2)
     }
 }
