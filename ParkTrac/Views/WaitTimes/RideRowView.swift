@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct RideRowView: View {
-    let entry: LiveDataEntry
+    let entry: DisplayRide
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {

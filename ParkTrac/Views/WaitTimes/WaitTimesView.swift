@@ -32,14 +32,17 @@ struct WaitTimesView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(viewModel.currentParks) { park in
-                            let isSelected = viewModel.filterPark?.id == park.id
-                            ParkChipButton(park: park, isSelected: isSelected) {
-                                if isSelected {
-                                    viewModel.filterPark = nil
-                                } else {
-                                    viewModel.filterPark = park
+                            ParkChipButton(
+                                park: park,
+                                selectedParkId: viewModel.filterPark?.id,
+                                onTap: {
+                                    if viewModel.filterPark?.id == park.id {
+                                        viewModel.filterPark = nil
+                                    } else {
+                                        viewModel.filterPark = park
+                                    }
                                 }
-                            }
+                            )
                         }
                     }
                     .padding(.horizontal)
@@ -130,11 +133,12 @@ struct WaitTimesView: View {
 // MARK: - Park Chip Button (extracted to its own type-check unit)
 
 private struct ParkChipButton: View {
-    let park: DisplayPark
-    let isSelected: Bool
+    let park: ParkEntity
+    let selectedParkId: String?
     let onTap: () -> Void
 
     var body: some View {
+        let isSelected = selectedParkId == park.id
         Button(action: onTap) {
             Text(park.name)
                 .fontWeight(isSelected ? Font.Weight.semibold : Font.Weight.regular)

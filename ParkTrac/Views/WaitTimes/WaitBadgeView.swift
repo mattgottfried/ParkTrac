@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WaitBadgeView: View {
-    let entry: LiveDataEntry
+    let entry: DisplayRide
 
     private var badgeColor: Color {
         guard entry.isOperating else { return .gray }
