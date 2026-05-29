@@ -249,12 +249,12 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000141 /* Home */ = {
+		AA0000000000000000000150 /* Home */ = {
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000138 /* TodayBlockOutBanner.swift */,
 			);
-			path = Home;
+			path = Views/Home;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000064 /* Views */ = {
@@ -266,7 +266,7 @@
 				AA0000000000000000000068 /* Settings */,
 				AA0000000000000000000069 /* Stats */,
 				AA000000000000000000013A /* Planner */,
-				AA0000000000000000000141 /* Home */,
+				AA0000000000000000000150 /* Home */,
 			);
 			path = Views;
 			sourceTree = "<group>";
