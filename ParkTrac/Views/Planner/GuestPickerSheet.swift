@@ -89,7 +89,7 @@ struct GuestPickerSheet: View {
         return HStack {
             Button { toggle(guest) } label: {
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(selected ? .accentColor : .secondary)
+                    .foregroundStyle(selected ? Color.accentColor : Color.secondary)
             }
             .buttonStyle(.plain)
             Text(guest.name).font(.subheadline)

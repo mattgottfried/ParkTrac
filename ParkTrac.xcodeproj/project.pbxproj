@@ -63,6 +63,9 @@
 		AA000000000000000000011B /* RideCounterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011A /* RideCounterView.swift */; };
 		AA000000000000000000011D /* VisitHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011C /* VisitHistoryView.swift */; };
 		AA000000000000000000011F /* RideAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011E /* RideAlert.swift */; };
+		AA0000000000000000000151 /* Guest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000152 /* Guest.swift */; };
+		AA0000000000000000000153 /* BlockOutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000154 /* BlockOutService.swift */; };
+		AA0000000000000000000155 /* APOffersData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000156 /* APOffersData.swift */; };
 		AA0000000000000000000121 /* PlanItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000120 /* PlanItem.swift */; };
 		AA0000000000000000000123 /* PurchaseLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000122 /* PurchaseLog.swift */; };
 		AA0000000000000000000125 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000124 /* NotificationService.swift */; };
@@ -141,6 +144,9 @@
 		AA000000000000000000011E /* RideAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAlert.swift; sourceTree = "<group>"; };
 		AA0000000000000000000120 /* PlanItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanItem.swift; sourceTree = "<group>"; };
 		AA0000000000000000000122 /* PurchaseLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseLog.swift; sourceTree = "<group>"; };
+		AA0000000000000000000152 /* Guest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guest.swift; sourceTree = "<group>"; };
+		AA0000000000000000000154 /* BlockOutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockOutService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000156 /* APOffersData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersData.swift; sourceTree = "<group>"; };
 		AA0000000000000000000124 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000126 /* CharacterData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterData.swift; sourceTree = "<group>"; };
 		AA0000000000000000000128 /* ShowsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowsListView.swift; sourceTree = "<group>"; };
@@ -218,6 +224,7 @@
 				AA000000000000000000011E /* RideAlert.swift */,
 				AA0000000000000000000120 /* PlanItem.swift */,
 				AA0000000000000000000122 /* PurchaseLog.swift */,
+				AA0000000000000000000152 /* Guest.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -228,6 +235,8 @@
 				AA000000000000000000002A /* ParkAPIService.swift */,
 				AA0000000000000000000056 /* BucketListService.swift */,
 				AA0000000000000000000058 /* SeedData.swift */,
+				AA0000000000000000000154 /* BlockOutService.swift */,
+				AA0000000000000000000156 /* APOffersData.swift */,
 				AA000000000000000000005A /* WaitTimeRecorder.swift */,
 				AA000000000000000000005C /* WaitTimePredictionService.swift */,
 				AA00000000000000000000F4 /* CommunityBaselineService.swift */,
@@ -477,6 +486,9 @@
 					AA000000000000000000011B /* RideCounterView.swift in Sources */,
 					AA000000000000000000011D /* VisitHistoryView.swift in Sources */,
 					AA000000000000000000011F /* RideAlert.swift in Sources */,
+				AA0000000000000000000151 /* Guest.swift in Sources */,
+				AA0000000000000000000153 /* BlockOutService.swift in Sources */,
+				AA0000000000000000000155 /* APOffersData.swift in Sources */,
 					AA0000000000000000000121 /* PlanItem.swift in Sources */,
 					AA0000000000000000000123 /* PurchaseLog.swift in Sources */,
 					AA0000000000000000000125 /* NotificationService.swift in Sources */,
