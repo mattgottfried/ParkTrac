@@ -185,6 +185,9 @@ struct StatsView: View {
                         }
                     }
 
+                    // Wait Accuracy card
+                    WaitAccuracyCard()
+
                     // Weather card
                     WeatherCardView(resort: appState.selectedResort)
 

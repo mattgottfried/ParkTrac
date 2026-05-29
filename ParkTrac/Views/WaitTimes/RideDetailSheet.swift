@@ -15,6 +15,8 @@ struct RideDetailSheet: View {
 
     @State private var showLogSheet = false
     @State private var showAlertSheet = false
+    @State private var showToast = false
+    @State private var toastMessage = ""
 
     private var rideCount: Int {
         allRideLogs.filter { $0.rideId == ride.id }.count
@@ -115,6 +117,34 @@ struct RideDetailSheet: View {
 
                 Divider()
 
+                // Wait Stopwatch section
+                WaitStopwatchSection(
+                    ride: ride,
+                    postedWait: ride.waitMinutes,
+                    onSave: { actualMins, posted in
+                        let log = RideLog(
+                            rideId: ride.id,
+                            rideName: ride.name,
+                            parkId: ride.parkId,
+                            parkName: parkName,
+                            resort: parkGroup.rawValue,
+                            riddenAt: .now,
+                            waitMinutes: posted == 0 ? nil : posted,
+                            actualWaitMinutes: actualMins,
+                            notes: ""
+                        )
+                        context.insert(log)
+                        toastMessage = "Saved! Posted: \(posted)m · Actual: \(actualMins)m"
+                        withAnimation { showToast = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            withAnimation { showToast = false }
+                        }
+                    }
+                )
+                .padding(.horizontal)
+
+                Divider()
+
                 // Alert section
                 VStack(spacing: 10) {
                     let existingAlert = allAlerts.first(where: { $0.rideId == ride.id && $0.isActive })
@@ -153,6 +183,18 @@ struct RideDetailSheet: View {
                     .padding(.top, 4)
             }
             .padding()
+        }
+        .overlay(alignment: .bottom) {
+            if showToast {
+                Text(toastMessage)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(.orange, in: Capsule())
+                    .padding(.bottom, 16)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .presentationDetents([.fraction(0.6), .large])
         .presentationDragIndicator(.hidden)

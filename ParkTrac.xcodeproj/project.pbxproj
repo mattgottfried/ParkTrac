@@ -82,6 +82,8 @@
 		AA000000000000000000013C /* AnnualPassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013B /* AnnualPassView.swift */; };
 		AA000000000000000000013E /* APOffersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013D /* APOffersView.swift */; };
 		AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013F /* GuestPickerSheet.swift */; };
+		AA0000000000000000000160 /* WaitStopwatchSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000161 /* WaitStopwatchSection.swift */; };
+		AA0000000000000000000162 /* WaitAccuracyCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000163 /* WaitAccuracyCard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -162,6 +164,8 @@
 		AA000000000000000000013D /* APOffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersView.swift; sourceTree = "<group>"; };
 		AA000000000000000000013F /* GuestPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestPickerSheet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000141 /* ParkTrac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ParkTrac.entitlements; sourceTree = "<group>"; };
+		AA0000000000000000000161 /* WaitStopwatchSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitStopwatchSection.swift; sourceTree = "<group>"; };
+		AA0000000000000000000163 /* WaitAccuracyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitAccuracyCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -297,6 +301,7 @@
 				AA0000000000000000000128 /* ShowsListView.swift */,
 				AA000000000000000000012A /* SetAlertSheet.swift */,
 				AA000000000000000000012C /* CharacterFinderView.swift */,
+				AA0000000000000000000161 /* WaitStopwatchSection.swift */,
 			);
 			path = WaitTimes;
 			sourceTree = "<group>";
@@ -348,6 +353,7 @@
 				AA0000000000000000000132 /* WeatherCardView.swift */,
 				AA0000000000000000000134 /* SpendingView.swift */,
 				AA000000000000000000013D /* APOffersView.swift */,
+				AA0000000000000000000163 /* WaitAccuracyCard.swift */,
 			);
 			path = Stats;
 			sourceTree = "<group>";
@@ -505,6 +511,8 @@
 				AA000000000000000000013C /* AnnualPassView.swift in Sources */,
 				AA000000000000000000013E /* APOffersView.swift in Sources */,
 				AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */,
+				AA0000000000000000000160 /* WaitStopwatchSection.swift in Sources */,
+				AA0000000000000000000162 /* WaitAccuracyCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -71,6 +71,15 @@ final class AppState {
         }
     }
 
+    // MARK: - Active Stopwatch Timer
+
+    var activeTimerRideId: String? {
+        didSet { UserDefaults.standard.set(activeTimerRideId, forKey: "activeTimerRideId") }
+    }
+    var activeTimerStart: Date? {
+        didSet { UserDefaults.standard.set(activeTimerStart?.timeIntervalSince1970, forKey: "activeTimerStart") }
+    }
+
     // MARK: - Today's Guests (keyed by date, auto-resets)
 
     var todayGuestIds: [String] {
@@ -107,6 +116,10 @@ final class AppState {
         if UserDefaults.standard.object(forKey: "universalPassExpiry") != nil {
             self.universalPassExpiry = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "universalPassExpiry"))
         }
+
+        activeTimerRideId = UserDefaults.standard.string(forKey: "activeTimerRideId")
+        let ts = UserDefaults.standard.double(forKey: "activeTimerStart")
+        activeTimerStart = ts > 0 ? Date(timeIntervalSince1970: ts) : nil
     }
 
     func toggleWish(_ rideId: String) {

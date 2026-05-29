@@ -10,6 +10,7 @@ final class RideLog {
     var resort: String = ""
     var riddenAt: Date = Date()
     var waitMinutes: Int?
+    var actualWaitMinutes: Int? = nil
     var notes: String = ""
 
     init(
@@ -20,16 +21,18 @@ final class RideLog {
         resort: String,
         riddenAt: Date = .now,
         waitMinutes: Int? = nil,
+        actualWaitMinutes: Int? = nil,
         notes: String = ""
     ) {
-        self.rideId      = rideId
-        self.rideName    = rideName
-        self.parkId      = parkId
-        self.parkName    = parkName
-        self.resort      = resort
-        self.riddenAt    = riddenAt
-        self.waitMinutes = waitMinutes
-        self.notes       = notes
+        self.rideId             = rideId
+        self.rideName           = rideName
+        self.parkId             = parkId
+        self.parkName           = parkName
+        self.resort             = resort
+        self.riddenAt           = riddenAt
+        self.waitMinutes        = waitMinutes
+        self.actualWaitMinutes  = actualWaitMinutes
+        self.notes              = notes
     }
 }
 
