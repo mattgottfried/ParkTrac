@@ -3,12 +3,12 @@ import Foundation
 
 @Model
 final class Guest {
-    var name: String
-    var hasDisneyPass: Bool
-    var hasUniversalPass: Bool
-    var disneyPassTier: String
-    var universalPassTier: String
-    var isFrequent: Bool
+    var name: String = ""
+    var hasDisneyPass: Bool = false
+    var hasUniversalPass: Bool = false
+    var disneyPassTier: String = ""
+    var universalPassTier: String = ""
+    var isFrequent: Bool = true
 
     init(
         name: String,

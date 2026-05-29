@@ -2,16 +2,16 @@ import Foundation
 import SwiftData
 
 @Model final class PlanItem {
-    var date: Date
+    var date: Date = Date()
     var scheduledTime: Date?
-    var title: String
-    var kind: String   // "ride" | "show" | "dining" | "ll" | "note"
+    var title: String = ""
+    var kind: String = "note"   // "ride" | "show" | "dining" | "ll" | "note"
     var rideId: String?
-    var parkName: String
-    var resort: String
-    var notes: String
-    var isDone: Bool
-    var sortOrder: Int
+    var parkName: String = ""
+    var resort: String = ""
+    var notes: String = ""
+    var isDone: Bool = false
+    var sortOrder: Int = 0
     var llReturnStart: Date?
     var llReturnEnd: Date?
 

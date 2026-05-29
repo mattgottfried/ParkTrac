@@ -3,13 +3,13 @@ import SwiftData
 
 @Model
 final class Restaurant {
-    var id: UUID
-    var name: String
-    var park: String
-    var dateVisited: Date
-    var notes: String
-    var mattRating: Int
-    var wifeRating: Int
+    var id: UUID = UUID()
+    var name: String = ""
+    var park: String = ""
+    var dateVisited: Date = Date()
+    var notes: String = ""
+    var mattRating: Int = 3
+    var wifeRating: Int = 3
 
     var averageRating: Double {
         Double(mattRating + wifeRating) / 2.0

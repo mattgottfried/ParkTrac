@@ -3,17 +3,17 @@ import SwiftData
 
 @Model
 final class BucketRestaurant {
-    var id: UUID
-    var name: String
-    var park: String
-    var resort: String
-    var category: String
-    var isVisited: Bool
+    var id: UUID = UUID()
+    var name: String = ""
+    var park: String = ""
+    var resort: String = ""
+    var category: String = ""
+    var isVisited: Bool = false
     var visitDate: Date?
-    var mattRating: Double
-    var wifeRating: Double
-    var notes: String
-    var isFromAPI: Bool
+    var mattRating: Double = 0
+    var wifeRating: Double = 0
+    var notes: String = ""
+    var isFromAPI: Bool = false
 
     var averageRating: Double? {
         guard isVisited, mattRating > 0, wifeRating > 0 else { return nil }

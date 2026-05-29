@@ -3,18 +3,18 @@ import SwiftData
 
 @Model
 final class HotelStay {
-    var id: UUID
-    var hotelName: String
-    var resort: String
-    var tier: String
-    var isVisited: Bool
+    var id: UUID = UUID()
+    var hotelName: String = ""
+    var resort: String = ""
+    var tier: String = ""
+    var isVisited: Bool = false
     var checkIn: Date?
     var checkOut: Date?
-    var roomType: String
-    var mattRating: Int
-    var wifeRating: Int
-    var notes: String
-    @Attribute(.externalStorage) var photoData: [Data]
+    var roomType: String = ""
+    var mattRating: Int = 0
+    var wifeRating: Int = 0
+    var notes: String = ""
+    @Attribute(.externalStorage) var photoData: [Data] = []
 
     var averageRating: Double? {
         guard isVisited, mattRating > 0, wifeRating > 0 else { return nil }

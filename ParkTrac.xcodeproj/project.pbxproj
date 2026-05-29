@@ -155,6 +155,7 @@
 		AA000000000000000000013B /* AnnualPassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnualPassView.swift; sourceTree = "<group>"; };
 		AA000000000000000000013D /* APOffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersView.swift; sourceTree = "<group>"; };
 		AA000000000000000000013F /* GuestPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestPickerSheet.swift; sourceTree = "<group>"; };
+		AA0000000000000000000141 /* ParkTrac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ParkTrac.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +174,7 @@
 			children = (
 				AA0000000000000000000020 /* ParkTracApp.swift */,
 				AA0000000000000000000022 /* ContentView.swift */,
+				AA0000000000000000000141 /* ParkTrac.entitlements */,
 				AA0000000000000000000061 /* Models */,
 				AA0000000000000000000062 /* Services */,
 				AA0000000000000000000063 /* ViewModels */,
@@ -617,6 +619,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ParkTrac/ParkTrac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -642,6 +645,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ParkTrac/ParkTrac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "";

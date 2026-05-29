@@ -3,13 +3,13 @@ import SwiftData
 
 @Model
 final class DiningReservation {
-    var restaurantName: String
-    var resort: String
-    var date: Date          // combined date + time (use a single Date for both)
-    var partySize: Int
-    var confirmationNumber: String
-    var notes: String
-    var isCompleted: Bool
+    var restaurantName: String = ""
+    var resort: String = ""
+    var date: Date = Date()          // combined date + time (use a single Date for both)
+    var partySize: Int = 2
+    var confirmationNumber: String = ""
+    var notes: String = ""
+    var isCompleted: Bool = false
 
     init(
         restaurantName: String,

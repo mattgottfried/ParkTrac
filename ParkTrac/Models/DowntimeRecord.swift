@@ -3,10 +3,10 @@ import SwiftData
 
 @Model
 final class DowntimeRecord {
-    var rideId: String
-    var rideName: String
-    var parkId: String
-    var downStart: Date
+    var rideId: String = ""
+    var rideName: String = ""
+    var parkId: String = ""
+    var downStart: Date = Date()
     var downEnd: Date?
 
     var durationMinutes: Int? {

@@ -3,14 +3,14 @@ import SwiftData
 
 @Model
 final class RideLog {
-    var rideId: String
-    var rideName: String
-    var parkId: String
-    var parkName: String
-    var resort: String
-    var riddenAt: Date
+    var rideId: String = ""
+    var rideName: String = ""
+    var parkId: String = ""
+    var parkName: String = ""
+    var resort: String = ""
+    var riddenAt: Date = Date()
     var waitMinutes: Int?
-    var notes: String
+    var notes: String = ""
 
     init(
         rideId: String,

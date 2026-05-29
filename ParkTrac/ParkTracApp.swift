@@ -18,7 +18,8 @@ struct ParkTracApp: App {
             PurchaseLog.self,
             Guest.self,
         ])
-        return try! ModelContainer(for: schema)
+        let config = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
+        return try! ModelContainer(for: schema, configurations: [config])
     }()
 
     init() {
