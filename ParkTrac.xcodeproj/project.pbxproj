@@ -254,7 +254,7 @@
 			children = (
 				AA0000000000000000000138 /* TodayBlockOutBanner.swift */,
 			);
-			path = Views/Home;
+			path = Home;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000064 /* Views */ = {
