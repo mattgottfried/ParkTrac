@@ -91,8 +91,6 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .toolbarBackground(appState.selectedResort.theme.primaryColor, for: .navigationBar)
-            .toolbarColorScheme(appState.selectedResort.theme.preferredColorScheme == .dark ? .dark : .light, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
     }

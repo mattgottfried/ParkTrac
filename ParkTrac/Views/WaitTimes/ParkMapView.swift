@@ -364,6 +364,8 @@ struct ParkMapView: View {
         .onChange(of: appState.defaultMapIsSatellite)   { _, val in mapStyleIsHybrid = val }
         .onChange(of: locationService.userCoordinate?.latitude) { _, _ in autoZoomIfInsidePark() }
         .onChange(of: viewModel.currentParks) { _, _ in autoZoomIfInsidePark() }
+        .onChange(of: region.center.latitude) { _, _ in autoSelectParkFromRegion() }
+        .onChange(of: region.center.longitude) { _, _ in autoSelectParkFromRegion() }
         .onChange(of: viewModel.lastRefreshed) { _, _ in
             NotificationService.shared.checkAlerts(rides: viewModel.allRides, context: modelContext)
         }
@@ -371,6 +373,31 @@ struct ParkMapView: View {
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
             RideDetailSheet(ride: ride, theme: theme, parkGroup: viewModel.selectedGroup, parkName: parkName)
         }
+    }
+
+    // MARK: - Zoom-Based Auto-Select
+
+    /// When the user pans/zooms so the map center is over a park and the zoom
+    /// is close enough, automatically select that park's chip.
+    private func autoSelectParkFromRegion() {
+        // Only trigger when zoomed in close enough
+        guard region.span.latitudeDelta < 0.05 else {
+            // Zoomed out — clear park filter if it was set by this mechanism
+            // (Don't clear if the user explicitly tapped a chip)
+            return
+        }
+        let center = CLLocation(latitude: region.center.latitude,
+                                longitude: region.center.longitude)
+        let nearest = viewModel.currentParks
+            .compactMap { park -> (ParkEntity, CLLocationDistance)? in
+                guard let coord = park.coordinate else { return nil }
+                let loc = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
+                let dist = center.distance(from: loc)
+                return dist < 3000 ? (park, dist) : nil
+            }
+            .min { $0.1 < $1.1 }?.0
+        guard let park = nearest, viewModel.filterPark?.id != park.id else { return }
+        viewModel.filterPark = park
     }
 
     // MARK: - GPS Auto-Zoom

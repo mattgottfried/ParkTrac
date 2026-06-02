@@ -63,9 +63,6 @@
 		AA000000000000000000011B /* RideCounterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011A /* RideCounterView.swift */; };
 		AA000000000000000000011D /* VisitHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011C /* VisitHistoryView.swift */; };
 		AA000000000000000000011F /* RideAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000011E /* RideAlert.swift */; };
-		AA0000000000000000000151 /* Guest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000152 /* Guest.swift */; };
-		AA0000000000000000000153 /* BlockOutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000154 /* BlockOutService.swift */; };
-		AA0000000000000000000155 /* APOffersData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000156 /* APOffersData.swift */; };
 		AA0000000000000000000121 /* PlanItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000120 /* PlanItem.swift */; };
 		AA0000000000000000000123 /* PurchaseLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000122 /* PurchaseLog.swift */; };
 		AA0000000000000000000125 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000124 /* NotificationService.swift */; };
@@ -82,6 +79,9 @@
 		AA000000000000000000013C /* AnnualPassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013B /* AnnualPassView.swift */; };
 		AA000000000000000000013E /* APOffersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013D /* APOffersView.swift */; };
 		AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013F /* GuestPickerSheet.swift */; };
+		AA0000000000000000000151 /* Guest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000152 /* Guest.swift */; };
+		AA0000000000000000000153 /* BlockOutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000154 /* BlockOutService.swift */; };
+		AA0000000000000000000155 /* APOffersData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000156 /* APOffersData.swift */; };
 		AA0000000000000000000160 /* WaitStopwatchSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000161 /* WaitStopwatchSection.swift */; };
 		AA0000000000000000000162 /* WaitAccuracyCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000163 /* WaitAccuracyCard.swift */; };
 		AA0000000000000000000164 /* WaitTimerLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000165 /* WaitTimerLog.swift */; };
@@ -93,6 +93,7 @@
 		AA0000000000000000000170 /* DiningSeedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000171 /* DiningSeedService.swift */; };
 		AA0000000000000000000172 /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000173 /* StoreService.swift */; };
 		AA0000000000000000000174 /* AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000175 /* AdBannerView.swift */; };
+		C960576D2FCFA0690034AD70 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = C960576C2FCFA0690034AD70 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -155,9 +156,6 @@
 		AA000000000000000000011E /* RideAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAlert.swift; sourceTree = "<group>"; };
 		AA0000000000000000000120 /* PlanItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanItem.swift; sourceTree = "<group>"; };
 		AA0000000000000000000122 /* PurchaseLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseLog.swift; sourceTree = "<group>"; };
-		AA0000000000000000000152 /* Guest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guest.swift; sourceTree = "<group>"; };
-		AA0000000000000000000154 /* BlockOutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockOutService.swift; sourceTree = "<group>"; };
-		AA0000000000000000000156 /* APOffersData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersData.swift; sourceTree = "<group>"; };
 		AA0000000000000000000124 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000126 /* CharacterData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterData.swift; sourceTree = "<group>"; };
 		AA0000000000000000000128 /* ShowsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowsListView.swift; sourceTree = "<group>"; };
@@ -173,6 +171,9 @@
 		AA000000000000000000013D /* APOffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersView.swift; sourceTree = "<group>"; };
 		AA000000000000000000013F /* GuestPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestPickerSheet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000141 /* ParkTrac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ParkTrac.entitlements; sourceTree = "<group>"; };
+		AA0000000000000000000152 /* Guest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guest.swift; sourceTree = "<group>"; };
+		AA0000000000000000000154 /* BlockOutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockOutService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000156 /* APOffersData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersData.swift; sourceTree = "<group>"; };
 		AA0000000000000000000161 /* WaitStopwatchSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitStopwatchSection.swift; sourceTree = "<group>"; };
 		AA0000000000000000000163 /* WaitAccuracyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitAccuracyCard.swift; sourceTree = "<group>"; };
 		AA0000000000000000000165 /* WaitTimerLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimerLog.swift; sourceTree = "<group>"; };
@@ -191,6 +192,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C960576D2FCFA0690034AD70 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,16 +286,6 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000150 /* Home */ = {
-			isa = PBXGroup;
-			children = (
-				AA0000000000000000000138 /* TodayBlockOutBanner.swift */,
-				AA0000000000000000000169 /* ReturnTimeBanner.swift */,
-				AA000000000000000000016B /* WaitTimerBanner.swift */,
-			);
-			path = Home;
-			sourceTree = "<group>";
-		};
 		AA0000000000000000000064 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -308,22 +300,6 @@
 				AA0000000000000000000178 /* Ads */,
 			);
 			path = Views;
-			sourceTree = "<group>";
-		};
-		AA0000000000000000000176 /* Onboarding */ = {
-			isa = PBXGroup;
-			children = (
-				AA000000000000000000016F /* OnboardingView.swift */,
-			);
-			path = Onboarding;
-			sourceTree = "<group>";
-		};
-		AA0000000000000000000178 /* Ads */ = {
-			isa = PBXGroup;
-			children = (
-				AA0000000000000000000175 /* AdBannerView.swift */,
-			);
-			path = Ads;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000065 /* WaitTimes */ = {
@@ -411,6 +387,32 @@
 			path = Planner;
 			sourceTree = "<group>";
 		};
+		AA0000000000000000000150 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000138 /* TodayBlockOutBanner.swift */,
+				AA0000000000000000000169 /* ReturnTimeBanner.swift */,
+				AA000000000000000000016B /* WaitTimerBanner.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000176 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000016F /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000178 /* Ads */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000175 /* AdBannerView.swift */,
+			);
+			path = Ads;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -455,6 +457,9 @@
 				Base,
 			);
 			mainGroup = AA0000000000000000000060;
+			packageReferences = (
+				C960576B2FCFA0690034AD70 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			productRefGroup = AA000000000000000000000C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -524,32 +529,32 @@
 				AA0000000000000000000105 /* BadgeDefinition.swift in Sources */,
 				AA0000000000000000000107 /* StatsView.swift in Sources */,
 				AA0000000000000000000109 /* BadgesView.swift in Sources */,
-					AA000000000000000000010B /* RideRowView.swift in Sources */,
-					AA000000000000000000010D /* WaitBadgeView.swift in Sources */,
-					AA000000000000000000010F /* WaitTimesView.swift in Sources */,
-					AA0000000000000000000111 /* ParkHoursHeaderView.swift in Sources */,
-					AA0000000000000000000113 /* RideLog.swift in Sources */,
-					AA0000000000000000000115 /* DiningReservation.swift in Sources */,
-					AA0000000000000000000117 /* CrowdCalendarService.swift in Sources */,
-					AA0000000000000000000119 /* CrowdCalendarView.swift in Sources */,
-					AA000000000000000000011B /* RideCounterView.swift in Sources */,
-					AA000000000000000000011D /* VisitHistoryView.swift in Sources */,
-					AA000000000000000000011F /* RideAlert.swift in Sources */,
+				AA000000000000000000010B /* RideRowView.swift in Sources */,
+				AA000000000000000000010D /* WaitBadgeView.swift in Sources */,
+				AA000000000000000000010F /* WaitTimesView.swift in Sources */,
+				AA0000000000000000000111 /* ParkHoursHeaderView.swift in Sources */,
+				AA0000000000000000000113 /* RideLog.swift in Sources */,
+				AA0000000000000000000115 /* DiningReservation.swift in Sources */,
+				AA0000000000000000000117 /* CrowdCalendarService.swift in Sources */,
+				AA0000000000000000000119 /* CrowdCalendarView.swift in Sources */,
+				AA000000000000000000011B /* RideCounterView.swift in Sources */,
+				AA000000000000000000011D /* VisitHistoryView.swift in Sources */,
+				AA000000000000000000011F /* RideAlert.swift in Sources */,
 				AA0000000000000000000151 /* Guest.swift in Sources */,
 				AA0000000000000000000153 /* BlockOutService.swift in Sources */,
 				AA0000000000000000000155 /* APOffersData.swift in Sources */,
-					AA0000000000000000000121 /* PlanItem.swift in Sources */,
-					AA0000000000000000000123 /* PurchaseLog.swift in Sources */,
-					AA0000000000000000000125 /* NotificationService.swift in Sources */,
-					AA0000000000000000000127 /* CharacterData.swift in Sources */,
-					AA0000000000000000000129 /* ShowsListView.swift in Sources */,
-					AA000000000000000000012B /* SetAlertSheet.swift in Sources */,
-					AA000000000000000000012D /* CharacterFinderView.swift in Sources */,
-					AA000000000000000000012F /* DayPlannerView.swift in Sources */,
-					AA0000000000000000000131 /* AddPlanItemView.swift in Sources */,
-					AA0000000000000000000133 /* WeatherCardView.swift in Sources */,
-					AA0000000000000000000135 /* SpendingView.swift in Sources */,
-					AA0000000000000000000137 /* HeightCheckerView.swift in Sources */,
+				AA0000000000000000000121 /* PlanItem.swift in Sources */,
+				AA0000000000000000000123 /* PurchaseLog.swift in Sources */,
+				AA0000000000000000000125 /* NotificationService.swift in Sources */,
+				AA0000000000000000000127 /* CharacterData.swift in Sources */,
+				AA0000000000000000000129 /* ShowsListView.swift in Sources */,
+				AA000000000000000000012B /* SetAlertSheet.swift in Sources */,
+				AA000000000000000000012D /* CharacterFinderView.swift in Sources */,
+				AA000000000000000000012F /* DayPlannerView.swift in Sources */,
+				AA0000000000000000000131 /* AddPlanItemView.swift in Sources */,
+				AA0000000000000000000133 /* WeatherCardView.swift in Sources */,
+				AA0000000000000000000135 /* SpendingView.swift in Sources */,
+				AA0000000000000000000137 /* HeightCheckerView.swift in Sources */,
 				AA0000000000000000000139 /* TodayBlockOutBanner.swift in Sources */,
 				AA000000000000000000013C /* AnnualPassView.swift in Sources */,
 				AA000000000000000000013E /* APOffersView.swift in Sources */,
@@ -760,6 +765,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C960576B2FCFA0690034AD70 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C960576C2FCFA0690034AD70 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C960576B2FCFA0690034AD70 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA000000000000000000000A /* Project object */;
 }

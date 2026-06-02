@@ -12,6 +12,7 @@ struct ContentView: View {
                 WaitTimerBanner(appState: appState)
             }
             AdBannerView()
+            Divider()
 
             TabView {
                 ParkMapView()
@@ -19,9 +20,9 @@ struct ContentView: View {
                         Label("Wait Times", systemImage: "clock.fill")
                     }
 
-                MyDiningView()
+                DayPlannerView()
                     .tabItem {
-                        Label("My Dining", systemImage: "fork.knife")
+                        Label("My Day", systemImage: "list.bullet.clipboard")
                     }
 
                 BucketListView()

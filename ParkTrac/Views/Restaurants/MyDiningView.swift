@@ -108,8 +108,6 @@ struct MyDiningView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("My Dining")
-            .toolbarBackground(appState.selectedResort.theme.primaryColor, for: .navigationBar)
-            .toolbarColorScheme(appState.selectedResort.theme.preferredColorScheme == .dark ? .dark : .light, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .sheet(item: $selectedRestaurant) { BucketRestaurantDetailView(restaurant: $0) }
             .sheet(isPresented: $showAddReservation) {

@@ -95,6 +95,16 @@ struct StatsView: View {
             ScrollView {
                 VStack(spacing: 16) {
 
+                    // My Dining link (moved from tab bar)
+                    NavigationLink(destination: MyDiningView()) {
+                        Label("My Dining Log", systemImage: "fork.knife")
+                            .font(.subheadline.weight(.medium))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 4)
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 4)
+
                     // Restaurants card
                     statsCard(title: "Restaurants", systemImage: "fork.knife", color: .orange) {
                         BucketProgressView(
@@ -219,8 +229,6 @@ struct StatsView: View {
             }
             .navigationTitle("Stats")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(appState.selectedResort.theme.primaryColor, for: .navigationBar)
-            .toolbarColorScheme(appState.selectedResort.theme.preferredColorScheme == .dark ? .dark : .light, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
     }
