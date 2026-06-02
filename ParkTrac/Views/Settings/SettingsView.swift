@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
+    private let store = StoreService.shared
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -78,6 +79,53 @@ struct SettingsView: View {
                     Text("Tools")
                 }
 
+                // MARK: Remove Ads
+                Section {
+                    if store.isAdFree {
+                        Label("Ads Removed — Thank You!", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        Button {
+                            Task { await store.purchase() }
+                        } label: {
+                            HStack {
+                                Label("Remove Ads", systemImage: "rectangle.slash")
+                                Spacer()
+                                if store.isPurchasing {
+                                    ProgressView()
+                                } else if let product = store.removeAdsProduct {
+                                    Text(product.displayPrice)
+                                        .foregroundStyle(.secondary)
+                                } else {
+                                    Text("Loading…")
+                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+                                }
+                            }
+                        }
+                        .disabled(store.isPurchasing)
+
+                        Button("Restore Purchase") {
+                            Task { await store.restorePurchases() }
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.blue)
+
+                        if let error = store.purchaseError {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
+                    }
+                } header: {
+                    Text("Support ParkTrac")
+                } footer: {
+                    Text(store.isAdFree
+                        ? "Enjoy an ad-free experience."
+                        : "One-time purchase to remove all ads and support development.")
+                        .font(.caption)
+                }
+
                 // MARK: About
                 Section {
                     HStack {
@@ -92,6 +140,7 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .toolbarBackground(.visible, for: .navigationBar)
+            .task { await store.loadProducts() }
         }
     }
 }
