@@ -212,6 +212,10 @@ struct StyledMapUIView: UIViewRepresentable {
         }
         func mapView(_ map: MKMapView, regionDidChangeAnimated animated: Bool) {
             isUserInteracting = false
+            // Write the user's final position back into the binding so the next
+            // updateUIView call doesn't see a drift and snap back.
+            let r = map.region
+            DispatchQueue.main.async { self.parent.region = r }
         }
     }
 }
