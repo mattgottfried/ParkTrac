@@ -84,6 +84,15 @@
 		AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013F /* GuestPickerSheet.swift */; };
 		AA0000000000000000000160 /* WaitStopwatchSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000161 /* WaitStopwatchSection.swift */; };
 		AA0000000000000000000162 /* WaitAccuracyCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000163 /* WaitAccuracyCard.swift */; };
+		AA0000000000000000000164 /* WaitTimerLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000165 /* WaitTimerLog.swift */; };
+		AA0000000000000000000166 /* VisitSaving.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000167 /* VisitSaving.swift */; };
+		AA0000000000000000000168 /* ReturnTimeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000169 /* ReturnTimeBanner.swift */; };
+		AA000000000000000000016A /* WaitTimerBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016B /* WaitTimerBanner.swift */; };
+		AA000000000000000000016C /* BookReturnTimeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016D /* BookReturnTimeSheet.swift */; };
+		AA000000000000000000016E /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016F /* OnboardingView.swift */; };
+		AA0000000000000000000170 /* DiningSeedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000171 /* DiningSeedService.swift */; };
+		AA0000000000000000000172 /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000173 /* StoreService.swift */; };
+		AA0000000000000000000174 /* AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000175 /* AdBannerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -166,6 +175,15 @@
 		AA0000000000000000000141 /* ParkTrac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ParkTrac.entitlements; sourceTree = "<group>"; };
 		AA0000000000000000000161 /* WaitStopwatchSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitStopwatchSection.swift; sourceTree = "<group>"; };
 		AA0000000000000000000163 /* WaitAccuracyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitAccuracyCard.swift; sourceTree = "<group>"; };
+		AA0000000000000000000165 /* WaitTimerLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimerLog.swift; sourceTree = "<group>"; };
+		AA0000000000000000000167 /* VisitSaving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitSaving.swift; sourceTree = "<group>"; };
+		AA0000000000000000000169 /* ReturnTimeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnTimeBanner.swift; sourceTree = "<group>"; };
+		AA000000000000000000016B /* WaitTimerBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimerBanner.swift; sourceTree = "<group>"; };
+		AA000000000000000000016D /* BookReturnTimeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReturnTimeSheet.swift; sourceTree = "<group>"; };
+		AA000000000000000000016F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000171 /* DiningSeedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiningSeedService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000173 /* StoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000175 /* AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdBannerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -229,6 +247,8 @@
 				AA0000000000000000000120 /* PlanItem.swift */,
 				AA0000000000000000000122 /* PurchaseLog.swift */,
 				AA0000000000000000000152 /* Guest.swift */,
+				AA0000000000000000000165 /* WaitTimerLog.swift */,
+				AA0000000000000000000167 /* VisitSaving.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -250,6 +270,8 @@
 				AA0000000000000000000116 /* CrowdCalendarService.swift */,
 				AA0000000000000000000124 /* NotificationService.swift */,
 				AA0000000000000000000126 /* CharacterData.swift */,
+				AA0000000000000000000171 /* DiningSeedService.swift */,
+				AA0000000000000000000173 /* StoreService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -266,6 +288,8 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000138 /* TodayBlockOutBanner.swift */,
+				AA0000000000000000000169 /* ReturnTimeBanner.swift */,
+				AA000000000000000000016B /* WaitTimerBanner.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -280,8 +304,26 @@
 				AA0000000000000000000069 /* Stats */,
 				AA000000000000000000013A /* Planner */,
 				AA0000000000000000000150 /* Home */,
+				AA0000000000000000000176 /* Onboarding */,
+				AA0000000000000000000178 /* Ads */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000176 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000016F /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000178 /* Ads */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000175 /* AdBannerView.swift */,
+			);
+			path = Ads;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000065 /* WaitTimes */ = {
@@ -302,6 +344,7 @@
 				AA000000000000000000012A /* SetAlertSheet.swift */,
 				AA000000000000000000012C /* CharacterFinderView.swift */,
 				AA0000000000000000000161 /* WaitStopwatchSection.swift */,
+				AA000000000000000000016D /* BookReturnTimeSheet.swift */,
 			);
 			path = WaitTimes;
 			sourceTree = "<group>";
@@ -513,6 +556,15 @@
 				AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */,
 				AA0000000000000000000160 /* WaitStopwatchSection.swift in Sources */,
 				AA0000000000000000000162 /* WaitAccuracyCard.swift in Sources */,
+				AA0000000000000000000164 /* WaitTimerLog.swift in Sources */,
+				AA0000000000000000000166 /* VisitSaving.swift in Sources */,
+				AA0000000000000000000168 /* ReturnTimeBanner.swift in Sources */,
+				AA000000000000000000016A /* WaitTimerBanner.swift in Sources */,
+				AA000000000000000000016C /* BookReturnTimeSheet.swift in Sources */,
+				AA000000000000000000016E /* OnboardingView.swift in Sources */,
+				AA0000000000000000000170 /* DiningSeedService.swift in Sources */,
+				AA0000000000000000000172 /* StoreService.swift in Sources */,
+				AA0000000000000000000174 /* AdBannerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

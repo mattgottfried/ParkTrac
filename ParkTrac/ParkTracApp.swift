@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import BackgroundTasks
+#if canImport(GoogleMobileAds)
+import GoogleMobileAds
+#endif
 
 @main
 struct ParkTracApp: App {
@@ -17,6 +20,8 @@ struct ParkTracApp: App {
             PlanItem.self,
             PurchaseLog.self,
             Guest.self,
+            WaitTimerLog.self,
+            VisitSaving.self,
         ])
         let config = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
         return try! ModelContainer(for: schema, configurations: [config])
@@ -29,6 +34,11 @@ struct ParkTracApp: App {
         ) { task in
             BackgroundRefreshService.run(task: task as! BGAppRefreshTask)
         }
+        #if canImport(GoogleMobileAds)
+        MobileAds.shared.start { _ in
+            StoreService.shared.markAdsReady()
+        }
+        #endif
     }
 
     @Environment(\.scenePhase) private var scenePhase
@@ -37,7 +47,9 @@ struct ParkTracApp: App {
         WindowGroup {
             ContentView()
                 .task {
+                    NSUbiquitousKeyValueStore.default.synchronize()
                     await BucketListService.shared.seedIfNeeded(context: container.mainContext)
+                    try? DiningSeedService.seedIfNeeded(context: container.mainContext)
                     BackgroundRefreshService.schedule()
                 }
         }

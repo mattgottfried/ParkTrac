@@ -7,6 +7,11 @@ struct ContentView: View {
         VStack(spacing: 0) {
             ResortBannerView(appState: appState)
             TodayBlockOutBanner(appState: appState)
+            ReturnTimeBanner()
+            if appState.activeTimerRideId != nil {
+                WaitTimerBanner(appState: appState)
+            }
+            AdBannerView()
 
             TabView {
                 ParkMapView()
@@ -38,6 +43,13 @@ struct ContentView: View {
             .tint(appState.selectedResort.theme.tabBarTint)
         }
         .environment(appState)
+        .fullScreenCover(isPresented: Binding(
+            get: { !appState.hasCompletedOnboarding },
+            set: { _ in }
+        )) {
+            OnboardingView()
+                .environment(appState)
+        }
         .sheet(isPresented: $appState.showResortPicker) {
             ResortPickerSheet(appState: appState)
                 .presentationDetents([.medium])
@@ -114,7 +126,7 @@ private struct ResortPickerSheet: View {
             VStack(spacing: 12) {
                 Image(systemName: resort == .disney ? "castle.fill" : "globe.americas.fill")
                     .font(.system(size: 36))
-                    .foregroundStyle(isSelected ? .white : resort.theme.primaryColor)
+                    .foregroundStyle(isSelected ? Color.white : resort.theme.primaryColor)
 
                 Text(resort.rawValue)
                     .font(.subheadline.weight(.semibold))

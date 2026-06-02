@@ -15,6 +15,7 @@ struct RideDetailSheet: View {
 
     @State private var showLogSheet = false
     @State private var showAlertSheet = false
+    @State private var showBookReturnSheet = false
     @State private var showToast = false
     @State private var toastMessage = ""
 
@@ -145,6 +146,21 @@ struct RideDetailSheet: View {
 
                 Divider()
 
+                // Book Return Time section
+                Button {
+                    showBookReturnSheet = true
+                } label: {
+                    Label("Book Return Time", systemImage: "clock.badge.checkmark")
+                        .font(.subheadline.weight(.medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.bordered)
+                .tint(.blue)
+                .padding(.horizontal)
+
+                Divider()
+
                 // Alert section
                 VStack(spacing: 10) {
                     let existingAlert = allAlerts.first(where: { $0.rideId == ride.id && $0.isActive })
@@ -209,6 +225,11 @@ struct RideDetailSheet: View {
         }
         .sheet(isPresented: $showAlertSheet) {
             SetAlertSheet(ride: ride)
+        }
+        .sheet(isPresented: $showBookReturnSheet) {
+            BookReturnTimeSheet(ride: ride, parkGroup: parkGroup, parkName: parkName)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
         }
     }
 

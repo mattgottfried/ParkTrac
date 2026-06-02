@@ -61,6 +61,9 @@ struct WaitStopwatchSection: View {
                 Button {
                     appState.activeTimerRideId = ride.id
                     appState.activeTimerStart = Date()
+                    appState.timerRideName = ride.name
+                    appState.timerPostedMinutes = postedWait ?? 0
+                    appState.timerResort = ride.parkId  // resort context for WaitTimerBanner
                     elapsed = 0
                 } label: {
                     Label("Start Timer", systemImage: "stopwatch")

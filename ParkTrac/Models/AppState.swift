@@ -20,53 +20,59 @@ enum UniversalPassTier: String, CaseIterable, Codable {
     case premier    = "Premier Pass"
 }
 
+enum UniversalExpressType: String, CaseIterable {
+    case none      = "None"
+    case expressNow = "Express Now"
+}
+
 // MARK: - AppState
 
 @Observable
 final class AppState {
+    // iCloud Key-Value Store — syncs preferences across devices automatically via Apple ID
+    private let icloud = NSUbiquitousKeyValueStore.default
+
     var selectedResort: ParkGroup {
-        didSet { UserDefaults.standard.set(selectedResort.rawValue, forKey: "selectedResortRaw") }
+        didSet { icloud.set(selectedResort.rawValue, forKey: "selectedResortRaw") }
     }
     var showResortPicker: Bool = false
 
-    // MARK: - Persisted Settings
+    // MARK: - Persisted Settings (iCloud-synced)
 
     var defaultMapIsSatellite: Bool {
-        didSet { UserDefaults.standard.set(defaultMapIsSatellite, forKey: "defaultMapIsSatellite") }
+        didSet { icloud.set(defaultMapIsSatellite, forKey: "defaultMapIsSatellite") }
     }
     var sortRidesAlphabetically: Bool {
-        didSet { UserDefaults.standard.set(sortRidesAlphabetically, forKey: "sortRidesAlphabetically") }
+        didSet { icloud.set(sortRidesAlphabetically, forKey: "sortRidesAlphabetically") }
     }
 
     var wishList: Set<String> {
-        didSet {
-            UserDefaults.standard.set(Array(wishList), forKey: "wishList")
-        }
+        didSet { icloud.set(Array(wishList), forKey: "wishList") }
     }
 
     // MARK: - Annual Pass
 
     var disneyPassTier: DisneyPassTier {
-        didSet { UserDefaults.standard.set(disneyPassTier.rawValue, forKey: "disneyPassTier") }
+        didSet { icloud.set(disneyPassTier.rawValue, forKey: "disneyPassTier") }
     }
     var disneyPassExpiry: Date? {
         didSet {
             if let d = disneyPassExpiry {
-                UserDefaults.standard.set(d.timeIntervalSince1970, forKey: "disneyPassExpiry")
+                icloud.set(d.timeIntervalSince1970, forKey: "disneyPassExpiry")
             } else {
-                UserDefaults.standard.removeObject(forKey: "disneyPassExpiry")
+                icloud.removeObject(forKey: "disneyPassExpiry")
             }
         }
     }
     var universalPassTier: UniversalPassTier {
-        didSet { UserDefaults.standard.set(universalPassTier.rawValue, forKey: "universalPassTier") }
+        didSet { icloud.set(universalPassTier.rawValue, forKey: "universalPassTier") }
     }
     var universalPassExpiry: Date? {
         didSet {
             if let d = universalPassExpiry {
-                UserDefaults.standard.set(d.timeIntervalSince1970, forKey: "universalPassExpiry")
+                icloud.set(d.timeIntervalSince1970, forKey: "universalPassExpiry")
             } else {
-                UserDefaults.standard.removeObject(forKey: "universalPassExpiry")
+                icloud.removeObject(forKey: "universalPassExpiry")
             }
         }
     }
@@ -78,6 +84,53 @@ final class AppState {
     }
     var activeTimerStart: Date? {
         didSet { UserDefaults.standard.set(activeTimerStart?.timeIntervalSince1970, forKey: "activeTimerStart") }
+    }
+
+    // Additional timer context (for WaitTimerBanner)
+    var timerRideName: String {
+        didSet { UserDefaults.standard.set(timerRideName, forKey: "timerRideName") }
+    }
+    var timerPostedMinutes: Int {
+        didSet { UserDefaults.standard.set(timerPostedMinutes, forKey: "timerPostedMinutes") }
+    }
+    var timerResort: String {
+        didSet { UserDefaults.standard.set(timerResort, forKey: "timerResort") }
+    }
+
+    // Aliases used by WaitTimerBanner
+    var timerStartDate: Date? { activeTimerStart }
+    var timerRideId: String? { activeTimerRideId }
+
+    func clearTimer() {
+        activeTimerRideId = nil
+        activeTimerStart = nil
+        timerRideName = ""
+        timerPostedMinutes = 0
+        timerResort = ""
+    }
+
+    // MARK: - Pass Accessibility / Express features
+
+    var hasLightningLane: Bool {
+        didSet { UserDefaults.standard.set(hasLightningLane, forKey: "hasLightningLane") }
+    }
+    var hasDAS: Bool {
+        didSet { UserDefaults.standard.set(hasDAS, forKey: "hasDAS") }
+    }
+    var hasAAP: Bool {
+        didSet { UserDefaults.standard.set(hasAAP, forKey: "hasAAP") }
+    }
+    var universalExpressType: UniversalExpressType {
+        didSet { UserDefaults.standard.set(universalExpressType.rawValue, forKey: "universalExpressType") }
+    }
+
+    // MARK: - Onboarding
+
+    var hasCompletedOnboarding: Bool {
+        didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding") }
+    }
+    var partyMembers: [String] {
+        didSet { UserDefaults.standard.set(partyMembers, forKey: "partyMembers") }
     }
 
     // MARK: - Today's Guests (keyed by date, auto-resets)
@@ -99,31 +152,89 @@ final class AppState {
     }
 
     init() {
-        let saved = UserDefaults.standard.string(forKey: "selectedResortRaw") ?? ""
-        self.selectedResort    = ParkGroup(rawValue: saved) ?? .disney
-        self.defaultMapIsSatellite   = UserDefaults.standard.bool(forKey: "defaultMapIsSatellite")
-        self.sortRidesAlphabetically = UserDefaults.standard.bool(forKey: "sortRidesAlphabetically")
-        self.wishList = Set(UserDefaults.standard.stringArray(forKey: "wishList") ?? [])
+        let kv = NSUbiquitousKeyValueStore.default
+        let ud = UserDefaults.standard
 
-        let disneyRaw = UserDefaults.standard.string(forKey: "disneyPassTier") ?? ""
+        // iCloud-synced prefs: read iCloud first, fall back to UserDefaults for one-time migration
+        let savedResort = kv.string(forKey: "selectedResortRaw") ?? ud.string(forKey: "selectedResortRaw") ?? ""
+        self.selectedResort = ParkGroup(rawValue: savedResort) ?? .disney
+
+        self.defaultMapIsSatellite = kv.object(forKey: "defaultMapIsSatellite") != nil
+            ? kv.bool(forKey: "defaultMapIsSatellite")
+            : ud.bool(forKey: "defaultMapIsSatellite")
+
+        self.sortRidesAlphabetically = kv.object(forKey: "sortRidesAlphabetically") != nil
+            ? kv.bool(forKey: "sortRidesAlphabetically")
+            : ud.bool(forKey: "sortRidesAlphabetically")
+
+        let wishArr = (kv.array(forKey: "wishList") as? [String]) ?? ud.stringArray(forKey: "wishList") ?? []
+        self.wishList = Set(wishArr)
+
+        let disneyRaw = kv.string(forKey: "disneyPassTier") ?? ud.string(forKey: "disneyPassTier") ?? ""
         self.disneyPassTier = DisneyPassTier(rawValue: disneyRaw) ?? .none
-        let universalRaw = UserDefaults.standard.string(forKey: "universalPassTier") ?? ""
+
+        let universalRaw = kv.string(forKey: "universalPassTier") ?? ud.string(forKey: "universalPassTier") ?? ""
         self.universalPassTier = UniversalPassTier(rawValue: universalRaw) ?? .none
 
-        if UserDefaults.standard.object(forKey: "disneyPassExpiry") != nil {
-            self.disneyPassExpiry = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "disneyPassExpiry"))
-        }
-        if UserDefaults.standard.object(forKey: "universalPassExpiry") != nil {
-            self.universalPassExpiry = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "universalPassExpiry"))
+        // Disney pass expiry
+        if kv.object(forKey: "disneyPassExpiry") != nil {
+            let ts = kv.double(forKey: "disneyPassExpiry")
+            self.disneyPassExpiry = ts > 0 ? Date(timeIntervalSince1970: ts) : nil
+        } else if ud.object(forKey: "disneyPassExpiry") != nil {
+            self.disneyPassExpiry = Date(timeIntervalSince1970: ud.double(forKey: "disneyPassExpiry"))
         }
 
-        activeTimerRideId = UserDefaults.standard.string(forKey: "activeTimerRideId")
-        let ts = UserDefaults.standard.double(forKey: "activeTimerStart")
+        // Universal pass expiry
+        if kv.object(forKey: "universalPassExpiry") != nil {
+            let ts = kv.double(forKey: "universalPassExpiry")
+            self.universalPassExpiry = ts > 0 ? Date(timeIntervalSince1970: ts) : nil
+        } else if ud.object(forKey: "universalPassExpiry") != nil {
+            self.universalPassExpiry = Date(timeIntervalSince1970: ud.double(forKey: "universalPassExpiry"))
+        }
+
+        // Device-local timer state (UserDefaults only)
+        activeTimerRideId = ud.string(forKey: "activeTimerRideId")
+        let ts = ud.double(forKey: "activeTimerStart")
         activeTimerStart = ts > 0 ? Date(timeIntervalSince1970: ts) : nil
+        timerRideName = ud.string(forKey: "timerRideName") ?? ""
+        timerPostedMinutes = ud.integer(forKey: "timerPostedMinutes")
+        timerResort = ud.string(forKey: "timerResort") ?? ""
+
+        // Onboarding + party (device-local)
+        hasCompletedOnboarding = ud.bool(forKey: "hasCompletedOnboarding")
+        partyMembers = ud.stringArray(forKey: "partyMembers") ?? []
+
+        // Pass features (device-local)
+        hasLightningLane = ud.bool(forKey: "hasLightningLane")
+        hasDAS = ud.bool(forKey: "hasDAS")
+        hasAAP = ud.bool(forKey: "hasAAP")
+        let expressRaw = ud.string(forKey: "universalExpressType") ?? ""
+        universalExpressType = UniversalExpressType(rawValue: expressRaw) ?? .none
+
+        // Listen for changes pushed from other devices
+        NotificationCenter.default.addObserver(
+            forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: kv,
+            queue: .main
+        ) { [weak self] _ in self?.reloadFromiCloud() }
     }
 
     func toggleWish(_ rideId: String) {
         if wishList.contains(rideId) { wishList.remove(rideId) }
         else { wishList.insert(rideId) }
+    }
+
+    // MARK: - Reload from iCloud (fires when another device writes new values)
+
+    private func reloadFromiCloud() {
+        let kv = NSUbiquitousKeyValueStore.default
+        if let raw = kv.string(forKey: "selectedResortRaw"), let r = ParkGroup(rawValue: raw) { selectedResort = r }
+        if kv.object(forKey: "defaultMapIsSatellite") != nil { defaultMapIsSatellite = kv.bool(forKey: "defaultMapIsSatellite") }
+        if kv.object(forKey: "sortRidesAlphabetically") != nil { sortRidesAlphabetically = kv.bool(forKey: "sortRidesAlphabetically") }
+        if let arr = kv.array(forKey: "wishList") as? [String] { wishList = Set(arr) }
+        if let raw = kv.string(forKey: "disneyPassTier"), let t = DisneyPassTier(rawValue: raw) { disneyPassTier = t }
+        if let raw = kv.string(forKey: "universalPassTier"), let t = UniversalPassTier(rawValue: raw) { universalPassTier = t }
+        let dts = kv.double(forKey: "disneyPassExpiry"); disneyPassExpiry = dts > 0 ? Date(timeIntervalSince1970: dts) : nil
+        let uts = kv.double(forKey: "universalPassExpiry"); universalPassExpiry = uts > 0 ? Date(timeIntervalSince1970: uts) : nil
     }
 }
