@@ -229,7 +229,7 @@ struct ParkMapView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.scenePhase) private var scenePhaseValue
     @Environment(\.modelContext) private var modelContext
-    @State private var viewModel = WaitTimesViewModel()
+    @Environment(WaitTimesViewModel.self) private var viewModel
     @State private var locationService = LocationService()
     @State private var region: MKCoordinateRegion = ParkGroup.disney.defaultRegion
     @State private var selectedRide: DisplayRide?
@@ -450,7 +450,7 @@ struct ParkMapView: View {
     private var searchBar: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary).font(.system(size: 14))
-            TextField("Search rides", text: $viewModel.searchText)
+            TextField("Search rides", text: Bindable(viewModel).searchText)
                 .font(.subheadline).autocorrectionDisabled()
             if !viewModel.searchText.isEmpty {
                 Button { viewModel.searchText = "" } label: {

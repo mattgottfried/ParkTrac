@@ -4,10 +4,12 @@ import SwiftData
 struct DayPlannerView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppState.self) private var appState
+    @Environment(WaitTimesViewModel.self) private var waitTimesVM
 
     @Query(sort: \PlanItem.sortOrder) private var allItems: [PlanItem]
     @State private var showAddSheet = false
     @State private var showGuestPicker = false
+    @State private var showSmartPlanner = false
 
     private var today: Date { Calendar.current.startOfDay(for: .now) }
     private var resort: String { appState.selectedResort.rawValue }
@@ -21,6 +23,11 @@ struct DayPlannerView: View {
     }
     private var planItems: [PlanItem] {
         todayItems.filter { $0.kind != "ll" }
+    }
+
+    private func liveWait(for item: PlanItem) -> Int? {
+        guard let rideId = item.rideId, !rideId.isEmpty else { return nil }
+        return waitTimesVM.allRides.first(where: { $0.id == rideId })?.waitMinutes
     }
 
     var body: some View {
@@ -64,7 +71,7 @@ struct DayPlannerView: View {
                 } else if !planItems.isEmpty {
                     Section("Today's Plan") {
                         ForEach(planItems) { item in
-                            PlanItemRow(item: item)
+                            PlanItemRow(item: item, liveWait: liveWait(for: item))
                                 .swipeActions(edge: .trailing) {
                                     Button("Delete", role: .destructive) { context.delete(item) }
                                 }
@@ -76,7 +83,14 @@ struct DayPlannerView: View {
             .navigationTitle("My Day")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showAddSheet = true } label: { Image(systemName: "plus") }
+                    HStack(spacing: 4) {
+                        Button { showSmartPlanner = true } label: {
+                            Image(systemName: "wand.and.stars")
+                        }
+                        Button { showAddSheet = true } label: {
+                            Image(systemName: "plus")
+                        }
+                    }
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     EditButton()
@@ -87,6 +101,9 @@ struct DayPlannerView: View {
             }
             .sheet(isPresented: $showGuestPicker) {
                 GuestPickerSheet()
+            }
+            .sheet(isPresented: $showSmartPlanner) {
+                SmartPlannerView()
             }
         }
     }
@@ -103,6 +120,7 @@ struct DayPlannerView: View {
 
 private struct PlanItemRow: View {
     let item: PlanItem
+    let liveWait: Int?
 
     private static let timeFmt: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "h:mm a"; return f
@@ -125,7 +143,7 @@ private struct PlanItemRow: View {
             } label: {
                 Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
-                    .foregroundStyle(item.isDone ? .green : .secondary)
+                    .foregroundStyle(item.isDone ? Color.green : Color.secondary)
             }
             .buttonStyle(.plain)
 
@@ -133,7 +151,7 @@ private struct PlanItemRow: View {
                 Text(item.title)
                     .font(.subheadline.weight(.medium))
                     .strikethrough(item.isDone)
-                    .foregroundStyle(item.isDone ? .secondary : .primary)
+                    .foregroundStyle(item.isDone ? Color.secondary : Color.primary)
                 HStack(spacing: 6) {
                     Image(systemName: kindIcon).font(.caption2).foregroundStyle(.secondary)
                     if let t = item.scheduledTime {
@@ -144,8 +162,26 @@ private struct PlanItemRow: View {
                     }
                 }
             }
+
+            Spacer()
+
+            // Live wait time badge
+            if let wait = liveWait, !item.isDone {
+                Text("\(wait)m")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(waitColor(wait), in: Capsule())
+            }
         }
         .padding(.vertical, 2)
+    }
+
+    private func waitColor(_ minutes: Int) -> Color {
+        if minutes < 30 { return .green }
+        if minutes < 60 { return Color(red: 1, green: 0.75, blue: 0) }
+        return .red
     }
 }
 
@@ -154,40 +190,72 @@ private struct PlanItemRow: View {
 private struct LLPassRow: View {
     let pass: PlanItem
 
-    private var windowText: String {
-        guard let start = pass.llReturnStart, let end = pass.llReturnEnd else { return pass.title }
-        let fmt = DateFormatter(); fmt.dateFormat = "h:mm"
-        return "\(fmt.string(from: start))–\(fmt.string(from: end))"
-    }
+    private static let timeFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "h:mm a"; return f
+    }()
 
-    private var timeUntilClose: String? {
-        guard let end = pass.llReturnEnd else { return nil }
-        let secs = end.timeIntervalSinceNow
-        if secs < 0 { return "Expired" }
-        let mins = Int(secs / 60)
-        return mins < 60 ? "Closes in \(mins)m" : "Closes in \(mins/60)h \(mins%60)m"
+    private var windowText: String {
+        guard let start = pass.llReturnStart else { return pass.title }
+        if let end = pass.llReturnEnd, end != .distantFuture {
+            return "\(Self.timeFmt.string(from: start)) – \(Self.timeFmt.string(from: end))"
+        }
+        return "After \(Self.timeFmt.string(from: start))"
     }
 
     private var urgencyColor: Color {
-        guard let end = pass.llReturnEnd else { return .secondary }
+        guard let end = pass.llReturnEnd, end != .distantFuture else { return .blue }
         let mins = Int(end.timeIntervalSinceNow / 60)
-        if mins < 0 { return .secondary }
+        if mins < 0 { return Color.secondary }
         if mins < 15 { return .red }
         if mins < 30 { return .orange }
         return .green
     }
 
+    private func timeUntilClose(_ now: Date) -> String? {
+        guard let end = pass.llReturnEnd, end != .distantFuture else { return nil }
+        let secs = end.timeIntervalSince(now)
+        if secs < 0 { return "Expired" }
+        let mins = Int(secs / 60)
+        return mins < 60 ? "Closes in \(mins)m" : "Closes in \(mins/60)h \(mins%60)m"
+    }
+
     var body: some View {
-        HStack {
-            Image(systemName: "bolt.fill").foregroundStyle(.yellow)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(pass.title).font(.subheadline.weight(.semibold))
-                Text(windowText).font(.caption).foregroundStyle(.secondary)
+        HStack(spacing: 0) {
+            // Urgency stripe
+            Rectangle()
+                .fill(urgencyColor)
+                .frame(width: 4)
+
+            HStack(spacing: 10) {
+                Image(systemName: "bolt.fill").foregroundStyle(.yellow)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(pass.title).font(.subheadline.weight(.semibold))
+                    Text(windowText).font(.caption).foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                TimelineView(.periodic(from: .now, by: 60)) { ctx in
+                    if let label = timeUntilClose(ctx.date) {
+                        Text(label)
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(urgencyColor)
+                    }
+                }
+
+                Button("Done") { pass.isDone = true }
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.green.opacity(0.15), in: Capsule())
+                    .foregroundStyle(.green)
+                    .buttonStyle(.plain)
             }
-            Spacer()
-            if let label = timeUntilClose {
-                Text(label).font(.caption.weight(.bold)).foregroundStyle(urgencyColor)
-            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
         }
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
 }

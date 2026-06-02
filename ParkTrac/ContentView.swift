@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var appState = AppState()
+    @State private var waitTimesVM = WaitTimesViewModel()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,6 +45,7 @@ struct ContentView: View {
             .tint(appState.selectedResort.theme.tabBarTint)
         }
         .environment(appState)
+        .environment(waitTimesVM)
         .fullScreenCover(isPresented: Binding(
             get: { !appState.hasCompletedOnboarding },
             set: { _ in }

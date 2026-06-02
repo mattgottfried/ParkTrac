@@ -16,6 +16,7 @@ struct RideDetailSheet: View {
     @State private var showLogSheet = false
     @State private var showAlertSheet = false
     @State private var showBookReturnSheet = false
+    @State private var showAddToPlanSheet = false
     @State private var showToast = false
     @State private var toastMessage = ""
 
@@ -159,6 +160,18 @@ struct RideDetailSheet: View {
                 .tint(.blue)
                 .padding(.horizontal)
 
+                Button {
+                    showAddToPlanSheet = true
+                } label: {
+                    Label("Add to My Day", systemImage: "calendar.badge.plus")
+                        .font(.subheadline.weight(.medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.bordered)
+                .tint(.purple)
+                .padding(.horizontal)
+
                 Divider()
 
                 // Alert section
@@ -229,6 +242,11 @@ struct RideDetailSheet: View {
         .sheet(isPresented: $showBookReturnSheet) {
             BookReturnTimeSheet(ride: ride, parkGroup: parkGroup, parkName: parkName)
                 .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showAddToPlanSheet) {
+            AddPlanItemView(resort: parkGroup.rawValue, prefillRide: ride, prefillPark: parkName)
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
     }

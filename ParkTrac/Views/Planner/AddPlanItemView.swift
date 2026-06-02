@@ -5,6 +5,7 @@ struct AddPlanItemView: View {
     let resort: String
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
+    @Environment(WaitTimesViewModel.self) private var waitTimesVM
 
     @State private var title = ""
     @State private var kind = "ride"
@@ -14,12 +15,29 @@ struct AddPlanItemView: View {
     @State private var notes = ""
     @State private var llStart: Date = .now
     @State private var llEnd: Date = Calendar.current.date(byAdding: .hour, value: 1, to: .now) ?? .now
+    @State private var rideId = ""
+    @State private var showAutoComplete = false
+
+    init(resort: String, prefillRide: DisplayRide? = nil, prefillPark: String = "") {
+        self.resort = resort
+        _title    = State(initialValue: prefillRide?.name ?? "")
+        _parkName = State(initialValue: prefillPark)
+        _rideId   = State(initialValue: prefillRide?.id ?? "")
+        _kind     = State(initialValue: "ride")
+    }
 
     private let kinds = [("ride", "figure.jumprope", "Ride"),
                          ("show", "theatermasks.fill", "Show"),
                          ("dining", "fork.knife", "Dining"),
                          ("ll", "bolt.fill", "LL"),
                          ("note", "note.text", "Note")]
+
+    private var rideSuggestions: [DisplayRide] {
+        guard kind == "ride", !title.isEmpty else { return [] }
+        return Array(waitTimesVM.allRides
+            .filter { $0.name.localizedCaseInsensitiveContains(title) && $0.isOperating }
+            .prefix(5))
+    }
 
     var body: some View {
         NavigationStack {
@@ -35,6 +53,34 @@ struct AddPlanItemView: View {
 
                 Section("Details") {
                     TextField(kind == "ll" ? "Ride name" : "Name", text: $title)
+                        .onChange(of: title) { _, _ in
+                            rideId = ""  // clear prefill if user edits
+                        }
+
+                    // Ride autocomplete suggestions
+                    if kind == "ride" && !rideSuggestions.isEmpty && rideId.isEmpty {
+                        ForEach(rideSuggestions) { ride in
+                            Button {
+                                title = ride.name
+                                rideId = ride.id
+                                parkName = waitTimesVM.currentParks
+                                    .first(where: { $0.id == ride.parkId })?.name ?? parkName
+                            } label: {
+                                HStack {
+                                    Text(ride.name)
+                                        .font(.subheadline)
+                                        .foregroundStyle(Color.primary)
+                                    Spacer()
+                                    if let wait = ride.waitMinutes {
+                                        Text("\(wait)m")
+                                            .font(.caption)
+                                            .foregroundStyle(Color.secondary)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     TextField("Park (optional)", text: $parkName)
                 }
 
@@ -78,6 +124,7 @@ struct AddPlanItemView: View {
             notes: notes,
             sortOrder: maxOrder + 1
         )
+        item.rideId = rideId.isEmpty ? nil : rideId
         if kind == "ll" {
             item.llReturnStart = llStart
             item.llReturnEnd = llEnd

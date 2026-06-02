@@ -21,7 +21,7 @@ struct SmartPlannerView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var viewModel = WaitTimesViewModel()
+    @Environment(WaitTimesViewModel.self) private var viewModel
     @State private var selectedRideIds: Set<String> = []
     @State private var selectedShowIds: Set<String> = []
     @State private var startTime: Date = .now
