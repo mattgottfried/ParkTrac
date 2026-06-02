@@ -109,6 +109,15 @@ final class AppState {
         timerResort = ""
     }
 
+    // MARK: - Pass Cost (for savings calculation)
+
+    var disneyPassCost: Double {
+        didSet { UserDefaults.standard.set(disneyPassCost, forKey: "disneyPassCost") }
+    }
+    var universalPassCost: Double {
+        didSet { UserDefaults.standard.set(universalPassCost, forKey: "universalPassCost") }
+    }
+
     // MARK: - Pass Accessibility / Express features
 
     var hasLightningLane: Bool {
@@ -205,6 +214,8 @@ final class AppState {
         partyMembers = ud.stringArray(forKey: "partyMembers") ?? []
 
         // Pass features (device-local)
+        disneyPassCost = ud.double(forKey: "disneyPassCost")
+        universalPassCost = ud.double(forKey: "universalPassCost")
         hasLightningLane = ud.bool(forKey: "hasLightningLane")
         hasDAS = ud.bool(forKey: "hasDAS")
         hasAAP = ud.bool(forKey: "hasAAP")

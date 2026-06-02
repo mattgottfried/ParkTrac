@@ -75,6 +75,12 @@ struct SpendingView: View {
             }
             .navigationTitle("Spending")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    NavigationLink(destination: PassSavingsView()) {
+                        Label("Pass Savings", systemImage: "dollarsign.arrow.circlepath")
+                            .font(.subheadline)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { showAddSheet = true } label: { Image(systemName: "plus") }
                 }
@@ -100,6 +106,7 @@ struct AddPurchaseView: View {
     @State private var amount = ""
     @State private var category = "Food"
     @State private var note = ""
+    @State private var isAPEligible = true
     private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
 
     var body: some View {
@@ -116,6 +123,14 @@ struct AddPurchaseView: View {
                         ForEach(categories, id: \.self) { Text($0).tag($0) }
                     }
                 }
+                if category == "Food" || category == "Merchandise" {
+                    Section {
+                        Toggle("AP Discount Eligible", isOn: $isAPEligible)
+                    } footer: {
+                        Text("Turn off if this purchase didn't use your annual pass discount.")
+                            .font(.caption)
+                    }
+                }
                 Section("Note (optional)") {
                     TextField("e.g. Mickey pretzel", text: $note)
                 }
@@ -127,7 +142,7 @@ struct AddPurchaseView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         if let value = Double(amount), value > 0 {
-                            context.insert(PurchaseLog(amount: value, category: category, resort: resort, note: note))
+                            context.insert(PurchaseLog(amount: value, category: category, resort: resort, note: note, isAPEligible: isAPEligible))
                             try? context.save()
                             dismiss()
                         }
