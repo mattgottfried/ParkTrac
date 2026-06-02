@@ -50,7 +50,7 @@ struct VisitHistoryView: View {
                 ContentUnavailableView(
                     "No visits yet",
                     systemImage: "calendar",
-                    description: Text("Log rides with "Rode It!" and your visits will appear here.")
+                    description: Text("Log rides with \"Rode It!\" and your visits will appear here.")
                 )
                 .listRowBackground(Color.clear)
             } else {
