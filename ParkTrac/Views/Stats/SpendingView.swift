@@ -107,6 +107,8 @@ struct AddPurchaseView: View {
     @State private var category = "Food"
     @State private var note = ""
     @State private var isAPEligible = true
+    @State private var selectedPark = ""
+    @State private var showLocationPicker = false
     private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
 
     var body: some View {
@@ -125,14 +127,28 @@ struct AddPurchaseView: View {
                 }
                 if category == "Food" || category == "Merchandise" {
                     Section {
+                        Button {
+                            showLocationPicker = true
+                        } label: {
+                            HStack {
+                                Text(note.isEmpty ? "Choose location…" : note)
+                                    .foregroundStyle(note.isEmpty ? Color.secondary : Color.primary)
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
                         Toggle("AP Discount Eligible", isOn: $isAPEligible)
+                    } header: {
+                        Text("Location")
                     } footer: {
-                        Text("Turn off if this purchase didn't use your annual pass discount.")
+                        Text("AP discount only applies at select locations.")
                             .font(.caption)
                     }
-                }
-                Section("Note (optional)") {
-                    TextField("e.g. Mickey pretzel", text: $note)
+                } else {
+                    Section("Note (optional)") {
+                        TextField("e.g. Mickey pretzel", text: $note)
+                    }
                 }
             }
             .navigationTitle("Add Purchase")
@@ -152,5 +168,15 @@ struct AddPurchaseView: View {
             }
         }
         .presentationDetents([.medium])
+        .sheet(isPresented: $showLocationPicker) {
+            LocationPickerView(
+                resort: resort,
+                category: category,
+                selectedPark: $selectedPark,
+                selectedLocation: $note,
+                isAPEligible: $isAPEligible
+            )
+            .presentationDetents([.large])
+        }
     }
 }

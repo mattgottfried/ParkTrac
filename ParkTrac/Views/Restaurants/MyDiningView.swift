@@ -189,6 +189,9 @@ struct AddReservationSheet: View {
     @Environment(\.modelContext) private var context
 
     @State private var restaurantName = ""
+    @State private var restaurantPark = ""
+    @State private var isAPEligible = true
+    @State private var showLocationPicker = false
     @State private var date = Date()
     @State private var partySize = 2
     @State private var confirmationNumber = ""
@@ -198,7 +201,20 @@ struct AddReservationSheet: View {
         NavigationStack {
             Form {
                 Section("Restaurant") {
-                    TextField("Restaurant name", text: $restaurantName)
+                    Button {
+                        showLocationPicker = true
+                    } label: {
+                        HStack {
+                            Text(restaurantName.isEmpty ? "Choose restaurant…" : restaurantName)
+                                .foregroundStyle(restaurantName.isEmpty ? Color.secondary : Color.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    if !restaurantPark.isEmpty {
+                        Text(restaurantPark).font(.caption).foregroundStyle(.secondary)
+                    }
                 }
 
                 Section("Details") {
@@ -218,6 +234,16 @@ struct AddReservationSheet: View {
             }
             .navigationTitle("Add Reservation")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showLocationPicker) {
+                LocationPickerView(
+                    resort: resort,
+                    category: "Food",
+                    selectedPark: $restaurantPark,
+                    selectedLocation: $restaurantName,
+                    isAPEligible: $isAPEligible
+                )
+                .presentationDetents([.large])
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

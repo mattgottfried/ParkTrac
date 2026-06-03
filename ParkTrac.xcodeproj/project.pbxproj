@@ -96,6 +96,7 @@
 		AA0000000000000000000179 /* SmartPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017A /* SmartPlannerView.swift */; };
 		AA000000000000000000017B /* TicketPriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017C /* TicketPriceService.swift */; };
 		AA000000000000000000017D /* PassSavingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017E /* PassSavingsView.swift */; };
+		AA000000000000000000017F /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000180 /* LocationPickerView.swift */; };
 		C960576D2FCFA0690034AD70 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = C960576C2FCFA0690034AD70 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
@@ -191,6 +192,7 @@
 		AA000000000000000000017A /* SmartPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartPlannerView.swift; sourceTree = "<group>"; };
 		AA000000000000000000017C /* TicketPriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketPriceService.swift; sourceTree = "<group>"; };
 		AA000000000000000000017E /* PassSavingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassSavingsView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000180 /* LocationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -381,6 +383,7 @@
 				AA0000000000000000000134 /* SpendingView.swift */,
 				AA000000000000000000013D /* APOffersView.swift */,
 				AA0000000000000000000163 /* WaitAccuracyCard.swift */,
+				AA0000000000000000000180 /* LocationPickerView.swift */,
 			);
 			path = Stats;
 			sourceTree = "<group>";
@@ -582,6 +585,7 @@
 				AA0000000000000000000179 /* SmartPlannerView.swift in Sources */,
 				AA000000000000000000017B /* TicketPriceService.swift in Sources */,
 				AA000000000000000000017D /* PassSavingsView.swift in Sources */,
+				AA000000000000000000017F /* LocationPickerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
