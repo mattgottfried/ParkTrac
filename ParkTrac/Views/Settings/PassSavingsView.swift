@@ -67,11 +67,19 @@ struct PassSavingsView: View {
         universalPurchases.filter { $0.category == "Food" && $0.isAPEligible }.map(\.amount).reduce(0, +)
     }
 
+    // Amounts entered are post-discount (what the user actually paid).
+    // To recover the original discount amount: savings = paid × rate / (1 − rate)
     private var disneyDiscountSavings: Double {
-        disneyMerchSpend * disneyMerchRate + disneyFoodSpend * disneyFoodRate
+        let merch = disneyMerchRate > 0 ? disneyMerchSpend * disneyMerchRate / (1 - disneyMerchRate) : 0
+        let food  = disneyFoodRate  > 0 ? disneyFoodSpend  * disneyFoodRate  / (1 - disneyFoodRate)  : 0
+        return merch + food
     }
     private var universalDiscountSavings: Double {
-        universalMerchSpend * universalMerchRate + universalFoodSpend * universalFoodRate
+        let mRate = universalMerchRate
+        let fRate = universalFoodRate
+        let merch = mRate > 0 ? universalMerchSpend * mRate / (1 - mRate) : 0
+        let food  = fRate > 0 ? universalFoodSpend  * fRate / (1 - fRate) : 0
+        return merch + food
     }
 
     private var disneyTotalSavings: Double { disneyVisitSavings + disneyDiscountSavings }
