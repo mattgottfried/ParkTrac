@@ -151,7 +151,7 @@ final class WaitTimesViewModel {
     /// Map annotations: operating rides only (no closed/blocked markers on map)
     var ridesWithLocation: [DisplayRide] {
         allRides
-            .filter { $0.isOperating }
+            .filter { $0.isOperating || $0.status == "DOWN" }
             .filter { !blockedAttractions.contains($0.name) }
             .filter { $0.coordinate != nil }
     }
