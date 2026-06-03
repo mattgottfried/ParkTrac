@@ -1,7 +1,8 @@
 import Foundation
 
 // MARK: - BlockOutService
-// Pure enum — no state, all static functions.
+// Exact blockout dates sourced from blockoutcalendars.com (retrieved Jun 2, 2026).
+// Uses date-string lookup sets for accuracy — no algorithmic approximations.
 
 enum BlockOutService {
 
@@ -10,198 +11,175 @@ enum BlockOutService {
     static func isBlockedOut(_ date: Date, disney tier: DisneyPassTier) -> Bool {
         switch tier {
         case .none:      return false
-        case .incredi:   return false
-        case .sorcerer:  return disneyCoreDates(date)
-        case .pirate:    return disneyCoreDates(date) || allSaturdaysJunAug(date)
-        case .pixieDust: return disneyCoreDates(date)
-                             || allSaturdaysJunAug(date)
-                             || jul4Week(date)
-                             || laborDayWeekend(date)
-                             || mlkWeekend(date)
-                             || presidentsWeekend(date)
+        case .incredi:   return false          // no blockouts
+        case .sorcerer:  return disneyDateKey(date, in: sorcererDates)
+        case .pirate:    return disneyDateKey(date, in: pirateDates)
+        case .pixieDust: return disneyDateKey(date, in: pixieDustDates)
         }
     }
 
     // MARK: - Universal
 
+    /// Returns true when the date is blocked for the primary Universal parks
+    /// (USF + IOA ± Epic Universe). Volcano-Bay-only blockouts are ignored since
+    /// most visitors are going to the main parks.
     static func isBlockedOut(_ date: Date, universal tier: UniversalPassTier) -> Bool {
         switch tier {
         case .none:      return false
-        case .premier:   return false
-        case .preferred: return christmasNYE(date)
-        case .power:     return allWeekendsYearRound(date) || disneyCoreDates(date)
-        case .select:    return allWeekendsYearRound(date) || disneyCoreDates(date)
-                             || memorialDayWeekend(date) || jul4Week(date)
-        case .seasonal:  return allWeekendsYearRound(date) || disneyCoreDates(date)
-                             || memorialDayWeekend(date) || jul4Week(date)
-                             || allJunAug(date)
+        case .premier:   return false          // no blockouts
+        case .preferred: return universalDateKey(date, in: preferredDates)
+        case .power:     return universalDateKey(date, in: powerDates)
+        case .select:    return universalDateKey(date, in: selectDates)
+        case .seasonal:  return universalDateKey(date, in: seasonalDates)
         }
     }
 
-    // MARK: - Shared Block-out Ranges
+    // MARK: - Helpers
 
-    /// Christmas / NYE: Dec 20 – Jan 1
-    private static func christmasNYE(_ date: Date) -> Bool {
+    private static func key(_ date: Date) -> String {
         let cal = Calendar.current
-        let month = cal.component(.month, from: date)
-        let day   = cal.component(.day,   from: date)
-        if month == 12 && day >= 20 { return true }
-        if month == 1  && day == 1  { return true }
-        return false
+        return String(format: "%04d-%02d-%02d",
+                      cal.component(.year,  from: date),
+                      cal.component(.month, from: date),
+                      cal.component(.day,   from: date))
     }
 
-    /// Spring Break: Mar 8 – Apr 18
-    private static func springBreak(_ date: Date) -> Bool {
-        let cal   = Calendar.current
-        let month = cal.component(.month, from: date)
-        let day   = cal.component(.day,   from: date)
-        if month == 3 && day >= 8  { return true }
-        if month == 4 && day <= 18 { return true }
-        return false
+    private static func disneyDateKey(_ date: Date, in set: Set<String>) -> Bool {
+        set.contains(key(date))
+    }
+    private static func universalDateKey(_ date: Date, in set: Set<String>) -> Bool {
+        set.contains(key(date))
     }
 
-    /// Peak Summer: Jun 14 – Aug 9
-    private static func peakSummer(_ date: Date) -> Bool {
-        let cal   = Calendar.current
-        let month = cal.component(.month, from: date)
-        let day   = cal.component(.day,   from: date)
-        if month == 6 && day >= 14 { return true }
-        if month == 7              { return true }
-        if month == 8 && day <= 9  { return true }
-        return false
-    }
+    // MARK: - Disney Pixie Dust Dates
 
-    /// Thanksgiving week: Thu–Sun of the 4th Thursday in November
-    private static func thanksgivingWeekend(_ date: Date) -> Bool {
-        let cal  = Calendar.current
-        let year = cal.component(.year, from: date)
-        // Find 4th Thursday of November
-        guard let nov1 = cal.date(from: DateComponents(year: year, month: 11, day: 1)) else { return false }
-        var thurCount = 0
-        var cursor = nov1
-        while true {
-            if cal.component(.weekday, from: cursor) == 5 { // Thursday = 5
-                thurCount += 1
-                if thurCount == 4 { break }
-            }
-            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
+    private static let pixieDustDates: Set<String> = {
+        var dates = Set<String>()
+        // 2026
+        add(&dates, 2026, 1, [3,4,10,11,17,18,19,24,25,31])
+        add(&dates, 2026, 2, [1,7,8,14,15,16,21,22,28])
+        add(&dates, 2026, 3, [1,7,8] + Array(14...22) + Array(28...31))
+        add(&dates, 2026, 4, Array(1...12) + [18,19,25,26])
+        add(&dates, 2026, 5, [2,3,9,10,16,17,23,24,25,30,31])
+        add(&dates, 2026, 6, [6,7,13,14,20,21,27,28])
+        add(&dates, 2026, 7, Array(2...6) + [11,12,18,19,25,26])
+        add(&dates, 2026, 8, [1,2,8,9,15,16,22,23,29,30])
+        add(&dates, 2026, 9, [5,6,7,12,13,19,20,26,27])
+        add(&dates, 2026, 10, [3,4,10,11,12,17,18,24,25,31])
+        add(&dates, 2026, 11, [1,7,8,14,15] + Array(20...29))
+        add(&dates, 2026, 12, [5,6,12,13] + Array(18...31))
+        // 2027
+        add(&dates, 2027, 1, [1,2,3,9,10,16,17,18,23,24,30,31])
+        add(&dates, 2027, 2, [6,7,13,14,15,20,21,27,28])
+        add(&dates, 2027, 3, [6,7] + Array(13...31))
+        add(&dates, 2027, 4, [1,2,3,4,10,11,17,18,24,25])
+        add(&dates, 2027, 5, [1,2,8,9,15,16,22,23,29,30,31])
+        add(&dates, 2027, 6, [5,6,12,13,19,20,26,27])
+        return dates
+    }()
+
+    // MARK: - Disney Pirate Dates
+
+    private static let pirateDates: Set<String> = {
+        var dates = Set<String>()
+        // 2026
+        add(&dates, 2026, 1, [1,2,17,18,19])
+        add(&dates, 2026, 2, [14,15,16])
+        add(&dates, 2026, 3, Array(14...21) + [29,30,31])
+        add(&dates, 2026, 4, Array(1...9))
+        add(&dates, 2026, 5, [23,24,25])
+        add(&dates, 2026, 7, [2,3,4,5])
+        add(&dates, 2026, 9, [5,6,7])
+        add(&dates, 2026, 10, [10,11,12])
+        add(&dates, 2026, 11, Array(20...28))
+        add(&dates, 2026, 12, Array(19...31))
+        // 2027
+        add(&dates, 2027, 1, [1,2,16,17,18])
+        add(&dates, 2027, 2, [13,14,15])
+        add(&dates, 2027, 3, Array(13...31))
+        add(&dates, 2027, 4, [1])
+        add(&dates, 2027, 5, [29,30,31])
+        return dates
+    }()
+
+    // MARK: - Disney Sorcerer Dates
+
+    private static let sorcererDates: Set<String> = {
+        var dates = Set<String>()
+        // 2026
+        add(&dates, 2026, 1, [1])
+        add(&dates, 2026, 11, [25,26,27,28])
+        add(&dates, 2026, 12, Array(20...31))
+        // 2027
+        add(&dates, 2027, 1, [1])
+        return dates
+    }()
+
+    // MARK: - Universal Seasonal (2-Park Seasonal) — most restrictive non-premier Disney equivalent
+
+    /// 2-Park Seasonal: all blockout dates that affect the main parks
+    private static let seasonalDates: Set<String> = {
+        var dates = Set<String>()
+        // 2026 — "All parks" or main-park blockouts
+        add(&dates, 2026, 1, [1,2,3,4])
+        add(&dates, 2026, 2, [4,7,15,21,28])
+        add(&dates, 2026, 3, [7] + Array(13...22) + [28,30,31])
+        add(&dates, 2026, 4, Array(1...11))
+        add(&dates, 2026, 7, Array(1...31))
+        add(&dates, 2026, 11, Array(23...28))
+        add(&dates, 2026, 12, Array(19...31))
+        // 2027
+        add(&dates, 2027, 1, [1,2,3])
+        add(&dates, 2027, 3, Array(15...31))
+        add(&dates, 2027, 4, [1,2,3])
+        add(&dates, 2027, 7, Array(1...31))
+        return dates
+    }()
+
+    // MARK: - Universal Select (2-Park Power)
+
+    private static let selectDates: Set<String> = {
+        var dates = Set<String>()
+        // 2026
+        add(&dates, 2026, 1, [1,2,3,4])
+        add(&dates, 2026, 3, [30,31])
+        add(&dates, 2026, 4, Array(1...11))
+        add(&dates, 2026, 12, Array(19...31))
+        // 2027
+        add(&dates, 2027, 1, [1,2,3])
+        add(&dates, 2027, 3, Array(15...27))
+        return dates
+    }()
+
+    // MARK: - Universal Power (3-Park Power)
+
+    private static let powerDates: Set<String> = {
+        var dates = Set<String>()
+        // 2026 — "All parks" and "USF & IOA" only (not Volcano Bay-only)
+        add(&dates, 2026, 1, [1,2,3,4])
+        add(&dates, 2026, 3, [30,31])
+        add(&dates, 2026, 4, Array(1...11))
+        add(&dates, 2026, 12, Array(19...31))
+        // 2027
+        add(&dates, 2027, 1, [1,2,3])
+        add(&dates, 2027, 3, Array(15...27))
+        return dates
+    }()
+
+    // MARK: - Universal Preferred (3-Park Preferred)
+    // Blockouts are Volcano Bay only — no main-park restrictions outside that
+
+    private static let preferredDates: Set<String> = {
+        // Preferred only blocks Volcano Bay (before 4pm in July/Aug)
+        // For the purposes of "can you go to the main parks" = never blocked
+        Set<String>()
+    }()
+
+    // MARK: - Date Set Builder
+
+    private static func add(_ set: inout Set<String>, _ year: Int, _ month: Int, _ days: [Int]) {
+        for day in days {
+            set.insert(String(format: "%04d-%02d-%02d", year, month, day))
         }
-        // cursor = 4th Thursday; block Thu–Sun
-        for offset in 0...3 {
-            if let d = cal.date(byAdding: .day, value: offset, to: cursor),
-               cal.isDate(d, inSameDayAs: date) { return true }
-        }
-        return false
-    }
-
-    /// Disney Sorcerer core dates: Christmas/NYE + Spring Break + Peak Summer + Thanksgiving
-    private static func disneyCoreDates(_ date: Date) -> Bool {
-        christmasNYE(date) || springBreak(date) || peakSummer(date) || thanksgivingWeekend(date)
-    }
-
-    /// All Saturdays in June–August
-    private static func allSaturdaysJunAug(_ date: Date) -> Bool {
-        let cal   = Calendar.current
-        let month = cal.component(.month, from: date)
-        guard month >= 6 && month <= 8 else { return false }
-        return cal.component(.weekday, from: date) == 7 // Saturday = 7
-    }
-
-    /// All of June, July, August
-    private static func allJunAug(_ date: Date) -> Bool {
-        let month = Calendar.current.component(.month, from: date)
-        return month >= 6 && month <= 8
-    }
-
-    /// Jul 4 week: Jun 28 – Jul 7
-    private static func jul4Week(_ date: Date) -> Bool {
-        let cal   = Calendar.current
-        let month = cal.component(.month, from: date)
-        let day   = cal.component(.day,   from: date)
-        if month == 6 && day >= 28 { return true }
-        if month == 7 && day <= 7  { return true }
-        return false
-    }
-
-    /// Labor Day weekend: Sat–Mon of first Mon in September
-    private static func laborDayWeekend(_ date: Date) -> Bool {
-        let cal  = Calendar.current
-        let year = cal.component(.year, from: date)
-        guard let sep1 = cal.date(from: DateComponents(year: year, month: 9, day: 1)) else { return false }
-        var cursor = sep1
-        while cal.component(.weekday, from: cursor) != 2 { // Monday = 2
-            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
-        }
-        // cursor = first Monday; block Sat–Mon
-        for offset in [-2, -1, 0] {
-            if let d = cal.date(byAdding: .day, value: offset, to: cursor),
-               cal.isDate(d, inSameDayAs: date) { return true }
-        }
-        return false
-    }
-
-    /// MLK weekend: Sat–Mon of 3rd Monday in January
-    private static func mlkWeekend(_ date: Date) -> Bool {
-        let cal  = Calendar.current
-        let year = cal.component(.year, from: date)
-        guard let jan1 = cal.date(from: DateComponents(year: year, month: 1, day: 1)) else { return false }
-        var monCount = 0
-        var cursor = jan1
-        while true {
-            if cal.component(.weekday, from: cursor) == 2 {
-                monCount += 1
-                if monCount == 3 { break }
-            }
-            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
-        }
-        for offset in [-2, -1, 0] {
-            if let d = cal.date(byAdding: .day, value: offset, to: cursor),
-               cal.isDate(d, inSameDayAs: date) { return true }
-        }
-        return false
-    }
-
-    /// Presidents' weekend: Sat–Mon of 3rd Monday in February
-    private static func presidentsWeekend(_ date: Date) -> Bool {
-        let cal  = Calendar.current
-        let year = cal.component(.year, from: date)
-        guard let feb1 = cal.date(from: DateComponents(year: year, month: 2, day: 1)) else { return false }
-        var monCount = 0
-        var cursor = feb1
-        while true {
-            if cal.component(.weekday, from: cursor) == 2 {
-                monCount += 1
-                if monCount == 3 { break }
-            }
-            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
-        }
-        for offset in [-2, -1, 0] {
-            if let d = cal.date(byAdding: .day, value: offset, to: cursor),
-               cal.isDate(d, inSameDayAs: date) { return true }
-        }
-        return false
-    }
-
-    /// Memorial Day weekend: Sat–Mon of last Monday in May
-    private static func memorialDayWeekend(_ date: Date) -> Bool {
-        let cal  = Calendar.current
-        let year = cal.component(.year, from: date)
-        // Last Monday of May
-        guard let may31 = cal.date(from: DateComponents(year: year, month: 5, day: 31)) else { return false }
-        var cursor = may31
-        while cal.component(.weekday, from: cursor) != 2 {
-            cursor = cal.date(byAdding: .day, value: -1, to: cursor)!
-        }
-        for offset in [-2, -1, 0] {
-            if let d = cal.date(byAdding: .day, value: offset, to: cursor),
-               cal.isDate(d, inSameDayAs: date) { return true }
-        }
-        return false
-    }
-
-    /// All Saturdays and Sundays year-round
-    private static func allWeekendsYearRound(_ date: Date) -> Bool {
-        let weekday = Calendar.current.component(.weekday, from: date)
-        return weekday == 1 || weekday == 7 // Sunday=1, Saturday=7
     }
 }
