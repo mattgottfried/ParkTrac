@@ -17,6 +17,7 @@ struct AddPlanItemView: View {
     @State private var llEnd: Date = Calendar.current.date(byAdding: .hour, value: 1, to: .now) ?? .now
     @State private var rideId = ""
     @State private var showLocationPicker = false
+    @State private var showActivityPicker = false
 
     init(resort: String, prefillRide: DisplayRide? = nil, prefillPark: String = "") {
         self.resort = resort
@@ -44,15 +45,6 @@ struct AddPlanItemView: View {
     ]
 
     private var currentKind: KindConfig { kinds.first(where: { $0.id == kind }) ?? kinds[0] }
-
-    // MARK: - Ride autocomplete
-
-    private var rideSuggestions: [DisplayRide] {
-        guard kind == "ride", !title.isEmpty, rideId.isEmpty else { return [] }
-        return Array(waitTimesVM.allRides
-            .filter { $0.name.localizedCaseInsensitiveContains(title) && $0.isOperating }
-            .prefix(5))
-    }
 
     // MARK: - Body
 
@@ -108,54 +100,32 @@ struct AddPlanItemView: View {
                             .buttonStyle(.plain)
                             .padding(.horizontal)
 
-                        } else if kind == "ride" {
-                            // Ride search with live waits
-                            VStack(spacing: 0) {
-                                HStack(spacing: 10) {
-                                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                                    TextField("Search rides…", text: $title)
-                                        .onChange(of: title) { _, _ in rideId = "" }
-                                    if !title.isEmpty {
-                                        Button { title = ""; rideId = "" } label: {
-                                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                        } else if kind == "ride" || kind == "show" || kind == "ll" {
+                            // Activity picker — park → ride/show drill-down
+                            Button {
+                                showActivityPicker = true
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(kind == "show" ? "Show" : "Ride")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.secondary)
+                                        Text(title.isEmpty ? "Choose \(kind == "show" ? "show" : "ride")…" : title)
+                                            .font(.subheadline)
+                                            .foregroundStyle(title.isEmpty ? Color.secondary : Color.primary)
+                                        if !parkName.isEmpty {
+                                            Text(parkName).font(.caption2).foregroundStyle(.secondary)
                                         }
-                                        .buttonStyle(.plain)
                                     }
+                                    Spacer()
+                                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
                                 }
                                 .padding()
                                 .background(Color(.secondarySystemGroupedBackground),
                                             in: RoundedRectangle(cornerRadius: 14))
-                                .padding(.horizontal)
-
-                                if !rideSuggestions.isEmpty {
-                                    VStack(spacing: 1) {
-                                        ForEach(rideSuggestions) { ride in
-                                            RideSuggestionRow(ride: ride, parkName: rideParkName(ride)) {
-                                                title = ride.name
-                                                rideId = ride.id
-                                                let p = rideParkName(ride)
-                                                if !p.isEmpty { parkName = p }
-                                            }
-                                        }
-                                    }
-                                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                                    .padding(.horizontal)
-                                }
-
-                                // Park shown when ride selected
-                                if !parkName.isEmpty && !rideId.isEmpty {
-                                    HStack {
-                                        Image(systemName: "mappin.circle.fill").foregroundStyle(.blue)
-                                        Text(parkName).font(.subheadline)
-                                        Spacer()
-                                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                                    }
-                                    .padding()
-                                    .background(Color(.secondarySystemGroupedBackground),
-                                                in: RoundedRectangle(cornerRadius: 14))
-                                    .padding(.horizontal)
-                                }
                             }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal)
 
                         } else if kind == "note" {
                             // Note — just a text area
@@ -167,8 +137,7 @@ struct AddPlanItemView: View {
                                 .padding(.horizontal)
 
                         } else {
-                            // Show or generic
-                            TextField(kind == "ll" ? "Ride name" : "Name", text: $title)
+                            TextField("Name", text: $title)
                                 .padding()
                                 .background(Color(.secondarySystemGroupedBackground),
                                             in: RoundedRectangle(cornerRadius: 14))
@@ -267,6 +236,16 @@ struct AddPlanItemView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            .sheet(isPresented: $showActivityPicker) {
+                ActivityPickerSheet(
+                    kind: kind,
+                    selectedTitle: $title,
+                    selectedPark: $parkName,
+                    selectedRideId: $rideId
+                )
+                .environment(waitTimesVM)
+                .presentationDetents([.large])
+            }
             .sheet(isPresented: $showLocationPicker) {
                 let dummy = Binding<Bool>(get: { true }, set: { _ in })
                 LocationPickerView(
@@ -317,41 +296,6 @@ struct AddPlanItemView: View {
         "\(Self.timeFmt.string(from: llStart)) – \(Self.timeFmt.string(from: llEnd))"
     }
 
-    private func rideParkName(_ ride: DisplayRide) -> String {
-        waitTimesVM.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
-    }
-
-    private struct RideSuggestionRow: View {
-        let ride: DisplayRide
-        let parkName: String
-        let onSelect: () -> Void
-
-        var body: some View {
-            Button(action: onSelect) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(ride.name).font(.subheadline).foregroundStyle(Color.primary)
-                        if !parkName.isEmpty {
-                            Text(parkName).font(.caption2).foregroundStyle(Color.secondary)
-                        }
-                    }
-                    Spacer()
-                    if let wait = ride.waitMinutes {
-                        let color: Color = wait < 30 ? .green : (wait < 60 ? Color(red:1,green:0.75,blue:0) : .red)
-                        Text("\(wait)m")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(color, in: Capsule())
-                    }
-                }
-                .padding(.horizontal).padding(.vertical, 10)
-            }
-            .buttonStyle(.plain)
-            .background(Color(.secondarySystemGroupedBackground))
-        }
-    }
-
     private func waitColor(_ minutes: Int) -> Color {
         if minutes < 30 { return .green }
         if minutes < 60 { return Color(red: 1, green: 0.75, blue: 0) }
@@ -386,5 +330,146 @@ struct AddPlanItemView: View {
         context.insert(item)
         try? context.save()
         dismiss()
+    }
+}
+
+// MARK: - Activity Picker Sheet (Ride / Show / LL drill-down)
+
+private struct ActivityPickerSheet: View {
+    let kind: String                    // "ride", "show", or "ll"
+    @Binding var selectedTitle: String
+    @Binding var selectedPark: String
+    @Binding var selectedRideId: String
+
+    @Environment(WaitTimesViewModel.self) private var waitTimesVM
+    @Environment(\.dismiss) private var dismiss
+    @State private var drillPark: ParkEntity? = nil
+    @State private var searchText = ""
+
+    private var isShowPicker: Bool { kind == "show" }
+
+    private var filteredRides: [DisplayRide] {
+        guard let park = drillPark else { return [] }
+        return waitTimesVM.allRides
+            .filter { $0.parkId == park.id && $0.isOperating }
+            .filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
+            .sorted { $0.name < $1.name }
+    }
+
+    private var filteredShows: [DisplayShow] {
+        guard let park = drillPark else { return [] }
+        return waitTimesVM.currentShows
+            .filter { $0.parkId == park.id }
+            .filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
+            .sorted { $0.name < $1.name }
+    }
+
+    private static let timeFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "h:mm a"; return f
+    }()
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if let park = drillPark {
+                    activityList(for: park)
+                } else {
+                    parkList
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    if drillPark != nil {
+                        Button("Back") { drillPark = nil; searchText = "" }
+                    } else {
+                        Button("Cancel") { dismiss() }
+                    }
+                }
+            }
+        }
+    }
+
+    private var parkList: some View {
+        List(waitTimesVM.currentParks, id: \.id) { park in
+            Button {
+                drillPark = park
+                searchText = ""
+            } label: {
+                HStack {
+                    Text(park.name).foregroundStyle(Color.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .navigationTitle(isShowPicker ? "Select Show" : "Select Ride")
+    }
+
+    private func activityList(for park: ParkEntity) -> some View {
+        Group {
+            if isShowPicker {
+                List(filteredShows) { show in
+                    Button {
+                        selectedTitle = show.name
+                        selectedPark = park.name
+                        selectedRideId = ""
+                        dismiss()
+                    } label: {
+                        ShowPickerRow(show: show)
+                    }
+                }
+            } else {
+                List(filteredRides) { ride in
+                    Button {
+                        selectedTitle = ride.name
+                        selectedPark = park.name
+                        selectedRideId = ride.id
+                        dismiss()
+                    } label: {
+                        RidePickerRow(ride: ride)
+                    }
+                }
+            }
+        }
+        .navigationTitle(park.name)
+        .searchable(text: $searchText, prompt: "Search")
+    }
+}
+
+// MARK: - Row cells (extracted for type-check budget)
+
+private struct RidePickerRow: View {
+    let ride: DisplayRide
+    var body: some View {
+        HStack {
+            Text(ride.name).foregroundStyle(Color.primary)
+            Spacer()
+            if let wait = ride.waitMinutes {
+                let color: Color = wait < 30 ? .green : (wait < 60 ? Color(red:1,green:0.75,blue:0) : .red)
+                Text("\(wait)m")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(color, in: Capsule())
+            } else {
+                Text("Open").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+private struct ShowPickerRow: View {
+    let show: DisplayShow
+    private static let fmt: DateFormatter = { let f = DateFormatter(); f.dateFormat = "h:mm a"; return f }()
+    var body: some View {
+        HStack {
+            Text(show.name).foregroundStyle(Color.primary)
+            Spacer()
+            if let next = show.nextShowtime {
+                Text(Self.fmt.string(from: next))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
     }
 }
