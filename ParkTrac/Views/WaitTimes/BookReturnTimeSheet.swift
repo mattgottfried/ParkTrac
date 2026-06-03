@@ -126,10 +126,13 @@ struct BookReturnTimeSheet: View {
         context.insert(item)
         try? context.save()
         let passId = "\(ride.id)-\(Int(returnStart.timeIntervalSince1970))"
-        NotificationService.shared.scheduleLLReminder(
-            passId: passId,
-            rideName: ride.name,
-            returnEnd: returnEnd
-        )
+        Task {
+            await NotificationService.shared.requestAuthorization()
+            NotificationService.shared.scheduleLLReminder(
+                passId: passId,
+                rideName: ride.name,
+                returnEnd: returnEnd
+            )
+        }
     }
 }
