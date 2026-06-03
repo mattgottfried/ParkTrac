@@ -207,19 +207,6 @@ struct StatsView: View {
                     // Crowd Calendar card
                     CrowdCalendarCard(resort: appState.selectedResort)
 
-                    // AP Offers teaser
-                    statsCard(title: "AP Offers", systemImage: "tag.fill", color: .blue) {
-                        HStack {
-                            Text("Perks & discounts for your passes")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            NavigationLink("View All") { APOffersView() }
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.blue)
-                        }
-                    }
-
                     // Badges teaser
                     badgesTeaser
                 }
