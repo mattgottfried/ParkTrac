@@ -147,11 +147,11 @@ struct RideDetailSheet: View {
 
                 Divider()
 
-                // Book Return Time section
+                // Log Return Time section
                 Button {
                     showBookReturnSheet = true
                 } label: {
-                    Label("Book Return Time", systemImage: "clock.badge.checkmark")
+                    Label("Log Return Time", systemImage: "clock.badge.checkmark")
                         .font(.subheadline.weight(.medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 4)
