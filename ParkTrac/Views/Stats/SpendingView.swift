@@ -106,7 +106,7 @@ struct AddPurchaseView: View {
     @State private var amount = ""
     @State private var category = "Food"
     @State private var note = ""
-    @State private var isAPEligible = true
+    @State private var isAPEligible = false
     @State private var selectedPark = ""
     @State private var showLocationPicker = false
     private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
