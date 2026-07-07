@@ -7,7 +7,7 @@ final class NotificationService {
     static let shared = NotificationService()
 
     func requestAuthorization() async {
-        try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
     }
 
     func checkAlerts(rides: [DisplayRide], context: ModelContext) {

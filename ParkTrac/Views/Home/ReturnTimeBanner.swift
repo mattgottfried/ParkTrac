@@ -14,7 +14,7 @@ struct ReturnTimeBanner: View {
         return allItems.filter { item in
             guard (item.kind == "ll" || item.kind == "aap") && !item.isDone else { return false }
             guard item.resort == resort else { return false }
-            guard Calendar.current.isDate(item.date ?? now, inSameDayAs: today) else { return false }
+            guard Calendar.current.isDate(item.date, inSameDayAs: today) else { return false }
             guard let end = item.llReturnEnd, end != .distantFuture else { return false }
             let minsLeft = end.timeIntervalSince(now) / 60
             return minsLeft > 0 && minsLeft <= 15   // within 15 min of closing
