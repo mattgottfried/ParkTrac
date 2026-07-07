@@ -368,6 +368,7 @@ struct ParkMapView: View {
         .onChange(of: region.center.longitude) { _, _ in autoSelectParkFromRegion() }
         .onChange(of: viewModel.lastRefreshed) { _, _ in
             NotificationService.shared.checkAlerts(rides: viewModel.allRides, context: modelContext)
+            WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
         }
         .sheet(item: $selectedRide) { ride in
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
