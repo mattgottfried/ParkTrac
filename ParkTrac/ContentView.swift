@@ -15,7 +15,6 @@ struct ContentView: View {
             if appState.activeTimerRideId != nil {
                 WaitTimerBanner(appState: appState)
             }
-            AdBannerView()
             Divider()
 
             TabView {

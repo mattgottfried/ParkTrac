@@ -35,8 +35,6 @@
 	<array>
 		<string>fetch</string>
 	</array>
-	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-8284895327083883~1641267185</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
