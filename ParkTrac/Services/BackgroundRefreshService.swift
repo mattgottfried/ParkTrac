@@ -23,7 +23,7 @@ struct BackgroundRefreshService {
         // Reschedule immediately so the next run is always queued
         schedule()
 
-        let container = try? ModelContainer(for: WaitTimeRecord.self, DowntimeRecord.self)
+        let container = try? PersistenceController.makeTelemetryContainer()
         guard let container else {
             task.setTaskCompleted(success: false)
             return

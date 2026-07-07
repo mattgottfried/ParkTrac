@@ -6,6 +6,9 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if PersistenceController.storageMode == .inMemory {
+                StorageWarningBanner()
+            }
             ResortBannerView(appState: appState)
             TodayBlockOutBanner(appState: appState)
             ReturnTimeBanner()
@@ -58,6 +61,24 @@ struct ContentView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
+    }
+}
+
+// MARK: - Storage Warning Banner
+
+private struct StorageWarningBanner: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 13, weight: .semibold))
+            Text("Storage unavailable — changes won't be saved")
+                .font(.caption.weight(.semibold))
+            Spacer()
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.red)
     }
 }
 

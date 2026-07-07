@@ -97,6 +97,7 @@
 		AA000000000000000000017B /* TicketPriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017C /* TicketPriceService.swift */; };
 		AA000000000000000000017D /* PassSavingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017E /* PassSavingsView.swift */; };
 		AA000000000000000000017F /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000180 /* LocationPickerView.swift */; };
+		AA0000000000000000000182 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000181 /* PersistenceController.swift */; };
 		C960576D2FCFA0690034AD70 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = C960576C2FCFA0690034AD70 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
@@ -188,6 +189,7 @@
 		AA000000000000000000016F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000171 /* DiningSeedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiningSeedService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000173 /* StoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000181 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		AA0000000000000000000175 /* AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdBannerView.swift; sourceTree = "<group>"; };
 		AA000000000000000000017A /* SmartPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartPlannerView.swift; sourceTree = "<group>"; };
 		AA000000000000000000017C /* TicketPriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketPriceService.swift; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 				AA000000000000000000017C /* TicketPriceService.swift */,
 				AA0000000000000000000171 /* DiningSeedService.swift */,
 				AA0000000000000000000173 /* StoreService.swift */,
+				AA0000000000000000000181 /* PersistenceController.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -586,6 +589,7 @@
 				AA000000000000000000017B /* TicketPriceService.swift in Sources */,
 				AA000000000000000000017D /* PassSavingsView.swift in Sources */,
 				AA000000000000000000017F /* LocationPickerView.swift in Sources */,
+				AA0000000000000000000182 /* PersistenceController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
