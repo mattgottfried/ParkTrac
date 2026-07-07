@@ -8,6 +8,22 @@ struct SettingsView: View {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
     }
 
+    private var storageDescription: String {
+        switch PersistenceController.storageMode {
+        case .cloud: return "On"
+        case .localOnly: return "Off — on-device only"
+        case .inMemory: return "Temporary — data won't be saved"
+        }
+    }
+
+    private var storageIcon: String {
+        switch PersistenceController.storageMode {
+        case .cloud: return "icloud.fill"
+        case .localOnly: return "icloud.slash"
+        case .inMemory: return "exclamationmark.triangle.fill"
+        }
+    }
+
     var body: some View {
         @Bindable var state = appState
         NavigationStack {
@@ -134,8 +150,20 @@ struct SettingsView: View {
                         Text(appVersion)
                             .foregroundStyle(.secondary)
                     }
+                    HStack {
+                        Label("iCloud Sync", systemImage: storageIcon)
+                        Spacer()
+                        Text(storageDescription)
+                            .foregroundStyle(PersistenceController.storageMode == .inMemory ? .red : .secondary)
+                    }
                 } header: {
                     Text("About")
+                } footer: {
+                    if PersistenceController.storageMode != .cloud {
+                        Text(PersistenceController.storageMode == .inMemory
+                            ? "The data store could not be opened. Changes made this session will not be saved."
+                            : "iCloud is unavailable, so your data is stored on this device only.")
+                    }
                 }
             }
             .navigationTitle("Settings")

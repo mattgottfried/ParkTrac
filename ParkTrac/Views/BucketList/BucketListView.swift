@@ -5,6 +5,19 @@ enum BucketTab: String, CaseIterable {
     case hotels = "Hotels"
 }
 
+/// Shared filter/sort options for the restaurant and hotel checklists
+enum BucketVisitedFilter: String, CaseIterable {
+    case all = "All"
+    case visited = "Visited"
+    case notVisited = "Not Visited"
+}
+
+enum BucketSortOrder: String, CaseIterable {
+    case name = "Name"
+    case rating = "Rating"
+    case dateVisited = "Date Visited"
+}
+
 struct BucketListView: View {
     @Environment(AppState.self) private var appState
     @State private var selectedTab: BucketTab = .restaurants

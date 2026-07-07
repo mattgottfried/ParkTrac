@@ -5,9 +5,45 @@ struct HotelListView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \HotelStay.hotelName) private var allHotels: [HotelStay]
     @State private var selectedHotel: HotelStay?
+    @State private var visitedFilter: BucketVisitedFilter = .all
+    @State private var tierFilter: String?
+    @State private var sortOrder: BucketSortOrder = .name
+    @State private var showAddSheet = false
+
+    static func tiers(for resort: ParkGroup) -> [String] {
+        resort == .disney
+            ? ["Value", "Moderate", "Deluxe", "Disney Vacation Club"]
+            : ["Premier", "Preferred", "Standard"]
+    }
 
     private var resortHotels: [HotelStay] {
         allHotels.filter { $0.resort == appState.selectedResort.rawValue }
+    }
+
+    private var filtered: [HotelStay] {
+        resortHotels
+            .filter {
+                switch visitedFilter {
+                case .all: return true
+                case .visited: return $0.isVisited
+                case .notVisited: return !$0.isVisited
+                }
+            }
+            .filter { tierFilter == nil || $0.tier == tierFilter }
+            .sorted { lhs, rhs in
+                switch sortOrder {
+                case .name:
+                    return lhs.hotelName.localizedCompare(rhs.hotelName) == .orderedAscending
+                case .rating:
+                    return (lhs.averageRating ?? -1) > (rhs.averageRating ?? -1)
+                case .dateVisited:
+                    return (lhs.checkIn ?? .distantPast) > (rhs.checkIn ?? .distantPast)
+                }
+            }
+    }
+
+    private var hasActiveFilters: Bool {
+        visitedFilter != .all || tierFilter != nil || sortOrder != .name
     }
 
     var body: some View {
@@ -25,16 +61,58 @@ struct HotelListView: View {
             hotelStatsStrip
                 .padding(.bottom, 8)
 
-            List {
-                ForEach(resortHotels) { hotel in
-                    HotelRow(hotel: hotel)
-                        .contentShape(Rectangle())
-                        .onTapGesture { selectedHotel = hotel }
+            if filtered.isEmpty {
+                ContentUnavailableView(
+                    "No Matches",
+                    systemImage: "line.3.horizontal.decrease.circle",
+                    description: Text("No hotels match the current filters.")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(filtered) { hotel in
+                        HotelRow(hotel: hotel)
+                            .contentShape(Rectangle())
+                            .onTapGesture { selectedHotel = hotel }
+                    }
+                }
+                .listStyle(.plain)
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker("Show", selection: $visitedFilter) {
+                        ForEach(BucketVisitedFilter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    Picker("Tier", selection: $tierFilter) {
+                        Text("All Tiers").tag(String?.none)
+                        ForEach(Self.tiers(for: appState.selectedResort), id: \.self) { Text($0).tag(String?.some($0)) }
+                    }
+                    Picker("Sort By", selection: $sortOrder) {
+                        ForEach(BucketSortOrder.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                } label: {
+                    Image(systemName: hasActiveFilters
+                        ? "line.3.horizontal.decrease.circle.fill"
+                        : "line.3.horizontal.decrease.circle")
                 }
             }
-            .listStyle(.plain)
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showAddSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
         }
+        .onChange(of: appState.selectedResort) { _, _ in tierFilter = nil }
         .sheet(item: $selectedHotel) { HotelDetailView(hotel: $0) }
+        .sheet(isPresented: $showAddSheet) {
+            AddHotelSheet(resort: appState.selectedResort)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
     }
 
     // MARK: - Stats strip
@@ -143,5 +221,65 @@ private struct HotelRow: View {
         case "Moderate", "Standard": return .orange
         default:                     return .gray
         }
+    }
+}
+
+// MARK: - Add Custom Hotel
+
+private struct AddHotelSheet: View {
+    let resort: ParkGroup
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+
+    @State private var name = ""
+    @State private var tier: String
+
+    init(resort: ParkGroup) {
+        self.resort = resort
+        _tier = State(initialValue: HotelListView.tiers(for: resort).first ?? "")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Hotel") {
+                    TextField("Name", text: $name)
+                }
+                Section {
+                    Picker("Tier", selection: $tier) {
+                        ForEach(HotelListView.tiers(for: resort), id: \.self) { Text($0) }
+                    }
+                    .pickerStyle(.menu)
+                } header: {
+                    Text("Tier")
+                } footer: {
+                    Text("Added to your \(resort.rawValue) bucket list.")
+                }
+            }
+            .navigationTitle("Add Hotel")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") { save() }
+                        .fontWeight(.semibold)
+                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+    }
+
+    private func save() {
+        let hotel = HotelStay(
+            hotelName: name.trimmingCharacters(in: .whitespaces),
+            resort: resort.rawValue,
+            tier: tier
+        )
+        context.insert(hotel)
+        try? context.save()
+        dismiss()
     }
 }

@@ -7,25 +7,7 @@ import GoogleMobileAds
 
 @main
 struct ParkTracApp: App {
-    let container: ModelContainer = {
-        let schema = Schema([
-            BucketRestaurant.self,
-            HotelStay.self,
-            Restaurant.self,
-            WaitTimeRecord.self,
-            DowntimeRecord.self,
-            RideLog.self,
-            DiningReservation.self,
-            RideAlert.self,
-            PlanItem.self,
-            PurchaseLog.self,
-            Guest.self,
-            WaitTimerLog.self,
-            VisitSaving.self,
-        ])
-        let config = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
-        return try! ModelContainer(for: schema, configurations: [config])
-    }()
+    let container: ModelContainer = PersistenceController.container
 
     init() {
         BGTaskScheduler.shared.register(
@@ -49,7 +31,6 @@ struct ParkTracApp: App {
                 .task {
                     NSUbiquitousKeyValueStore.default.synchronize()
                     await BucketListService.shared.seedIfNeeded(context: container.mainContext)
-                    try? DiningSeedService.seedIfNeeded(context: container.mainContext)
                     BackgroundRefreshService.schedule()
                 }
         }
