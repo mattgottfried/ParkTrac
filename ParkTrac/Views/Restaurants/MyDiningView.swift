@@ -65,7 +65,7 @@ struct MyDiningView: View {
                     }
                 }
 
-                // Past reservations (collapsible)
+                // Past reservations (5 most recent, with link to full history)
                 if !pastReservations.isEmpty {
                     Section("Past Reservations") {
                         ForEach(pastReservations.prefix(5)) { res in
@@ -74,6 +74,16 @@ struct MyDiningView: View {
                         }
                         .onDelete { offsets in
                             deleteReservations(Array(pastReservations.prefix(5)), at: offsets)
+                        }
+
+                        if pastReservations.count > 5 {
+                            NavigationLink {
+                                PastReservationsListView(resort: appState.selectedResort.rawValue)
+                            } label: {
+                                Text("See All (\(pastReservations.count))")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.blue)
+                            }
                         }
                     }
                 }
@@ -124,6 +134,39 @@ struct MyDiningView: View {
         for index in offsets {
             context.delete(list[index])
         }
+        try? context.save()
+    }
+}
+
+// MARK: - Full Past Reservation History
+
+private struct PastReservationsListView: View {
+    let resort: String
+
+    @Query(sort: \DiningReservation.date, order: .reverse) private var allReservations: [DiningReservation]
+    @Environment(\.modelContext) private var context
+
+    private var pastReservations: [DiningReservation] {
+        let now = Date()
+        return allReservations.filter { $0.resort == resort && ($0.date < now || $0.isCompleted) }
+    }
+
+    var body: some View {
+        List {
+            ForEach(pastReservations) { res in
+                ReservationRow(reservation: res)
+            }
+            .onDelete { offsets in
+                for index in offsets {
+                    context.delete(pastReservations[index])
+                }
+                try? context.save()
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Past Reservations")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { EditButton() }
     }
 }
 

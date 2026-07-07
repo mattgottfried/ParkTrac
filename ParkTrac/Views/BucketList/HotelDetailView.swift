@@ -3,6 +3,7 @@ import PhotosUI
 
 struct HotelDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
     let hotel: HotelStay
 
     @State private var isVisited: Bool
@@ -14,6 +15,7 @@ struct HotelDetailView: View {
     @State private var notes: String
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var photoImages: [UIImage] = []
+    @State private var photosChanged = false
 
     init(hotel: HotelStay) {
         self.hotel = hotel
@@ -114,14 +116,16 @@ struct HotelDetailView: View {
     }
 
     private func loadPhotos(from items: [PhotosPickerItem]) async {
-        var loaded: [UIImage] = []
+        guard !items.isEmpty else { return }
+        // Append so newly picked photos join the already-saved ones
         for item in items {
             if let data = try? await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
-                loaded.append(image)
+                photoImages.append(image)
+                photosChanged = true
             }
         }
-        photoImages = loaded
+        selectedPhotos = []
     }
 
     private func save() async {
@@ -132,9 +136,11 @@ struct HotelDetailView: View {
         hotel.mattRating = isVisited ? mattRating : 0
         hotel.wifeRating = isVisited ? heatherRating : 0
         hotel.notes = notes
-        if !selectedPhotos.isEmpty {
+        // Re-encode only when photos changed — repeated JPEG passes degrade quality
+        if photosChanged {
             hotel.photoData = photoImages.compactMap { $0.jpegData(compressionQuality: 0.7) }
         }
+        try? context.save()
         dismiss()
     }
 }

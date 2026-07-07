@@ -14,6 +14,7 @@ final class BucketRestaurant {
     var wifeRating: Double = 0
     var notes: String = ""
     var isFromAPI: Bool = false
+    @Attribute(.externalStorage) var photoData: [Data] = []
 
     var averageRating: Double? {
         guard isVisited, mattRating > 0, wifeRating > 0 else { return nil }
@@ -41,5 +42,6 @@ final class BucketRestaurant {
         self.wifeRating = wifeRating
         self.notes = ""
         self.isFromAPI = isFromAPI
+        self.photoData = []
     }
 }
