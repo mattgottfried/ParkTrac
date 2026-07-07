@@ -54,6 +54,7 @@ final class WaitTimesViewModel {
     var selectedGroup: ParkGroup = .disney {
         didSet {
             filterPark = nil
+            rebuildAllRides()
             Task { await loadAllParksInGroup() }
         }
     }
@@ -65,6 +66,9 @@ final class WaitTimesViewModel {
     var currentParks: [ParkEntity] { parksByGroup[selectedGroup] ?? [] }
 
     private var attractionLocations: [String: CLLocationCoordinate2D] = [:]
+
+    /// Parks whose attraction locations have already been fetched (locations are static)
+    private var locationsFetchedParkIds: Set<String> = []
 
     /// Rides keyed by park ID — all parks in the current group
     private var ridesByPark: [String: [DisplayRide]] = [:]
@@ -78,10 +82,14 @@ final class WaitTimesViewModel {
     /// Sort preference — set from AppState/Settings
     var sortAlphabetical: Bool = false
 
-    /// Flat merge of rides for the **current group only** (prevents cross-resort bleed)
-    var allRides: [DisplayRide] {
+    /// Flat merge of rides for the **current group only** (prevents cross-resort bleed).
+    /// Stored (not computed) so map annotations, list, and crowd stats don't re-join
+    /// ridesByPark on every body evaluation — rebuilt once per refresh.
+    private(set) var allRides: [DisplayRide] = []
+
+    private func rebuildAllRides() {
         let currentParkIds = Set(currentParks.map(\.id))
-        return Array(ridesByPark.filter { currentParkIds.contains($0.key) }.values.joined())
+        allRides = Array(ridesByPark.filter { currentParkIds.contains($0.key) }.values.joined())
     }
 
     /// Shows for the currently filtered park (or all parks if no filter)
@@ -187,20 +195,32 @@ final class WaitTimesViewModel {
         guard let parks = parksByGroup[selectedGroup], !parks.isEmpty else { return }
         isLoading = true
         errorMessage = nil
-        await withTaskGroup(of: Void.self) { group in
+        var successCount = 0
+        await withTaskGroup(of: Bool.self) { group in
             for park in parks {
                 group.addTask { await self.loadRidesForPark(park) }
             }
+            for await succeeded in group where succeeded {
+                successCount += 1
+            }
         }
+        // Keep stale data visible on failure; only surface an error when nothing loaded
+        if successCount == 0 {
+            errorMessage = "Couldn't refresh wait times. Check your connection."
+        }
+        rebuildAllRides()
         lastRefreshed = .now
         isLoading = false
     }
 
     @MainActor
-    private func loadRidesForPark(_ park: ParkEntity) async {
-        // Fetch locations once per park
-        if attractionLocations[park.id] == nil {
+    private func loadRidesForPark(_ park: ParkEntity) async -> Bool {
+        // Fetch locations once per park (they're static; only retry after a failed fetch)
+        if !locationsFetchedParkIds.contains(park.id) {
             let attractions = (try? await ParkAPIService.shared.fetchAttractionChildren(parkId: park.id)) ?? []
+            if !attractions.isEmpty {
+                locationsFetchedParkIds.insert(park.id)
+            }
             for attraction in attractions {
                 if let coord = attraction.coordinate {
                     attractionLocations[attraction.id] = coord
@@ -208,7 +228,7 @@ final class WaitTimesViewModel {
             }
         }
 
-        guard let liveEntries = try? await ParkAPIService.shared.fetchLiveData(for: park.id) else { return }
+        guard let liveEntries = try? await ParkAPIService.shared.fetchLiveData(for: park.id) else { return false }
 
         let newRides = liveEntries
             .filter { $0.entityType == "ATTRACTION" }
@@ -230,6 +250,7 @@ final class WaitTimesViewModel {
                 schedulesByPark[scheduleKey] = schedule
             }
         }
+        return true
     }
 
     @MainActor
