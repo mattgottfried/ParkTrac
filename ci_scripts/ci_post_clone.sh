@@ -3,12 +3,17 @@
 # project so every archive uploads a CFBundleVersion TestFlight hasn't seen.
 # https://developer.apple.com/documentation/xcode/setting-the-next-build-number-for-xcode-cloud-builds
 #
-# The offset keeps new numbers above builds that were uploaded before Xcode
-# Cloud was set up (highest manual upload was 3).
+# The offset keeps new numbers above every build uploaded before Xcode Cloud
+# was set up.
 set -e
 
-buildNumberOffset=10
-newBuildNumber=$((CI_BUILD_NUMBER + buildNumberOffset))
+buildNumberOffset=20
+newBuildNumber=$((${CI_BUILD_NUMBER:?not set} + buildNumberOffset))
 
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 agvtool new-version -all "$newBuildNumber"
+
+# Belt and suspenders: write CFBundleVersion directly too, and show the result
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $newBuildNumber" ParkTrac/Info.plist || true
+echo "ci_post_clone: build number set to $newBuildNumber (CI_BUILD_NUMBER=$CI_BUILD_NUMBER)"
+grep -A1 CFBundleVersion ParkTrac/Info.plist
