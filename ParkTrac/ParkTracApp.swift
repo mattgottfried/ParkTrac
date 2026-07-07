@@ -1,9 +1,6 @@
 import SwiftUI
 import SwiftData
 import BackgroundTasks
-#if canImport(GoogleMobileAds)
-import GoogleMobileAds
-#endif
 
 @main
 struct ParkTracApp: App {
@@ -16,11 +13,6 @@ struct ParkTracApp: App {
         ) { task in
             BackgroundRefreshService.run(task: task as! BGAppRefreshTask)
         }
-        #if canImport(GoogleMobileAds)
-        MobileAds.shared.start { _ in
-            StoreService.shared.markAdsReady()
-        }
-        #endif
     }
 
     @Environment(\.scenePhase) private var scenePhase

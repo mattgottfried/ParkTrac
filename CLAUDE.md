@@ -27,9 +27,9 @@ There are no automated tests. Verification is done by building in Xcode and runn
 2. **My Day** — `DayPlannerView` — today's plan (rides, dining, Lightning Lane windows, guests)
 3. **Bucket List** — `BucketListView` — restaurants/hotels checklists with filters, sort, custom entries, and photos
 4. **Stats** — `StatsView` — hub linking dining log (`MyDiningView`), ride counter, spending, crowd calendar, badges, etc.
-5. **Settings** — `SettingsView` — prefs, resort switch, passes, tools, remove-ads IAP, storage/sync status
+5. **Settings** — `SettingsView` — prefs, resort switch, passes, tools, storage/sync status
 
-A banner stack (resort switcher, blockout, return-time, wait-timer, ads) sits above the TabView.
+A banner stack (resort switcher, blockout, return-time, wait-timer) sits above the TabView. The app has **no third-party dependencies** — no SPM packages (GoogleMobileAds was removed).
 
 ### Persistence (`PersistenceController.swift`)
 

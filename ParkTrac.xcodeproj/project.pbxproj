@@ -84,14 +84,11 @@
 		AA000000000000000000016A /* WaitTimerBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016B /* WaitTimerBanner.swift */; };
 		AA000000000000000000016C /* BookReturnTimeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016D /* BookReturnTimeSheet.swift */; };
 		AA000000000000000000016E /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016F /* OnboardingView.swift */; };
-		AA0000000000000000000172 /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000173 /* StoreService.swift */; };
-		AA0000000000000000000174 /* AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000175 /* AdBannerView.swift */; };
 		AA0000000000000000000179 /* SmartPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017A /* SmartPlannerView.swift */; };
 		AA000000000000000000017B /* TicketPriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017C /* TicketPriceService.swift */; };
 		AA000000000000000000017D /* PassSavingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017E /* PassSavingsView.swift */; };
 		AA000000000000000000017F /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000180 /* LocationPickerView.swift */; };
 		AA0000000000000000000182 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000181 /* PersistenceController.swift */; };
-		C960576D2FCFA0690034AD70 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = C960576C2FCFA0690034AD70 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -174,9 +171,7 @@
 		AA000000000000000000016B /* WaitTimerBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimerBanner.swift; sourceTree = "<group>"; };
 		AA000000000000000000016D /* BookReturnTimeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReturnTimeSheet.swift; sourceTree = "<group>"; };
 		AA000000000000000000016F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		AA0000000000000000000173 /* StoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000181 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
-		AA0000000000000000000175 /* AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdBannerView.swift; sourceTree = "<group>"; };
 		AA000000000000000000017A /* SmartPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartPlannerView.swift; sourceTree = "<group>"; };
 		AA000000000000000000017C /* TicketPriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketPriceService.swift; sourceTree = "<group>"; };
 		AA000000000000000000017E /* PassSavingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassSavingsView.swift; sourceTree = "<group>"; };
@@ -188,7 +183,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C960576D2FCFA0690034AD70 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,7 +262,6 @@
 				AA0000000000000000000124 /* NotificationService.swift */,
 				AA0000000000000000000126 /* CharacterData.swift */,
 				AA000000000000000000017C /* TicketPriceService.swift */,
-				AA0000000000000000000173 /* StoreService.swift */,
 				AA0000000000000000000181 /* PersistenceController.swift */,
 			);
 			path = Services;
@@ -293,7 +286,6 @@
 				AA000000000000000000013A /* Planner */,
 				AA0000000000000000000150 /* Home */,
 				AA0000000000000000000176 /* Onboarding */,
-				AA0000000000000000000178 /* Ads */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -399,14 +391,6 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
-		AA0000000000000000000178 /* Ads */ = {
-			isa = PBXGroup;
-			children = (
-				AA0000000000000000000175 /* AdBannerView.swift */,
-			);
-			path = Ads;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -452,7 +436,6 @@
 			);
 			mainGroup = AA0000000000000000000060;
 			packageReferences = (
-				C960576B2FCFA0690034AD70 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			productRefGroup = AA000000000000000000000C /* Products */;
 			projectDirPath = "";
@@ -555,8 +538,6 @@
 				AA000000000000000000016A /* WaitTimerBanner.swift in Sources */,
 				AA000000000000000000016C /* BookReturnTimeSheet.swift in Sources */,
 				AA000000000000000000016E /* OnboardingView.swift in Sources */,
-				AA0000000000000000000172 /* StoreService.swift in Sources */,
-				AA0000000000000000000174 /* AdBannerView.swift in Sources */,
 				AA0000000000000000000179 /* SmartPlannerView.swift in Sources */,
 				AA000000000000000000017B /* TicketPriceService.swift in Sources */,
 				AA000000000000000000017D /* PassSavingsView.swift in Sources */,
@@ -758,24 +739,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		C960576B2FCFA0690034AD70 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 13.4.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		C960576C2FCFA0690034AD70 /* GoogleMobileAds */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C960576B2FCFA0690034AD70 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
-			productName = GoogleMobileAds;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA000000000000000000000A /* Project object */;
 }
