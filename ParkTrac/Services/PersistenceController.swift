@@ -25,7 +25,6 @@ enum PersistenceController {
     static let userModels: [any PersistentModel.Type] = [
         BucketRestaurant.self,
         HotelStay.self,
-        Restaurant.self,
         RideLog.self,
         DiningReservation.self,
         RideAlert.self,

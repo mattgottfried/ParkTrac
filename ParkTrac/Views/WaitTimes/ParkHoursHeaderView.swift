@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Park Hours Header Strip
 
 /// Compact one-line hours display for the currently visible park.
-/// Shown above the park chips in WaitTimesView.
+/// Shown above the park chips in ParkMapView.
 struct ParkHoursHeaderView: View {
     let park: ParkEntity
     let schedule: [ParkScheduleDay]

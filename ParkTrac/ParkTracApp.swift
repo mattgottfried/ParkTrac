@@ -31,7 +31,6 @@ struct ParkTracApp: App {
                 .task {
                     NSUbiquitousKeyValueStore.default.synchronize()
                     await BucketListService.shared.seedIfNeeded(context: container.mainContext)
-                    try? DiningSeedService.seedIfNeeded(context: container.mainContext)
                     BackgroundRefreshService.schedule()
                 }
         }
