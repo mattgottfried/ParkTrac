@@ -4,10 +4,10 @@
 # https://developer.apple.com/documentation/xcode/setting-the-next-build-number-for-xcode-cloud-builds
 #
 # The offset keeps new numbers above every build uploaded before Xcode Cloud
-# was set up.
+# was set up (App Store Connect already has a build numbered above 24).
 set -e
 
-buildNumberOffset=20
+buildNumberOffset=1000
 newBuildNumber=$((${CI_BUILD_NUMBER:?not set} + buildNumberOffset))
 
 cd "$CI_PRIMARY_REPOSITORY_PATH"
