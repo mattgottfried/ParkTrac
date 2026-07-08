@@ -67,8 +67,53 @@ final class WaitTimesViewModel {
 
     private var attractionLocations: [String: CLLocationCoordinate2D] = [:]
 
-    /// Parks whose attraction locations have already been fetched (locations are static)
-    private var locationsFetchedParkIds: Set<String> = []
+    // MARK: - Ride catalog
+    // Persisted list of every ride per park so the list never empties when a
+    // park closes. Refreshed once per calendar day (first refresh of the
+    // morning) to pick up newly added rides.
+
+    private struct CatalogRide: Codable {
+        let id: String
+        let name: String
+        let latitude: Double?
+        let longitude: Double?
+    }
+
+    private var catalogsByPark: [String: [CatalogRide]] = [:]
+
+    private var todayKey: String {
+        let c = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+        return "\(c.year ?? 0)-\(c.month ?? 0)-\(c.day ?? 0)"
+    }
+
+    private func loadCatalog(for parkId: String) -> [CatalogRide]? {
+        if let cached = catalogsByPark[parkId] { return cached }
+        guard let data = UserDefaults.standard.data(forKey: "rideCatalog_\(parkId)"),
+              let catalog = try? JSONDecoder().decode([CatalogRide].self, from: data) else { return nil }
+        catalogsByPark[parkId] = catalog
+        return catalog
+    }
+
+    private func refreshCatalogIfNeeded(for park: ParkEntity) async {
+        let dayKey = "rideCatalogDay_\(park.id)"
+        if UserDefaults.standard.string(forKey: dayKey) == todayKey,
+           loadCatalog(for: park.id) != nil {
+            return
+        }
+        // Keep the stale catalog when the fetch fails — better old rides than none
+        guard let attractions = try? await ParkAPIService.shared.fetchAttractionChildren(parkId: park.id),
+              !attractions.isEmpty else { return }
+        let catalog = attractions
+            .filter { $0.entityType == "ATTRACTION" }
+            .map { CatalogRide(id: $0.id, name: $0.name,
+                               latitude: $0.location?.latitude,
+                               longitude: $0.location?.longitude) }
+        catalogsByPark[park.id] = catalog
+        if let data = try? JSONEncoder().encode(catalog) {
+            UserDefaults.standard.set(data, forKey: "rideCatalog_\(park.id)")
+            UserDefaults.standard.set(todayKey, forKey: dayKey)
+        }
+    }
 
     /// Rides keyed by park ID — all parks in the current group
     private var ridesByPark: [String: [DisplayRide]] = [:]
@@ -140,17 +185,24 @@ final class WaitTimesViewModel {
     var filteredRides: [DisplayRide] {
         allRides
             .filter { !blockedAttractions.contains($0.name) }
-            .filter { $0.status != "CLOSED" && $0.status != "REFURBISHMENT" }
             .filter { filterPark == nil || $0.parkId == filterPark?.id }
             .filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
             .sorted { lhs, rhs in
                 if sortAlphabetical {
                     return lhs.name.localizedCompare(rhs.name) == .orderedAscending
                 }
-                // Default: operating first, then by descending wait time
-                if lhs.isOperating != rhs.isOperating { return lhs.isOperating }
-                return (lhs.waitMinutes ?? -1) > (rhs.waitMinutes ?? -1)
+                // Default: operating (by wait desc) → temporarily down → closed (A–Z)
+                let lRank = statusRank(lhs), rRank = statusRank(rhs)
+                if lRank != rRank { return lRank < rRank }
+                if lRank == 0 { return (lhs.waitMinutes ?? -1) > (rhs.waitMinutes ?? -1) }
+                return lhs.name.localizedCompare(rhs.name) == .orderedAscending
             }
+    }
+
+    private func statusRank(_ ride: DisplayRide) -> Int {
+        if ride.isOperating { return 0 }
+        if ride.status == "DOWN" { return 1 }
+        return 2  // CLOSED / REFURBISHMENT / unknown
     }
 
     /// Alias for allRides — used by views
@@ -215,26 +267,44 @@ final class WaitTimesViewModel {
 
     @MainActor
     private func loadRidesForPark(_ park: ParkEntity) async -> Bool {
-        // Fetch locations once per park (they're static; only retry after a failed fetch)
-        if !locationsFetchedParkIds.contains(park.id) {
-            let attractions = (try? await ParkAPIService.shared.fetchAttractionChildren(parkId: park.id)) ?? []
-            if !attractions.isEmpty {
-                locationsFetchedParkIds.insert(park.id)
-            }
-            for attraction in attractions {
-                if let coord = attraction.coordinate {
-                    attractionLocations[attraction.id] = coord
-                }
+        await refreshCatalogIfNeeded(for: park)
+        let catalog = loadCatalog(for: park.id) ?? []
+        for entry in catalog {
+            if let lat = entry.latitude, let lon = entry.longitude {
+                attractionLocations[entry.id] = CLLocationCoordinate2D(latitude: lat, longitude: lon)
             }
         }
 
-        guard let liveEntries = try? await ParkAPIService.shared.fetchLiveData(for: park.id) else { return false }
-
-        let newRides = liveEntries
-            .filter { $0.entityType == "ATTRACTION" }
-            .map { entry in
-                DisplayRide(live: entry, parkId: park.id, location: attractionLocations[entry.id])
+        guard let liveEntries = try? await ParkAPIService.shared.fetchLiveData(for: park.id) else {
+            // No live data at all (offline / park closed overnight on some
+            // endpoints): still show every cataloged ride as Closed
+            if ridesByPark[park.id] == nil && !catalog.isEmpty {
+                ridesByPark[park.id] = catalog.map {
+                    DisplayRide(catalogId: $0.id, name: $0.name, parkId: park.id,
+                                location: attractionLocations[$0.id])
+                }
             }
+            return false
+        }
+
+        // Catalog is the roster; live data fills in wait/status. Rides missing
+        // from live data show as Closed instead of disappearing.
+        let liveAttractions = liveEntries.filter { $0.entityType == "ATTRACTION" }
+        let liveById = Dictionary(liveAttractions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let catalogIds = Set(catalog.map(\.id))
+
+        var newRides: [DisplayRide] = catalog.map { entry in
+            if let live = liveById[entry.id] {
+                return DisplayRide(live: live, parkId: park.id, location: attractionLocations[entry.id])
+            }
+            return DisplayRide(catalogId: entry.id, name: entry.name, parkId: park.id,
+                               location: attractionLocations[entry.id])
+        }
+        // Rides that appeared in live data before the daily catalog caught up
+        newRides += liveAttractions
+            .filter { !catalogIds.contains($0.id) }
+            .map { DisplayRide(live: $0, parkId: park.id, location: attractionLocations[$0.id]) }
+
         ridesByPark[park.id] = newRides
 
         // Collect show entities

@@ -256,4 +256,16 @@ struct DisplayRide: Identifiable {
         self.coordinate = location
         self.parkId = parkId
     }
+
+    /// A ride known from the daily catalog but absent from live data
+    /// (park closed, or the API dropped it overnight) — shown as Closed.
+    init(catalogId: String, name: String, parkId: String, location: CLLocationCoordinate2D?) {
+        self.id = catalogId
+        self.name = name
+        self.status = "CLOSED"
+        self.waitMinutes = nil
+        self.isOperating = false
+        self.coordinate = location
+        self.parkId = parkId
+    }
 }
