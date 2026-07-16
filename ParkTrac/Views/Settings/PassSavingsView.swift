@@ -175,8 +175,21 @@ struct PassSavingsView: View {
 
             // Visit log
             Section {
+                Button {
+                    showAddVisit = true
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Log a Visit").fontWeight(.semibold)
+                        Spacer()
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 6)
+                }
+                .listRowBackground(Color.green)
+
                 if allSavings.isEmpty {
-                    Text("Tap + to log your first visit and how much you saved on gate tickets.")
+                    Text("Log your first visit to track gate ticket and parking savings.")
                         .font(.subheadline).foregroundStyle(.secondary)
                 } else {
                     ForEach(allSavings) { saving in

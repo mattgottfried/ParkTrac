@@ -6,6 +6,7 @@ struct StatsView: View {
     @Query(sort: \BucketRestaurant.name) private var allRestaurants: [BucketRestaurant]
     @Query(sort: \HotelStay.hotelName)   private var allHotels: [HotelStay]
     @Query(sort: \RideLog.riddenAt, order: .reverse) private var allRideLogs: [RideLog]
+    @Query private var allVisitSavings: [VisitSaving]
 
     private var resort: String { appState.selectedResort.rawValue }
 
@@ -204,6 +205,9 @@ struct StatsView: View {
                     // Spending card
                     spendingCard
 
+                    // Pass Savings card
+                    passSavingsCard
+
                     // Crowd Calendar card
                     CrowdCalendarCard(resort: appState.selectedResort)
 
@@ -323,6 +327,45 @@ struct StatsView: View {
                 NavigationLink("Open") { SpendingView() }
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.green)
+            }
+        }
+    }
+
+    private var hasAnyPass: Bool {
+        appState.disneyPassTier != .none || appState.universalPassTier != .none
+    }
+
+    private var visitSavingCount: Int {
+        allVisitSavings.filter { $0.resort == resort }.count
+    }
+
+    private var passSavingsCard: some View {
+        statsCard(title: "Pass Savings", systemImage: "ticket.fill", color: .mint) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(hasAnyPass
+                    ? "See if your annual pass has paid for itself yet"
+                    : "Set up a pass in Settings to start tracking")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                NavigationLink {
+                    PassSavingsView()
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text(visitSavingCount == 0 ? "Log Your First Visit" : "Log a Visit (\(visitSavingCount) so far)")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Color.mint, in: RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(.plain)
             }
         }
     }
