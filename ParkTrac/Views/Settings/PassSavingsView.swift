@@ -45,6 +45,18 @@ struct PassSavingsView: View {
         allSavings.filter { $0.resort == ParkGroup.universal.rawValue }.map(\.gateValue).reduce(0, +)
     }
 
+    private var disneyParkingSavings: Double {
+        allSavings.filter { $0.resort == ParkGroup.disney.rawValue }.map(\.parkingValue).reduce(0, +)
+    }
+
+    private var universalParkingSavings: Double {
+        allSavings.filter { $0.resort == ParkGroup.universal.rawValue }.map(\.parkingValue).reduce(0, +)
+    }
+
+    private func parkingVisitCount(_ resort: String) -> Int {
+        allSavings.filter { $0.resort == resort && $0.parkingValue > 0 }.count
+    }
+
     private var disneyPurchases: [PurchaseLog] {
         allPurchases.filter { $0.resort == ParkGroup.disney.rawValue }
     }
@@ -82,8 +94,8 @@ struct PassSavingsView: View {
         return merch + food
     }
 
-    private var disneyTotalSavings: Double { disneyVisitSavings + disneyDiscountSavings }
-    private var universalTotalSavings: Double { universalVisitSavings + universalDiscountSavings }
+    private var disneyTotalSavings: Double { disneyVisitSavings + disneyParkingSavings + disneyDiscountSavings }
+    private var universalTotalSavings: Double { universalVisitSavings + universalParkingSavings + universalDiscountSavings }
 
     private var disneyNet: Double { disneyTotalSavings - appState.disneyPassCost }
     private var universalNet: Double { universalTotalSavings - appState.universalPassCost }
@@ -121,6 +133,8 @@ struct PassSavingsView: View {
                     savingsSummaryCard(
                         resort: ParkGroup.disney.rawValue,
                         visitSavings: disneyVisitSavings,
+                        parkingSavings: disneyParkingSavings,
+                        parkingCount: parkingVisitCount(ParkGroup.disney.rawValue),
                         discountSavings: disneyDiscountSavings,
                         totalSavings: disneyTotalSavings,
                         passCost: appState.disneyPassCost,
@@ -142,6 +156,8 @@ struct PassSavingsView: View {
                     savingsSummaryCard(
                         resort: ParkGroup.universal.rawValue,
                         visitSavings: universalVisitSavings,
+                        parkingSavings: universalParkingSavings,
+                        parkingCount: parkingVisitCount(ParkGroup.universal.rawValue),
                         discountSavings: universalDiscountSavings,
                         totalSavings: universalTotalSavings,
                         passCost: appState.universalPassCost,
@@ -170,9 +186,13 @@ struct PassSavingsView: View {
                                     .font(.subheadline)
                                 Text(saving.date, style: .date)
                                     .font(.caption).foregroundStyle(.secondary)
+                                if saving.parkingValue > 0 {
+                                    Text("Ticket \(saving.gateValue, format: .currency(code: "USD")) + \(saving.parkingType.lowercased()) parking \(saving.parkingValue, format: .currency(code: "USD"))")
+                                        .font(.caption2).foregroundStyle(.secondary)
+                                }
                             }
                             Spacer()
-                            Text(saving.gateValue, format: .currency(code: "USD"))
+                            Text(saving.totalValue, format: .currency(code: "USD"))
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(.green)
                         }
@@ -184,7 +204,7 @@ struct PassSavingsView: View {
                 }
             } header: {
                 HStack {
-                    Text("Visit Ticket Savings")
+                    Text("Visit Savings")
                     Spacer()
                     Button { showAddVisit = true } label: {
                         Image(systemName: "plus.circle.fill").foregroundStyle(.green)
@@ -192,7 +212,7 @@ struct PassSavingsView: View {
                     .buttonStyle(.plain)
                 }
             } footer: {
-                Text("Log the gate ticket price you would have paid for each visit. Discounts on food and merchandise are calculated automatically from your Spending log.")
+                Text("Log the gate ticket price and parking you would have paid for each visit. Discounts on food and merchandise are calculated automatically from your Spending log.")
                     .font(.caption)
             }
 
@@ -228,6 +248,8 @@ struct PassSavingsView: View {
     private func savingsSummaryCard(
         resort: String,
         visitSavings: Double,
+        parkingSavings: Double,
+        parkingCount: Int,
         discountSavings: Double,
         totalSavings: Double,
         passCost: Double,
@@ -281,6 +303,17 @@ struct PassSavingsView: View {
             Spacer()
             Text(visitSavings, format: .currency(code: "USD"))
                 .font(.subheadline.weight(.medium)).foregroundStyle(.green)
+        }
+
+        // Parking savings row
+        if parkingSavings > 0 {
+            HStack {
+                Label("Parking (\(parkingCount) visit\(parkingCount == 1 ? "" : "s"))", systemImage: "car.fill")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                Spacer()
+                Text(parkingSavings, format: .currency(code: "USD"))
+                    .font(.subheadline.weight(.medium)).foregroundStyle(.green)
+            }
         }
 
         // Discount rows (only if there's something to show)
@@ -368,12 +401,33 @@ struct AddVisitSavingSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
 
+    enum ParkingChoice: String, CaseIterable {
+        case none = "None"
+        case standard = "Standard"
+        case valet = "Valet"
+    }
+
     @State private var date = Date()
     @State private var gateValueText = ""
     @State private var note = ""
     @State private var selectedResort: ParkGroup = .disney
     @State private var disneyPark: DisneyPark = .magicKingdom
     @State private var universalPark: UniversalPark = .epicUniverse
+    @State private var parking: ParkingChoice = .none
+    @State private var parkingValueText = ""
+
+    /// Typical posted rates as editable prefills — verify against the lot that day
+    private var defaultParkingPrice: Double {
+        switch (selectedResort, parking) {
+        case (_, .none):               return 0
+        case (.disney, .standard):     return 30
+        case (.disney, .valet):        return 75
+        case (.universal, .standard):  return 35
+        case (.universal, .valet):     return 85
+        }
+    }
+
+    private var parkingValue: Double { parking == .none ? 0 : (Double(parkingValueText) ?? 0) }
 
     private var lookupPrice: Double? {
         switch selectedResort {
@@ -427,7 +481,10 @@ struct AddVisitSavingSheet: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
-                    .onChange(of: selectedResort) { _, _ in applyPrice() }
+                    .onChange(of: selectedResort) { _, _ in
+                        applyPrice()
+                        applyParkingPrice()
+                    }
                 }
 
                 Section("Visit Date") {
@@ -477,6 +534,29 @@ struct AddVisitSavingSheet: View {
                     Text(priceFooter).font(.caption)
                 }
 
+                Section {
+                    Picker("Parking", selection: $parking) {
+                        ForEach(ParkingChoice.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .onChange(of: parking) { _, _ in applyParkingPrice() }
+                    if parking != .none {
+                        HStack {
+                            Text("$")
+                            TextField("0", text: $parkingValueText)
+                                .keyboardType(.decimalPad)
+                        }
+                    }
+                } header: {
+                    Text("Parking Covered by Pass")
+                } footer: {
+                    Text(parking == .none
+                        ? "If your pass covered parking this visit, pick the type you'd have paid for."
+                        : "Typical rate prefilled — edit to match the posted price that day.")
+                        .font(.caption)
+                }
+
                 Section("Note (optional)") {
                     TextField("e.g. Magic Kingdom day", text: $note)
                 }
@@ -493,13 +573,15 @@ struct AddVisitSavingSheet: View {
                             gateValue: gateValue,
                             note: note.isEmpty
                                 ? (selectedResort == .disney ? disneyPark.rawValue : universalPark.rawValue)
-                                : note
+                                : note,
+                            parkingValue: parkingValue,
+                            parkingType: parking == .none ? "" : parking.rawValue
                         )
                         modelContext.insert(saving)
                         try? modelContext.save()
                         dismiss()
                     }
-                    .disabled(gateValue <= 0)
+                    .disabled(gateValue <= 0 && parkingValue <= 0)
                 }
             }
             .onAppear {
@@ -515,5 +597,9 @@ struct AddVisitSavingSheet: View {
         } else {
             gateValueText = ""
         }
+    }
+
+    private func applyParkingPrice() {
+        parkingValueText = parking == .none ? "" : String(format: "%.0f", defaultParkingPrice)
     }
 }
