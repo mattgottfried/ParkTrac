@@ -71,6 +71,17 @@ struct AnnualPassView: View {
                     }
                 }
             }
+
+            Section {
+                NavigationLink {
+                    PassSavingsView()
+                } label: {
+                    Label("Pass Savings", systemImage: "dollarsign.arrow.circlepath")
+                }
+            } footer: {
+                Text("Track tickets, parking, and discounts to see if your pass has paid for itself.")
+                    .font(.caption)
+            }
         }
         .navigationTitle("Annual Passes")
         .navigationBarTitleDisplayMode(.inline)
