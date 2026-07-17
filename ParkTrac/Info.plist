@@ -7,7 +7,7 @@
 		<string>com.parktrac.background.refresh</string>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>ParkTrac</string>
+	<string>ThrillTrack</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,7 +23,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ParkTrac uses your location to center the map on the park you're currently visiting.</string>
+	<string>ThrillTrack uses your location to center the map on the park you're currently visiting.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

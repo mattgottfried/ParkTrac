@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Naming note**: the app's Home Screen name (`CFBundleDisplayName` in Info.plist) is **ThrillTrack**. The Xcode project file, target, scheme, bundle identifier, module name, and folder are all still named `ParkTrac` — that's intentional (renaming those carries real risk to App Store Connect/TestFlight/CloudKit continuity and isn't required for the display name to read "ThrillTrack"). Don't "fix" the technical name to match unless explicitly asked.
+
 ## Build & Run
 
 This is a native iOS/iPadOS app. There is no CLI build — use Xcode or `xcodebuild`:
