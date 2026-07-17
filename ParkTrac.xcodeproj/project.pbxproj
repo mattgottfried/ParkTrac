@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -91,7 +91,34 @@
 		AA0000000000000000000182 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000181 /* PersistenceController.swift */; };
 		AA0000000000000000000184 /* RideLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000183 /* RideLookupService.swift */; };
 		AA0000000000000000000186 /* RideWaitTimeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000185 /* RideWaitTimeIntent.swift */; };
+		C972E4CA300AADAF00E01CAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4C9300AADAF00E01CAC /* WidgetKit.framework */; };
+		C972E4CC300AADAF00E01CAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4CB300AADAF00E01CAC /* SwiftUI.framework */; };
+		C972E4DD300AADB000E01CAC /* TrillTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C972E4DB300AADB000E01CAC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000000000000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C972E4C6300AADAF00E01CAC;
+			remoteInfo = TrillTrackWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C972E4DE300AADB000E01CAC /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C972E4DD300AADB000E01CAC /* TrillTrackWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AA0000000000000000000020 /* ParkTracApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkTracApp.swift; sourceTree = "<group>"; };
@@ -173,20 +200,46 @@
 		AA000000000000000000016B /* WaitTimerBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimerBanner.swift; sourceTree = "<group>"; };
 		AA000000000000000000016D /* BookReturnTimeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReturnTimeSheet.swift; sourceTree = "<group>"; };
 		AA000000000000000000016F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		AA0000000000000000000181 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
-		AA0000000000000000000183 /* RideLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLookupService.swift; sourceTree = "<group>"; };
-		AA0000000000000000000185 /* RideWaitTimeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideWaitTimeIntent.swift; sourceTree = "<group>"; };
 		AA000000000000000000017A /* SmartPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartPlannerView.swift; sourceTree = "<group>"; };
 		AA000000000000000000017C /* TicketPriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketPriceService.swift; sourceTree = "<group>"; };
 		AA000000000000000000017E /* PassSavingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassSavingsView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000180 /* LocationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPickerView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000181 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		AA0000000000000000000183 /* RideLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLookupService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000185 /* RideWaitTimeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideWaitTimeIntent.swift; sourceTree = "<group>"; };
+		C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrillTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C972E4C9300AADAF00E01CAC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C972E4CB300AADAF00E01CAC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C972E4E1300AADB000E01CAC /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C972E4C6300AADAF00E01CAC /* TrillTrackWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		C972E4CD300AADAF00E01CAC /* TrillTrackWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (C972E4E1300AADB000E01CAC /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = TrillTrackWidget; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AA0000000000000000000016 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C972E4C4300AADAF00E01CAC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C972E4CC300AADAF00E01CAC /* SwiftUI.framework in Frameworks */,
+				C972E4CA300AADAF00E01CAC /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,6 +266,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000070 /* ParkTrac.app */,
+				C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -221,6 +275,8 @@
 			isa = PBXGroup;
 			children = (
 				AA000000000000000000000B /* ParkTrac */,
+				C972E4CD300AADAF00E01CAC /* TrillTrackWidget */,
+				C972E4C8300AADAF00E01CAC /* Frameworks */,
 				AA000000000000000000000C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -397,6 +453,15 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
+		C972E4C8300AADAF00E01CAC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C972E4C9300AADAF00E01CAC /* WidgetKit.framework */,
+				C972E4CB300AADAF00E01CAC /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -407,15 +472,39 @@
 				AA0000000000000000000014 /* Sources */,
 				AA0000000000000000000016 /* Frameworks */,
 				AA0000000000000000000015 /* Resources */,
+				C972E4DE300AADB000E01CAC /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C972E4DC300AADB000E01CAC /* PBXTargetDependency */,
 			);
 			name = ParkTrac;
 			productName = ParkTrac;
 			productReference = AA0000000000000000000070 /* ParkTrac.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C972E4C6300AADAF00E01CAC /* TrillTrackWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C972E4E2300AADB000E01CAC /* Build configuration list for PBXNativeTarget "TrillTrackWidgetExtension" */;
+			buildPhases = (
+				C972E4C3300AADAF00E01CAC /* Sources */,
+				C972E4C4300AADAF00E01CAC /* Frameworks */,
+				C972E4C5300AADAF00E01CAC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C972E4CD300AADAF00E01CAC /* TrillTrackWidget */,
+			);
+			name = TrillTrackWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = TrillTrackWidgetExtension;
+			productReference = C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -424,11 +513,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					AA000000000000000000000D = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					C972E4C6300AADAF00E01CAC = {
+						CreatedOnToolsVersion = 26.6;
 					};
 				};
 			};
@@ -448,6 +540,7 @@
 			projectRoot = "";
 			targets = (
 				AA000000000000000000000D /* ParkTrac */,
+				C972E4C6300AADAF00E01CAC /* TrillTrackWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -459,6 +552,13 @@
 			files = (
 				AA000000000000000000005F /* Assets.xcassets in Resources */,
 				AA00000000000000000000FB /* CommunityBaselines.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C972E4C5300AADAF00E01CAC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -554,7 +654,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C972E4C3300AADAF00E01CAC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C972E4DC300AADB000E01CAC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C972E4C6300AADAF00E01CAC /* TrillTrackWidgetExtension */;
+			targetProxy = C972E4DB300AADB000E01CAC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AA0000000000000000000010 /* Debug */ = {
@@ -724,6 +839,74 @@
 			};
 			name = Release;
 		};
+		C972E4DF300AADB000E01CAC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X796Z5UW4P;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TrillTrackWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrillTrackWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mattgottfried.parktrac.TrillTrackWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C972E4E0300AADB000E01CAC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X796Z5UW4P;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TrillTrackWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrillTrackWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mattgottfried.parktrac.TrillTrackWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -745,8 +928,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C972E4E2300AADB000E01CAC /* Build configuration list for PBXNativeTarget "TrillTrackWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C972E4DF300AADB000E01CAC /* Debug */,
+				C972E4E0300AADB000E01CAC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = AA000000000000000000000A /* Project object */;
 }
