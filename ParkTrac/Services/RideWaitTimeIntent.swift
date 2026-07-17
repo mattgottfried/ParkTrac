@@ -30,8 +30,8 @@ struct ParkTracShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: GetRideWaitTimeIntent(),
             phrases: [
-                "What's the wait for \(\.$rideName) in \(.applicationName)",
-                "Check the wait for \(\.$rideName) in \(.applicationName)"
+                "Check a ride wait time in \(.applicationName)",
+                "What's the wait for a ride in \(.applicationName)"
             ],
             shortTitle: "Ride Wait Time",
             systemImageName: "clock.fill"
