@@ -2,6 +2,7 @@ import SwiftUI
 
 struct WaitStopwatchSection: View {
     let ride: DisplayRide
+    let parkName: String
     let postedWait: Int?         // ride.waitMinutes at the moment timing starts
     @Environment(AppState.self) private var appState
     @State private var elapsed: TimeInterval = 0
@@ -39,16 +40,14 @@ struct WaitStopwatchSection: View {
                         let actualMins = max(1, Int(elapsed / 60))
                         let posted = postedWait ?? 0
                         onSave(actualMins, posted)
-                        appState.activeTimerRideId = nil
-                        appState.activeTimerStart = nil
+                        appState.clearTimer()
                         elapsed = 0
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.orange)
 
                     Button("Cancel") {
-                        appState.activeTimerRideId = nil
-                        appState.activeTimerStart = nil
+                        appState.clearTimer()
                         elapsed = 0
                     }
                     .buttonStyle(.bordered)
@@ -59,12 +58,16 @@ struct WaitStopwatchSection: View {
                     .foregroundStyle(.secondary)
             } else {
                 Button {
+                    let start = Date()
                     appState.activeTimerRideId = ride.id
-                    appState.activeTimerStart = Date()
+                    appState.activeTimerStart = start
                     appState.timerRideName = ride.name
                     appState.timerPostedMinutes = postedWait ?? 0
                     appState.timerResort = ride.parkId  // resort context for WaitTimerBanner
                     elapsed = 0
+                    LiveActivityManager.startWaitTimer(
+                        rideName: ride.name, parkName: parkName, startedAt: start, postedMinutes: postedWait ?? 0
+                    )
                 } label: {
                     Label("Start Timer", systemImage: "stopwatch")
                 }

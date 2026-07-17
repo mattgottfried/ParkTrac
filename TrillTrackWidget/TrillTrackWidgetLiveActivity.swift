@@ -1,80 +1,117 @@
-//
-//  TrillTrackWidgetLiveActivity.swift
-//  TrillTrackWidget
-//
-//  Created by Matthew R. Gottfried, CPA, MSA on 7/17/26.
-//
-
 import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct TrillTrackWidgetAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        // Dynamic stateful properties about your activity go here!
-        var emoji: String
-    }
-
-    // Fixed non-changing properties about your activity go here!
-    var name: String
-}
-
 struct TrillTrackWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: TrillTrackWidgetAttributes.self) { context in
-            // Lock screen/banner UI goes here
-            VStack {
-                Text("Hello \(context.state.emoji)")
-            }
-            .activityBackgroundTint(Color.cyan)
-            .activitySystemActionForegroundColor(Color.black)
-
+        ActivityConfiguration(for: ThrillTrackActivityAttributes.self) { context in
+            LockScreenView(context: context)
+                .activityBackgroundTint(Color.black.opacity(0.85))
+                .activitySystemActionForegroundColor(Color.white)
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded UI goes here.  Compose the expanded UI through
-                // various regions, like leading/trailing/center/bottom
                 DynamicIslandExpandedRegion(.leading) {
-                    Text("Leading")
+                    Image(systemName: icon(for: context.attributes))
+                        .foregroundStyle(.white)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text("Trailing")
+                    TimeText(context: context, font: .body.monospacedDigit())
+                }
+                DynamicIslandExpandedRegion(.center) {
+                    Text(context.attributes.rideName)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("Bottom \(context.state.emoji)")
-                    // more content
+                    Text("\(context.attributes.passLabel) · \(context.attributes.parkName)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
             } compactLeading: {
-                Text("L")
+                Image(systemName: icon(for: context.attributes))
             } compactTrailing: {
-                Text("T \(context.state.emoji)")
+                TimeText(context: context, font: .caption2.monospacedDigit())
             } minimal: {
-                Text(context.state.emoji)
+                Image(systemName: icon(for: context.attributes))
             }
-            .widgetURL(URL(string: "http://www.apple.com"))
-            .keylineTint(Color.red)
         }
     }
-}
 
-extension TrillTrackWidgetAttributes {
-    fileprivate static var preview: TrillTrackWidgetAttributes {
-        TrillTrackWidgetAttributes(name: "World")
+    private func icon(for attributes: ThrillTrackActivityAttributes) -> String {
+        attributes.mode == .returnTime ? "bolt.fill" : "stopwatch.fill"
     }
 }
 
-extension TrillTrackWidgetAttributes.ContentState {
-    fileprivate static var smiley: TrillTrackWidgetAttributes.ContentState {
-        TrillTrackWidgetAttributes.ContentState(emoji: "😀")
-     }
-     
-     fileprivate static var starEyes: TrillTrackWidgetAttributes.ContentState {
-         TrillTrackWidgetAttributes.ContentState(emoji: "🤩")
-     }
+private struct LockScreenView: View {
+    let context: ActivityViewContext<ThrillTrackActivityAttributes>
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: context.attributes.mode == .returnTime ? "bolt.fill" : "stopwatch.fill")
+                    .foregroundStyle(.yellow)
+                Text(context.attributes.rideName)
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                Spacer()
+                Text(context.attributes.passLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+            Text(context.attributes.parkName)
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.6))
+
+            if context.attributes.mode == .returnTime {
+                if let end = context.state.returnEnd, end > .now {
+                    Text(timerInterval: Date.now...end, countsDown: true)
+                        .font(.title.monospacedDigit())
+                        .foregroundStyle(.white)
+                    Text("Return by \(end, style: .time)")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.6))
+                } else if context.state.returnEnd != nil {
+                    Text("Window closed")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.7))
+                } else {
+                    Text("Valid until park close")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white)
+                }
+            } else if let start = context.state.startedAt {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Waiting")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text(start, style: .timer)
+                        .font(.title.monospacedDigit())
+                        .foregroundStyle(.white)
+                }
+                if let posted = context.state.postedMinutes, posted > 0 {
+                    Text("Posted wait: \(posted) min")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+            }
+        }
+        .padding()
+    }
 }
 
-#Preview("Notification", as: .content, using: TrillTrackWidgetAttributes.preview) {
-   TrillTrackWidgetLiveActivity()
-} contentStates: {
-    TrillTrackWidgetAttributes.ContentState.smiley
-    TrillTrackWidgetAttributes.ContentState.starEyes
+private struct TimeText: View {
+    let context: ActivityViewContext<ThrillTrackActivityAttributes>
+    let font: Font
+
+    var body: some View {
+        if context.attributes.mode == .returnTime, let end = context.state.returnEnd, end > .now {
+            Text(timerInterval: Date.now...end, countsDown: true).font(font)
+        } else if context.attributes.mode == .returnTime {
+            Image(systemName: context.state.returnEnd == nil ? "infinity" : "checkmark")
+        } else if context.attributes.mode == .waitTimer, let start = context.state.startedAt {
+            Text(start, style: .timer).font(font)
+        } else {
+            EmptyView()
+        }
+    }
 }

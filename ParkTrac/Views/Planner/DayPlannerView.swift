@@ -38,7 +38,10 @@ struct DayPlannerView: View {
                         ForEach(llPasses) { pass in
                             LLPassRow(pass: pass)
                                 .swipeActions {
-                                    Button("Done", role: .destructive) { pass.isDone = true }
+                                    Button("Done", role: .destructive) {
+                                        pass.isDone = true
+                                        LiveActivityManager.endReturnTime()
+                                    }
                                 }
                         }
                     } header: {
@@ -140,6 +143,9 @@ private struct PlanItemRow: View {
         HStack(spacing: 12) {
             Button {
                 withAnimation { item.isDone.toggle() }
+                if item.isDone && (item.kind == "ll" || item.kind == "aap") {
+                    LiveActivityManager.endReturnTime()
+                }
             } label: {
                 Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
@@ -244,7 +250,10 @@ private struct LLPassRow: View {
                     }
                 }
 
-                Button("Done") { pass.isDone = true }
+                Button("Done") {
+                    pass.isDone = true
+                    LiveActivityManager.endReturnTime()
+                }
                     .font(.caption.weight(.semibold))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)

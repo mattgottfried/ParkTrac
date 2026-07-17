@@ -91,6 +91,9 @@
 		AA0000000000000000000182 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000181 /* PersistenceController.swift */; };
 		AA0000000000000000000184 /* RideLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000183 /* RideLookupService.swift */; };
 		AA0000000000000000000186 /* RideWaitTimeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000185 /* RideWaitTimeIntent.swift */; };
+		AA0000000000000000000188 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000187 /* LiveActivityManager.swift */; };
+		AA000000000000000000018A /* ThrillTrackActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */; };
+		AA000000000000000000018B /* ThrillTrackActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */; };
 		C972E4CA300AADAF00E01CAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4C9300AADAF00E01CAC /* WidgetKit.framework */; };
 		C972E4CC300AADAF00E01CAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4CB300AADAF00E01CAC /* SwiftUI.framework */; };
 		C972E4DD300AADB000E01CAC /* TrillTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -207,6 +210,8 @@
 		AA0000000000000000000181 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		AA0000000000000000000183 /* RideLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLookupService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000185 /* RideWaitTimeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideWaitTimeIntent.swift; sourceTree = "<group>"; };
+		AA0000000000000000000187 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
+		AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrillTrackActivityAttributes.swift; sourceTree = "<group>"; };
 		C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrillTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C972E4C9300AADAF00E01CAC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C972E4CB300AADAF00E01CAC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -325,6 +330,8 @@
 				AA0000000000000000000181 /* PersistenceController.swift */,
 				AA0000000000000000000183 /* RideLookupService.swift */,
 				AA0000000000000000000185 /* RideWaitTimeIntent.swift */,
+				AA0000000000000000000187 /* LiveActivityManager.swift */,
+				AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -651,6 +658,8 @@
 				AA0000000000000000000182 /* PersistenceController.swift in Sources */,
 				AA0000000000000000000184 /* RideLookupService.swift in Sources */,
 				AA0000000000000000000186 /* RideWaitTimeIntent.swift in Sources */,
+				AA0000000000000000000188 /* LiveActivityManager.swift in Sources */,
+				AA000000000000000000018A /* ThrillTrackActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -658,6 +667,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA000000000000000000018B /* ThrillTrackActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
