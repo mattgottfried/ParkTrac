@@ -40,6 +40,16 @@ struct AnnualPassView: View {
                 }
             }
 
+            Section {
+                Toggle("Lightning Lane Multi Pass", isOn: Bindable(appState).hasLightningLane)
+                Toggle("DAS (Disability Access Service)", isOn: Bindable(appState).hasDAS)
+            } header: {
+                Text("Disney Ride Access")
+            } footer: {
+                Text("Lets \"Log Return Time\" offer the right pass type — DAS windows stay open until park close instead of expiring after an hour.")
+                    .font(.caption)
+            }
+
             Section("Universal Annual Pass") {
                 Picker("Pass Tier", selection: Bindable(appState).universalPassTier) {
                     ForEach(UniversalPassTier.allCases, id: \.self) { tier in
@@ -70,6 +80,19 @@ struct AnnualPassView: View {
                         .disabled(appState.universalPassExpiry == nil)
                     }
                 }
+            }
+
+            Section {
+                Toggle("Universal Express Now", isOn: Binding(
+                    get: { appState.universalExpressType == .expressNow },
+                    set: { appState.universalExpressType = $0 ? .expressNow : .none }
+                ))
+                Toggle("AAP (Attraction Assistance Pass)", isOn: Bindable(appState).hasAAP)
+            } header: {
+                Text("Universal Ride Access")
+            } footer: {
+                Text("Lets \"Log Return Time\" offer the right pass type — AAP windows stay open until park close instead of expiring after an hour.")
+                    .font(.caption)
             }
 
             Section {
