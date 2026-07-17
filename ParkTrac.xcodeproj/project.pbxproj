@@ -89,6 +89,8 @@
 		AA000000000000000000017D /* PassSavingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017E /* PassSavingsView.swift */; };
 		AA000000000000000000017F /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000180 /* LocationPickerView.swift */; };
 		AA0000000000000000000182 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000181 /* PersistenceController.swift */; };
+		AA0000000000000000000184 /* RideLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000183 /* RideLookupService.swift */; };
+		AA0000000000000000000186 /* RideWaitTimeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000185 /* RideWaitTimeIntent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -172,6 +174,8 @@
 		AA000000000000000000016D /* BookReturnTimeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReturnTimeSheet.swift; sourceTree = "<group>"; };
 		AA000000000000000000016F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000181 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		AA0000000000000000000183 /* RideLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLookupService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000185 /* RideWaitTimeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideWaitTimeIntent.swift; sourceTree = "<group>"; };
 		AA000000000000000000017A /* SmartPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartPlannerView.swift; sourceTree = "<group>"; };
 		AA000000000000000000017C /* TicketPriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketPriceService.swift; sourceTree = "<group>"; };
 		AA000000000000000000017E /* PassSavingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassSavingsView.swift; sourceTree = "<group>"; };
@@ -263,6 +267,8 @@
 				AA0000000000000000000126 /* CharacterData.swift */,
 				AA000000000000000000017C /* TicketPriceService.swift */,
 				AA0000000000000000000181 /* PersistenceController.swift */,
+				AA0000000000000000000183 /* RideLookupService.swift */,
+				AA0000000000000000000185 /* RideWaitTimeIntent.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -543,6 +549,8 @@
 				AA000000000000000000017D /* PassSavingsView.swift in Sources */,
 				AA000000000000000000017F /* LocationPickerView.swift in Sources */,
 				AA0000000000000000000182 /* PersistenceController.swift in Sources */,
+				AA0000000000000000000184 /* RideLookupService.swift in Sources */,
+				AA0000000000000000000186 /* RideWaitTimeIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
