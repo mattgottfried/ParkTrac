@@ -125,6 +125,12 @@ struct BookReturnTimeSheet: View {
         item.llReturnEnd = returnEnd
         context.insert(item)
         try? context.save()
+        LiveActivityManager.startReturnTime(
+            passLabel: passKind.rawValue,
+            rideName: ride.name,
+            parkName: parkName,
+            returnEnd: isOpenEnded ? nil : returnEnd
+        )
         let passId = "\(ride.id)-\(Int(returnStart.timeIntervalSince1970))"
         Task {
             await NotificationService.shared.requestAuthorization()

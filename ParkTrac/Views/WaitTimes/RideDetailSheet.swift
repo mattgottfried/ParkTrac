@@ -122,6 +122,7 @@ struct RideDetailSheet: View {
                 // Wait Stopwatch section
                 WaitStopwatchSection(
                     ride: ride,
+                    parkName: parkName,
                     postedWait: ride.waitMinutes,
                     onSave: { actualMins, posted in
                         let log = RideLog(

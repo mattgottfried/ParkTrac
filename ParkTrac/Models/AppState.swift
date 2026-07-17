@@ -107,6 +107,7 @@ final class AppState {
         timerRideName = ""
         timerPostedMinutes = 0
         timerResort = ""
+        LiveActivityManager.endWaitTimer()
     }
 
     // MARK: - Pass Cost (for savings calculation)
