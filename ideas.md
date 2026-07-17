@@ -1,4 +1,4 @@
-# ParkTrac — Feature Ideas
+# ThrillTrack — Feature Ideas
 
 ## Wait Time Stopwatch
 
