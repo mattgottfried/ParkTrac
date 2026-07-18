@@ -3,6 +3,7 @@ import SwiftData
 
 struct RideCounterView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.modelContext) private var context
     @Query(sort: \RideLog.riddenAt, order: .reverse) private var allLogs: [RideLog]
 
     @State private var sortByCount = true
@@ -67,6 +68,11 @@ struct RideCounterView: View {
                             count: group.count,
                             lastRidden: group.lastRidden
                         )
+                        .swipeActions {
+                            Button("Delete All", role: .destructive) {
+                                deleteAllLogs(named: group.name)
+                            }
+                        }
                     }
                 }
             }
@@ -92,6 +98,13 @@ struct RideCounterView: View {
                 }
             }
         }
+    }
+
+    private func deleteAllLogs(named rideName: String) {
+        for log in resortLogs where log.rideName == rideName {
+            context.delete(log)
+        }
+        try? context.save()
     }
 
     private func statChip(value: String, label: String, color: Color) -> some View {
