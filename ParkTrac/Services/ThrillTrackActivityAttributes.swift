@@ -9,16 +9,22 @@ struct ThrillTrackActivityAttributes: ActivityAttributes {
         case returnTime
         /// Posted-vs-actual wait stopwatch
         case waitTimer
+        /// Dining reservation countdown
+        case dining
+        /// Park opening (rope drop) countdown
+        case ropeDrop
+        /// Next Lightning Lane booking eligibility (user-edited estimate)
+        case nextBooking
     }
 
     struct ContentState: Codable, Hashable {
-        var returnEnd: Date?      // .returnTime: countdown target (nil = open-ended DAS/AAP)
-        var startedAt: Date?      // .waitTimer: count-up origin
-        var postedMinutes: Int?  // .waitTimer: posted wait when timing started
+        var countdownEnd: Date?   // returnTime/dining/ropeDrop/nextBooking: countdown target (nil = open-ended)
+        var startedAt: Date?      // waitTimer: count-up origin
+        var postedMinutes: Int?   // waitTimer: posted wait when timing started
     }
 
     var mode: Mode
-    var passLabel: String   // e.g. "Lightning Lane", "DAS", "Wait Timer"
-    var rideName: String
-    var parkName: String
+    var label: String     // e.g. "Lightning Lane", "Dining Reservation", "Rope Drop", "Next Booking"
+    var title: String     // ride name / restaurant name / park name
+    var subtitle: String  // park name / party-size info / empty
 }

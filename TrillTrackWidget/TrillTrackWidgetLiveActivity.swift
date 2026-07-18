@@ -18,12 +18,12 @@ struct TrillTrackWidgetLiveActivity: Widget {
                     TimeText(context: context, font: .body.monospacedDigit())
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    Text(context.attributes.rideName)
+                    Text(context.attributes.title)
                         .font(.caption.weight(.semibold))
                         .lineLimit(1)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("\(context.attributes.passLabel) · \(context.attributes.parkName)")
+                    Text(bottomText(for: context.attributes))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -38,40 +38,93 @@ struct TrillTrackWidgetLiveActivity: Widget {
     }
 
     private func icon(for attributes: ThrillTrackActivityAttributes) -> String {
-        attributes.mode == .returnTime ? "bolt.fill" : "stopwatch.fill"
+        switch attributes.mode {
+        case .returnTime:  return "bolt.fill"
+        case .waitTimer:   return "stopwatch.fill"
+        case .dining:      return "fork.knife"
+        case .ropeDrop:    return "sunrise.fill"
+        case .nextBooking: return "clock.badge.checkmark.fill"
+        }
+    }
+
+    private func bottomText(for attributes: ThrillTrackActivityAttributes) -> String {
+        if attributes.subtitle.isEmpty {
+            return attributes.label
+        }
+        return "\(attributes.label) · \(attributes.subtitle)"
     }
 }
 
 private struct LockScreenView: View {
     let context: ActivityViewContext<ThrillTrackActivityAttributes>
 
+    /// Any mode that renders as a countdown to `countdownEnd`.
+    private var isCountdown: Bool {
+        switch context.attributes.mode {
+        case .returnTime, .dining, .ropeDrop, .nextBooking: return true
+        case .waitTimer: return false
+        }
+    }
+
+    private var iconName: String {
+        switch context.attributes.mode {
+        case .returnTime:  return "bolt.fill"
+        case .waitTimer:   return "stopwatch.fill"
+        case .dining:      return "fork.knife"
+        case .ropeDrop:    return "sunrise.fill"
+        case .nextBooking: return "clock.badge.checkmark.fill"
+        }
+    }
+
+    /// Label shown when the countdown target has passed.
+    private var closedText: String {
+        switch context.attributes.mode {
+        case .dining:      return "Reservation time"
+        case .ropeDrop:    return "Park is open"
+        case .nextBooking: return "Eligible now"
+        default:           return "Window closed"
+        }
+    }
+
+    /// Prefix shown under the live countdown (e.g. "Return by 3:15 PM").
+    private func caption(for end: Date) -> String {
+        switch context.attributes.mode {
+        case .dining:      return "Reservation at \(end.formatted(date: .omitted, time: .shortened))"
+        case .ropeDrop:    return "Opens at \(end.formatted(date: .omitted, time: .shortened))"
+        case .nextBooking: return "Eligible at \(end.formatted(date: .omitted, time: .shortened))"
+        default:           return "Return by \(end.formatted(date: .omitted, time: .shortened))"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: context.attributes.mode == .returnTime ? "bolt.fill" : "stopwatch.fill")
+                Image(systemName: iconName)
                     .foregroundStyle(.yellow)
-                Text(context.attributes.rideName)
+                Text(context.attributes.title)
                     .font(.headline)
                     .foregroundStyle(.white)
                 Spacer()
-                Text(context.attributes.passLabel)
+                Text(context.attributes.label)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.7))
             }
-            Text(context.attributes.parkName)
-                .font(.caption)
-                .foregroundStyle(.white.opacity(0.6))
+            if !context.attributes.subtitle.isEmpty {
+                Text(context.attributes.subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.6))
+            }
 
-            if context.attributes.mode == .returnTime {
-                if let end = context.state.returnEnd, end > .now {
+            if isCountdown {
+                if let end = context.state.countdownEnd, end > .now {
                     Text(timerInterval: Date.now...end, countsDown: true)
                         .font(.title.monospacedDigit())
                         .foregroundStyle(.white)
-                    Text("Return by \(end, style: .time)")
+                    Text(caption(for: end))
                         .font(.caption2)
                         .foregroundStyle(.white.opacity(0.6))
-                } else if context.state.returnEnd != nil {
-                    Text("Window closed")
+                } else if context.state.countdownEnd != nil {
+                    Text(closedText)
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.7))
                 } else {
@@ -103,11 +156,18 @@ private struct TimeText: View {
     let context: ActivityViewContext<ThrillTrackActivityAttributes>
     let font: Font
 
+    private var isCountdown: Bool {
+        switch context.attributes.mode {
+        case .returnTime, .dining, .ropeDrop, .nextBooking: return true
+        case .waitTimer: return false
+        }
+    }
+
     var body: some View {
-        if context.attributes.mode == .returnTime, let end = context.state.returnEnd, end > .now {
+        if isCountdown, let end = context.state.countdownEnd, end > .now {
             Text(timerInterval: Date.now...end, countsDown: true).font(font)
-        } else if context.attributes.mode == .returnTime {
-            Image(systemName: context.state.returnEnd == nil ? "infinity" : "checkmark")
+        } else if isCountdown {
+            Image(systemName: context.state.countdownEnd == nil ? "infinity" : "checkmark")
         } else if context.attributes.mode == .waitTimer, let start = context.state.startedAt {
             Text(start, style: .timer).font(font)
         } else {

@@ -12,6 +12,12 @@ struct BookReturnTimeSheet: View {
 
     @State private var passKind: PassKind = .ll
     @State private var returnStart = Date()
+    @State private var trackNextBooking = false
+    @State private var nextBookingAt = Date().addingTimeInterval(5400)
+
+    /// Commonly-cited modern Lightning Lane re-booking interval (90 min),
+    /// presented as an editable estimate — not asserted as authoritative.
+    private static let nextBookingInterval: TimeInterval = 90 * 60
 
     private var isOpenEnded: Bool { passKind == .das || passKind == .aap }
 
@@ -96,6 +102,20 @@ struct BookReturnTimeSheet: View {
                     }
                     .font(.caption)
                 }
+
+                if !isOpenEnded {
+                    Section {
+                        Toggle("Track next booking eligibility", isOn: $trackNextBooking)
+                        if trackNextBooking {
+                            DatePicker("Eligible at", selection: $nextBookingAt, displayedComponents: .hourAndMinute)
+                        }
+                    } footer: {
+                        if trackNextBooking {
+                            Text("Estimated next Lightning Lane booking time (default: 90 min after your return time). This is an estimate — always verify eligibility in the official app.")
+                                .font(.caption)
+                        }
+                    }
+                }
             }
             .navigationTitle("Log Return Time")
             .navigationBarTitleDisplayMode(.inline)
@@ -109,6 +129,14 @@ struct BookReturnTimeSheet: View {
             }
             .onAppear {
                 passKind = availableKinds.first ?? .ll
+                nextBookingAt = returnStart.addingTimeInterval(Self.nextBookingInterval)
+            }
+            .onChange(of: returnStart) { _, newValue in
+                // Keep the estimate in step with the return time until the
+                // user opts in — once enabled, their edits are preserved.
+                if !trackNextBooking {
+                    nextBookingAt = newValue.addingTimeInterval(Self.nextBookingInterval)
+                }
             }
         }
     }
@@ -131,6 +159,12 @@ struct BookReturnTimeSheet: View {
             parkName: parkName,
             returnEnd: isOpenEnded ? nil : returnEnd
         )
+        // Optional concurrent "next booking eligibility" countdown (LL / Express
+        // Now only). Runs alongside the return-time activity — ActivityKit
+        // supports multiple concurrent activities from one app.
+        if trackNextBooking && !isOpenEnded && nextBookingAt > .now {
+            LiveActivityManager.startNextBooking(rideName: ride.name, eligibleAt: nextBookingAt)
+        }
         let passId = "\(ride.id)-\(Int(returnStart.timeIntervalSince1970))"
         Task {
             await NotificationService.shared.requestAuthorization()

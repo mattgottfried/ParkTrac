@@ -135,6 +135,7 @@ struct MyDiningView: View {
             context.delete(list[index])
         }
         try? context.save()
+        LiveActivityManager.syncDiningActivity(context: context)
     }
 }
 
@@ -311,6 +312,7 @@ struct AddReservationSheet: View {
         )
         context.insert(res)
         try? context.save()
+        LiveActivityManager.syncDiningActivity(context: context)
         dismiss()
     }
 }

@@ -238,6 +238,9 @@ struct ParkMapView: View {
     @State private var lastAutoZoomedParkId: String? = nil
     @State private var showTab: BottomTab = .rides
     @State private var showMustDoOnly: Bool = false
+    /// "<parkId>-<openingTime>" of the rope-drop activity we last started —
+    /// prevents the 60s auto-refresh from restarting it every cycle.
+    @State private var lastRopeDropKey: String? = nil
 
     var theme: ParkTheme { viewModel.selectedGroup.theme }
 
@@ -343,6 +346,7 @@ struct ParkMapView: View {
             await viewModel.loadAllParks()
             viewModel.startAutoRefresh()
             locationService.requestAndStart()
+            syncRopeDropActivity()
         }
         .onDisappear {
             viewModel.stopAutoRefresh()
@@ -369,11 +373,32 @@ struct ParkMapView: View {
         .onChange(of: viewModel.lastRefreshed) { _, _ in
             NotificationService.shared.checkAlerts(rides: viewModel.allRides, context: modelContext)
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
+            syncRopeDropActivity()
         }
         .sheet(item: $selectedRide) { ride in
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
             RideDetailSheet(ride: ride, theme: theme, parkGroup: viewModel.selectedGroup, parkName: parkName)
         }
+    }
+
+    // MARK: - Rope Drop Live Activity
+
+    /// Starts a park-opening (rope drop) countdown Live Activity for the
+    /// currently selected park when its operating opening time is still in the
+    /// future. Called from `.task` and every 60s refresh; a per-(park, day)
+    /// key guards against restarting the activity on every refresh cycle.
+    /// Once the opening passes, the activity is left to go stale naturally.
+    private func syncRopeDropActivity() {
+        guard let park = viewModel.filterPark ?? viewModel.currentParks.first else { return }
+        let schedule = viewModel.todaySchedule(for: park)
+        guard let operatingDay = schedule.first(where: { $0.type == "OPERATING" || $0.type == nil }),
+              let opening = operatingDay.openingDate,
+              opening > .now
+        else { return }
+        let key = "\(park.id)-\(opening.timeIntervalSince1970)"
+        guard key != lastRopeDropKey else { return }
+        lastRopeDropKey = key
+        LiveActivityManager.startRopeDrop(parkName: park.name, openingTime: opening)
     }
 
     // MARK: - Zoom-Based Auto-Select

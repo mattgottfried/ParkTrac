@@ -30,7 +30,13 @@ struct ParkTracApp: App {
         .onChange(of: scenePhase) { _, phase in
             // Re-queue the background task every time the app comes to the foreground
             // so iOS always has a fresh request to schedule against
-            if phase == .active { BackgroundRefreshService.schedule() }
+            if phase == .active {
+                BackgroundRefreshService.schedule()
+                // Refresh the dining countdown for the soonest reservation later
+                // today — covers reservations created outside a view (e.g. the
+                // email-scraping AppIntent) and clears stale/past activities.
+                LiveActivityManager.syncDiningActivity(context: container.mainContext)
+            }
         }
     }
 }
