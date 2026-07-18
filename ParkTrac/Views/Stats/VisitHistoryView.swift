@@ -150,6 +150,9 @@ private struct VisitDayRow: View {
 struct VisitDayDetailView: View {
     let visit: VisitDay
 
+    @Environment(\.modelContext) private var context
+    @State private var deletedIds: Set<PersistentIdentifier> = []
+
     private var dateStr: String {
         let f = DateFormatter()
         f.dateStyle = .full
@@ -159,11 +162,17 @@ struct VisitDayDetailView: View {
 
     private var entriesByPark: [(park: String, logs: [RideLog])] {
         var byPark: [String: [RideLog]] = [:]
-        for log in visit.entries {
+        for log in visit.entries where !deletedIds.contains(log.persistentModelID) {
             byPark[log.parkName, default: []].append(log)
         }
         return byPark.map { (park: $0.key, logs: $0.value.sorted { $0.riddenAt < $1.riddenAt }) }
             .sorted { $0.park < $1.park }
+    }
+
+    private func delete(_ log: RideLog) {
+        deletedIds.insert(log.persistentModelID)
+        context.delete(log)
+        try? context.save()
     }
 
     private static let timeFmt: DateFormatter = {
@@ -197,6 +206,12 @@ struct VisitDayDetailView: View {
                 .listRowBackground(Color.clear)
             }
 
+            if entriesByPark.isEmpty {
+                ContentUnavailableView("No Rides Left", systemImage: "ticket",
+                    description: Text("All rides for this visit have been removed."))
+                    .listRowBackground(Color.clear)
+            }
+
             ForEach(entriesByPark, id: \.park) { group in
                 Section(group.park) {
                     ForEach(group.logs) { log in
@@ -221,6 +236,9 @@ struct VisitDayDetailView: View {
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                        }
+                        .swipeActions {
+                            Button("Delete", role: .destructive) { delete(log) }
                         }
                     }
                 }
