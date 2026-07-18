@@ -92,7 +92,7 @@ private struct ResortBannerView: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: appState.selectedResort == .disney
-                    ? "castle.fill" : "globe.americas.fill")
+                    ? "crown.fill" : "globe.americas.fill")
                     .font(.system(size: 14, weight: .semibold))
 
                 Text(appState.selectedResort.rawValue)
@@ -147,7 +147,7 @@ private struct ResortPickerSheet: View {
             dismiss()
         } label: {
             VStack(spacing: 12) {
-                Image(systemName: resort == .disney ? "castle.fill" : "globe.americas.fill")
+                Image(systemName: resort == .disney ? "crown.fill" : "globe.americas.fill")
                     .font(.system(size: 36))
                     .foregroundStyle(isSelected ? Color.white : resort.theme.primaryColor)
 
