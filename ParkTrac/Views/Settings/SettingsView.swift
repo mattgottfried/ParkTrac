@@ -53,7 +53,7 @@ struct SettingsView: View {
                 Section {
                     HStack {
                         Label("Current Resort", systemImage: appState.selectedResort == .disney
-                              ? "castle.fill" : "globe.americas.fill")
+                              ? "crown.fill" : "globe.americas.fill")
                         Spacer()
                         Text(appState.selectedResort.rawValue)
                             .foregroundStyle(.secondary)
