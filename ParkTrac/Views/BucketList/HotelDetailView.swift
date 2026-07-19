@@ -1,17 +1,19 @@
 import SwiftUI
+import SwiftData
 import PhotosUI
 
 struct HotelDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
+    @Query(sort: \Guest.name) private var allGuests: [Guest]
     let hotel: HotelStay
 
     @State private var isVisited: Bool
     @State private var checkIn: Date
     @State private var checkOut: Date
     @State private var roomType: String
-    @State private var mattRating: Int
-    @State private var heatherRating: Int
+    @State private var ratings: [UUID: Int] = [:]
+    @State private var showGuestPicker = false
     @State private var notes: String
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var photoImages: [UIImage] = []
@@ -23,10 +25,15 @@ struct HotelDetailView: View {
         _checkIn = State(initialValue: hotel.checkIn ?? .now)
         _checkOut = State(initialValue: hotel.checkOut ?? Calendar.current.date(byAdding: .day, value: 1, to: .now)!)
         _roomType = State(initialValue: hotel.roomType)
-        _mattRating = State(initialValue: hotel.mattRating)
-        _heatherRating = State(initialValue: hotel.wifeRating)
         _notes = State(initialValue: hotel.notes)
         _photoImages = State(initialValue: hotel.photoData.compactMap { UIImage(data: $0) })
+    }
+
+    private func ratingBinding(for guest: Guest) -> Binding<Int> {
+        Binding(
+            get: { ratings[guest.id] ?? HotelRating.current(hotelId: hotel.id, guestId: guest.id, context: context) },
+            set: { ratings[guest.id] = $0 }
+        )
     }
 
     var body: some View {
@@ -59,9 +66,17 @@ struct HotelDetailView: View {
                 }
 
                 if isVisited {
-                    Section("Ratings") {
-                        StarRatingView(label: "Matt", rating: $mattRating)
-                        StarRatingView(label: "Heather", rating: $heatherRating)
+                    Section {
+                        ForEach(allGuests) { guest in
+                            StarRatingView(label: guest.name, rating: ratingBinding(for: guest))
+                        }
+                        Button {
+                            showGuestPicker = true
+                        } label: {
+                            Label("Add Guest", systemImage: "person.badge.plus")
+                        }
+                    } header: {
+                        Text("Ratings")
                     }
 
                     Section("Notes") {
@@ -102,6 +117,9 @@ struct HotelDetailView: View {
             .onChange(of: selectedPhotos) { _, newItems in
                 Task { await loadPhotos(from: newItems) }
             }
+            .sheet(isPresented: $showGuestPicker) {
+                GuestPickerSheet()
+            }
         }
     }
 
@@ -133,8 +151,18 @@ struct HotelDetailView: View {
         hotel.checkIn = isVisited ? checkIn : nil
         hotel.checkOut = isVisited ? checkOut : nil
         hotel.roomType = roomType
-        hotel.mattRating = isVisited ? mattRating : 0
-        hotel.wifeRating = isVisited ? heatherRating : 0
+        if isVisited {
+            for guest in allGuests {
+                // Fall back to the persisted value (not 0) for guests whose star row the
+                // user never touched this session — otherwise saving would silently wipe
+                // out every untouched guest's existing rating.
+                let stars = ratings[guest.id]
+                    ?? HotelRating.current(hotelId: hotel.id, guestId: guest.id, context: context)
+                HotelRating.set(hotelId: hotel.id, guestId: guest.id, stars: stars, context: context)
+            }
+        } else {
+            HotelRating.deleteAll(hotelId: hotel.id, context: context)
+        }
         hotel.notes = notes
         // Re-encode only when photos changed — repeated JPEG passes degrade quality
         if photosChanged {

@@ -5,12 +5,13 @@ import PhotosUI
 struct BucketRestaurantDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
+    @Query(sort: \Guest.name) private var allGuests: [Guest]
     let restaurant: BucketRestaurant
 
     @State private var isVisited: Bool
     @State private var visitDate: Date
-    @State private var mattRating: Int
-    @State private var heatherRating: Int
+    @State private var ratings: [UUID: Int] = [:]
+    @State private var showGuestPicker = false
     @State private var notes: String
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var photoImages: [UIImage]
@@ -20,10 +21,15 @@ struct BucketRestaurantDetailView: View {
         self.restaurant = restaurant
         _isVisited = State(initialValue: restaurant.isVisited)
         _visitDate = State(initialValue: restaurant.visitDate ?? .now)
-        _mattRating = State(initialValue: Int(restaurant.mattRating.rounded()))
-        _heatherRating = State(initialValue: Int(restaurant.wifeRating.rounded()))
         _notes = State(initialValue: restaurant.notes)
         _photoImages = State(initialValue: restaurant.photoData.compactMap { UIImage(data: $0) })
+    }
+
+    private func ratingBinding(for guest: Guest) -> Binding<Int> {
+        Binding(
+            get: { ratings[guest.id] ?? RestaurantRating.current(restaurantId: restaurant.id, guestId: guest.id, context: context) },
+            set: { ratings[guest.id] = $0 }
+        )
     }
 
     var body: some View {
@@ -54,9 +60,17 @@ struct BucketRestaurantDetailView: View {
                 }
 
                 if isVisited {
-                    Section("Ratings") {
-                        StarRatingView(label: "Matt", rating: $mattRating)
-                        StarRatingView(label: "Heather", rating: $heatherRating)
+                    Section {
+                        ForEach(allGuests) { guest in
+                            StarRatingView(label: guest.name, rating: ratingBinding(for: guest))
+                        }
+                        Button {
+                            showGuestPicker = true
+                        } label: {
+                            Label("Add Guest", systemImage: "person.badge.plus")
+                        }
+                    } header: {
+                        Text("Ratings")
                     }
 
                     Section("Notes") {
@@ -97,6 +111,9 @@ struct BucketRestaurantDetailView: View {
             .onChange(of: selectedPhotos) { _, newItems in
                 Task { await loadPhotos(from: newItems) }
             }
+            .sheet(isPresented: $showGuestPicker) {
+                GuestPickerSheet()
+            }
         }
     }
 
@@ -126,17 +143,16 @@ struct BucketRestaurantDetailView: View {
         restaurant.isVisited = isVisited
         restaurant.visitDate = isVisited ? visitDate : nil
         if isVisited {
-            // The stars edit whole numbers but the model stores halves (e.g. 4.5
-            // from seed data) — only overwrite a rating the user actually changed
-            if mattRating != Int(restaurant.mattRating.rounded()) {
-                restaurant.mattRating = Double(mattRating)
-            }
-            if heatherRating != Int(restaurant.wifeRating.rounded()) {
-                restaurant.wifeRating = Double(heatherRating)
+            for guest in allGuests {
+                // Fall back to the persisted value (not 0) for guests whose star row the
+                // user never touched this session — otherwise saving would silently wipe
+                // out every untouched guest's existing rating.
+                let stars = ratings[guest.id]
+                    ?? RestaurantRating.current(restaurantId: restaurant.id, guestId: guest.id, context: context)
+                RestaurantRating.set(restaurantId: restaurant.id, guestId: guest.id, stars: stars, context: context)
             }
         } else {
-            restaurant.mattRating = 0
-            restaurant.wifeRating = 0
+            RestaurantRating.deleteAll(restaurantId: restaurant.id, context: context)
         }
         restaurant.notes = notes
         if photosChanged {

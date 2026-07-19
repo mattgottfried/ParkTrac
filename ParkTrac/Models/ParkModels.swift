@@ -23,10 +23,11 @@ enum CrowdLevel: String {
 
     var color: Color {
         switch self {
-        case .ghost, .low: return .green
-        case .moderate:    return .yellow
-        case .high:        return .orange
-        case .veryHigh:    return .red
+        case .ghost:    return .teal
+        case .low:      return .green
+        case .moderate: return .yellow
+        case .high:     return .orange
+        case .veryHigh: return .red
         }
     }
 

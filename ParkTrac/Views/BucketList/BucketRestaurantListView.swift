@@ -44,6 +44,14 @@ struct BucketRestaurantListView: View {
         visitedFilter != .all || categoryFilter != nil || sortOrder != .name
     }
 
+    /// A–Z section groups, only meaningful when sorted by name.
+    private var groupedByLetter: [(letter: String, restaurants: [BucketRestaurant])] {
+        let groups = Dictionary(grouping: filtered) { restaurant -> String in
+            restaurant.name.first.map { String($0).uppercased() } ?? "#"
+        }
+        return groups.keys.sorted().map { ($0, groups[$0]!) }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             BucketProgressView(
@@ -70,6 +78,19 @@ struct BucketRestaurantListView: View {
                         description: Text("No restaurants match the current filters.")
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if sortOrder == .name {
+                    List {
+                        ForEach(groupedByLetter, id: \.letter) { group in
+                            Section(group.letter) {
+                                ForEach(group.restaurants) { restaurant in
+                                    BucketRestaurantRow(restaurant: restaurant)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { selectedRestaurant = restaurant }
+                                }
+                            }
+                        }
+                    }
+                    .listStyle(.plain)
                 } else {
                     List {
                         ForEach(filtered) { restaurant in
@@ -101,6 +122,7 @@ struct BucketRestaurantListView: View {
                         ? "line.3.horizontal.decrease.circle.fill"
                         : "line.3.horizontal.decrease.circle")
                 }
+                .accessibilityLabel("Filter and sort")
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -108,6 +130,7 @@ struct BucketRestaurantListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add restaurant")
             }
         }
         .sheet(item: $selectedRestaurant) { BucketRestaurantDetailView(restaurant: $0) }
@@ -136,12 +159,15 @@ struct BucketRestaurantListView: View {
                     total: allRestaurants.filter { $0.resort == resort && $0.category == "Quick Service" }.count,
                     color: .orange
                 )
-                statCard(
-                    label: "Character Dining",
-                    visited: allRestaurants.filter { $0.resort == resort && $0.category == "Character Dining" && $0.isVisited }.count,
-                    total: allRestaurants.filter { $0.resort == resort && $0.category == "Character Dining" }.count,
-                    color: .blue
-                )
+                let characterDiningTotal = allRestaurants.filter { $0.resort == resort && $0.category == "Character Dining" }.count
+                if characterDiningTotal > 0 {
+                    statCard(
+                        label: "Character Dining",
+                        visited: allRestaurants.filter { $0.resort == resort && $0.category == "Character Dining" && $0.isVisited }.count,
+                        total: characterDiningTotal,
+                        color: .blue
+                    )
+                }
             }
             .padding(.horizontal)
         }

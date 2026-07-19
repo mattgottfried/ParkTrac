@@ -1,8 +1,10 @@
 import SwiftUI
+import SwiftData
 
 struct OnboardingView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
 
     @State private var names: [String] = ["", ""]
     @State private var focusedIndex: Int? = nil
@@ -85,7 +87,7 @@ struct OnboardingView: View {
                     .disabled(!canContinue)
                     .opacity(canContinue ? 1 : 0.5)
 
-                    Text("You can edit party members anytime in Settings.")
+                    Text("You can manage guests anytime in Settings.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -101,70 +103,13 @@ struct OnboardingView: View {
     }
 
     private func finish() {
-        appState.partyMembers = validNames.isEmpty ? ["Me"] : validNames
+        let names = validNames.isEmpty ? ["Me"] : validNames
+        let existingGuests = (try? context.fetch(FetchDescriptor<Guest>())) ?? []
+        for name in names where !existingGuests.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+            context.insert(Guest(name: name))
+        }
+        try? context.save()
         appState.hasCompletedOnboarding = true
         dismiss()
-    }
-}
-
-// MARK: - Edit Party Sheet (reused from Settings)
-
-struct EditPartyView: View {
-    @Environment(AppState.self) private var appState
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var names: [String] = []
-
-    private var validNames: [String] { names.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    ForEach(names.indices, id: \.self) { i in
-                        HStack {
-                            TextField("Name", text: $names[i])
-                                .textContentType(.name)
-                            if names.count > 1 {
-                                Button {
-                                    names.remove(at: i)
-                                } label: {
-                                    Image(systemName: "minus.circle.fill")
-                                        .foregroundStyle(.red)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    Button {
-                        names.append("")
-                    } label: {
-                        Label("Add Person", systemImage: "plus")
-                    }
-                } header: {
-                    Text("Party Members")
-                } footer: {
-                    Text("Names appear on restaurant and hotel rating screens.")
-                }
-            }
-            .navigationTitle("Edit Party")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        let saved = validNames
-                        appState.partyMembers = saved.isEmpty ? ["Me"] : saved
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                }
-            }
-            .onAppear {
-                names = appState.partyMembers.isEmpty ? [""] : appState.partyMembers
-            }
-        }
     }
 }

@@ -42,7 +42,6 @@ struct TrillTrackWidgetLiveActivity: Widget {
         case .returnTime:  return "bolt.fill"
         case .waitTimer:   return "stopwatch.fill"
         case .dining:      return "fork.knife"
-        case .ropeDrop:    return "sunrise.fill"
         case .nextBooking: return "clock.badge.checkmark.fill"
         }
     }
@@ -61,7 +60,7 @@ private struct LockScreenView: View {
     /// Any mode that renders as a countdown to `countdownEnd`.
     private var isCountdown: Bool {
         switch context.attributes.mode {
-        case .returnTime, .dining, .ropeDrop, .nextBooking: return true
+        case .returnTime, .dining, .nextBooking: return true
         case .waitTimer: return false
         }
     }
@@ -71,7 +70,6 @@ private struct LockScreenView: View {
         case .returnTime:  return "bolt.fill"
         case .waitTimer:   return "stopwatch.fill"
         case .dining:      return "fork.knife"
-        case .ropeDrop:    return "sunrise.fill"
         case .nextBooking: return "clock.badge.checkmark.fill"
         }
     }
@@ -80,7 +78,6 @@ private struct LockScreenView: View {
     private var closedText: String {
         switch context.attributes.mode {
         case .dining:      return "Reservation time"
-        case .ropeDrop:    return "Park is open"
         case .nextBooking: return "Eligible now"
         default:           return "Window closed"
         }
@@ -90,7 +87,6 @@ private struct LockScreenView: View {
     private func caption(for end: Date) -> String {
         switch context.attributes.mode {
         case .dining:      return "Reservation at \(end.formatted(date: .omitted, time: .shortened))"
-        case .ropeDrop:    return "Opens at \(end.formatted(date: .omitted, time: .shortened))"
         case .nextBooking: return "Eligible at \(end.formatted(date: .omitted, time: .shortened))"
         default:           return "Return by \(end.formatted(date: .omitted, time: .shortened))"
         }
@@ -158,7 +154,7 @@ private struct TimeText: View {
 
     private var isCountdown: Bool {
         switch context.attributes.mode {
-        case .returnTime, .dining, .ropeDrop, .nextBooking: return true
+        case .returnTime, .dining, .nextBooking: return true
         case .waitTimer: return false
         }
     }

@@ -319,7 +319,7 @@ struct AddPlanItemView: View {
             Task {
                 await NotificationService.shared.requestAuthorization()
                 NotificationService.shared.scheduleLLReminder(
-                    passId: item.persistentModelID.hashValue.description,
+                    passId: item.id.uuidString,
                     rideName: item.title,
                     returnEnd: llEnd
                 )

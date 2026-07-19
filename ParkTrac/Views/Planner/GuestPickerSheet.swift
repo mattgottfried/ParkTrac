@@ -55,10 +55,10 @@ struct GuestPickerSheet: View {
     }
 
     private func isSelected(_ guest: Guest) -> Bool {
-        appState.todayGuestIds.contains(guest.persistentModelID.hashValue.description)
+        appState.todayGuestIds.contains(guest.id.uuidString)
     }
     private func toggle(_ guest: Guest) {
-        let key = guest.persistentModelID.hashValue.description
+        let key = guest.id.uuidString
         if appState.todayGuestIds.contains(key) {
             appState.todayGuestIds.removeAll { $0 == key }
         } else {

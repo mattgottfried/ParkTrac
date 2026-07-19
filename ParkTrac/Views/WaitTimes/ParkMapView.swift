@@ -238,10 +238,6 @@ struct ParkMapView: View {
     @State private var lastAutoZoomedParkId: String? = nil
     @State private var showTab: BottomTab = .rides
     @State private var showMustDoOnly: Bool = false
-    /// "<parkId>-<openingTime>" of the rope-drop activity we last started —
-    /// prevents the 60s auto-refresh from restarting it every cycle.
-    @State private var lastRopeDropKey: String? = nil
-
     var theme: ParkTheme { viewModel.selectedGroup.theme }
 
     var body: some View {
@@ -266,6 +262,7 @@ struct ParkMapView: View {
                             .padding(8)
                             .background(.regularMaterial, in: Circle())
                     }
+                    .accessibilityLabel(mapStyleIsHybrid ? "Switch to standard map" : "Switch to satellite map")
                     Spacer()
                 }
                 .padding(.horizontal)
@@ -332,7 +329,7 @@ struct ParkMapView: View {
                 VStack(spacing: 0) {
                     Spacer()
                     rideListPanel
-                        .frame(height: panelExpanded ? geo.size.height * 0.82 : 320)
+                        .frame(height: panelExpanded ? geo.size.height * 0.82 : 420)
                         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: panelExpanded)
                 }
             }
@@ -346,7 +343,6 @@ struct ParkMapView: View {
             await viewModel.loadAllParks()
             viewModel.startAutoRefresh()
             locationService.requestAndStart()
-            syncRopeDropActivity()
         }
         .onDisappear {
             viewModel.stopAutoRefresh()
@@ -373,32 +369,11 @@ struct ParkMapView: View {
         .onChange(of: viewModel.lastRefreshed) { _, _ in
             NotificationService.shared.checkAlerts(rides: viewModel.allRides, context: modelContext)
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
-            syncRopeDropActivity()
         }
         .sheet(item: $selectedRide) { ride in
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
             RideDetailSheet(ride: ride, theme: theme, parkGroup: viewModel.selectedGroup, parkName: parkName)
         }
-    }
-
-    // MARK: - Rope Drop Live Activity
-
-    /// Starts a park-opening (rope drop) countdown Live Activity for the
-    /// currently selected park when its operating opening time is still in the
-    /// future. Called from `.task` and every 60s refresh; a per-(park, day)
-    /// key guards against restarting the activity on every refresh cycle.
-    /// Once the opening passes, the activity is left to go stale naturally.
-    private func syncRopeDropActivity() {
-        guard let park = viewModel.filterPark ?? viewModel.currentParks.first else { return }
-        let schedule = viewModel.todaySchedule(for: park)
-        guard let operatingDay = schedule.first(where: { $0.type == "OPERATING" || $0.type == nil }),
-              let opening = operatingDay.openingDate,
-              opening > .now
-        else { return }
-        let key = "\(park.id)-\(opening.timeIntervalSince1970)"
-        guard key != lastRopeDropKey else { return }
-        lastRopeDropKey = key
-        LiveActivityManager.startRopeDrop(parkName: park.name, openingTime: opening)
     }
 
     // MARK: - Zoom-Based Auto-Select
@@ -498,17 +473,20 @@ struct ParkMapView: View {
 
     private var rideListPanel: some View {
         VStack(spacing: 0) {
-            Capsule()
-                .fill(.secondary.opacity(0.4))
-                .frame(width: 36, height: 4)
-                .padding(.top, 8).padding(.bottom, 6)
-                .onTapGesture { panelExpanded.toggle() }
-                .gesture(DragGesture(minimumDistance: 20).onEnded { v in
-                    if v.translation.height < -30 { panelExpanded = true }
-                    else if v.translation.height > 30 { panelExpanded = false }
-                })
+            VStack(spacing: 0) {
+                Capsule()
+                    .fill(.secondary.opacity(0.4))
+                    .frame(width: 36, height: 4)
+                    .padding(.top, 8).padding(.bottom, 6)
 
-            panelHeader
+                panelHeader
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { panelExpanded.toggle() }
+            .gesture(DragGesture(minimumDistance: 20).onEnded { v in
+                if v.translation.height < -30 { panelExpanded = true }
+                else if v.translation.height > 30 { panelExpanded = false }
+            })
 
             // Park Hours Header
             if let park = viewModel.filterPark ?? viewModel.currentParks.first {
@@ -537,7 +515,8 @@ struct ParkMapView: View {
 
             if showTab == .shows {
                 ShowsListView(shows: viewModel.currentShows, theme: theme)
-            } else if viewModel.isLoadingParks || (viewModel.isLoading && viewModel.allRides.isEmpty) {
+            } else if viewModel.isLoadingParks || viewModel.isLoading
+                || (viewModel.allRides.isEmpty && viewModel.errorMessage == nil) {
                 ProgressView("Loading…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let errorMsg = viewModel.errorMessage {
                 VStack(spacing: 16) {
@@ -562,7 +541,7 @@ struct ParkMapView: View {
                                 .onTapGesture { selectedRide = ride }
                         }
                     }
-                    .padding(.horizontal).padding(.vertical, 8)
+                    .padding(.horizontal).padding(.top, 8).padding(.bottom, panelExpanded ? 8 : 90)
                 }
                 .refreshable { await viewModel.refresh() }
             }

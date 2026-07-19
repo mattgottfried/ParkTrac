@@ -14,11 +14,19 @@ final class BucketRestaurant {
     var wifeRating: Double = 0
     var notes: String = ""
     var isFromAPI: Bool = false
+    var syncUpdatedAt: Date = Date()
     @Attribute(.externalStorage) var photoData: [Data] = []
 
+    // mattRating/wifeRating stay declared (unused by app logic) so RatingMigrationService
+    // has legacy data to read once; real ratings now live in RestaurantRating rows.
     var averageRating: Double? {
-        guard isVisited, mattRating > 0, wifeRating > 0 else { return nil }
-        return (mattRating + wifeRating) / 2.0
+        guard isVisited, let context = modelContext else { return nil }
+        let rid = id
+        let ratings = (try? context.fetch(FetchDescriptor<RestaurantRating>(
+            predicate: #Predicate { $0.restaurantId == rid }
+        ))) ?? []
+        guard !ratings.isEmpty else { return nil }
+        return Double(ratings.map(\.stars).reduce(0, +)) / Double(ratings.count)
     }
 
     init(
@@ -42,6 +50,7 @@ final class BucketRestaurant {
         self.wifeRating = wifeRating
         self.notes = ""
         self.isFromAPI = isFromAPI
+        self.syncUpdatedAt = Date()
         self.photoData = []
     }
 }

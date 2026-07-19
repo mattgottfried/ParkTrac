@@ -139,10 +139,6 @@ final class AppState {
     var hasCompletedOnboarding: Bool {
         didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding") }
     }
-    var partyMembers: [String] {
-        didSet { UserDefaults.standard.set(partyMembers, forKey: "partyMembers") }
-    }
-
     // MARK: - Today's Guests (keyed by date, auto-resets)
 
     var todayGuestIds: [String] {
@@ -210,9 +206,8 @@ final class AppState {
         timerPostedMinutes = ud.integer(forKey: "timerPostedMinutes")
         timerResort = ud.string(forKey: "timerResort") ?? ""
 
-        // Onboarding + party (device-local)
+        // Onboarding (device-local)
         hasCompletedOnboarding = ud.bool(forKey: "hasCompletedOnboarding")
-        partyMembers = ud.stringArray(forKey: "partyMembers") ?? []
 
         // Pass features (device-local)
         disneyPassCost = ud.double(forKey: "disneyPassCost")

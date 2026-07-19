@@ -2,6 +2,7 @@ import Foundation
 import SwiftData
 
 @Model final class PlanItem {
+    var id: UUID = UUID()
     var date: Date = Date()
     var scheduledTime: Date?
     var title: String = ""
@@ -14,6 +15,7 @@ import SwiftData
     var sortOrder: Int = 0
     var llReturnStart: Date?
     var llReturnEnd: Date?
+    var syncUpdatedAt: Date = Date()
 
     init(date: Date = Calendar.current.startOfDay(for: .now),
          scheduledTime: Date? = nil,
@@ -24,6 +26,7 @@ import SwiftData
          resort: String = "",
          notes: String = "",
          sortOrder: Int = 0) {
+        self.id = UUID()
         self.date = date
         self.scheduledTime = scheduledTime
         self.title = title
@@ -34,5 +37,6 @@ import SwiftData
         self.notes = notes
         self.isDone = false
         self.sortOrder = sortOrder
+        self.syncUpdatedAt = .now
     }
 }
