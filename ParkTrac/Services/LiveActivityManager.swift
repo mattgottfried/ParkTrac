@@ -4,9 +4,8 @@ import SwiftData
 
 /// Starts and ends Live Activities for return-time passes (Lightning Lane /
 /// Express Now / DAS / AAP), the wait stopwatch, dining reservation
-/// countdowns, rope-drop (park opening) countdowns, and next-booking
-/// eligibility countdowns. Main-app only — the widget extension only renders
-/// the ContentState this hands to ActivityKit.
+/// countdowns, and next-booking eligibility countdowns. Main-app only — the
+/// widget extension only renders the ContentState this hands to ActivityKit.
 ///
 /// Simplification: one active activity per mode. Starting a new one replaces
 /// whichever was running for that mode; there's no per-item correlation, so
@@ -22,7 +21,6 @@ enum LiveActivityManager {
     private static var returnTimeActivity: Activity<ThrillTrackActivityAttributes>?
     private static var waitTimerActivity: Activity<ThrillTrackActivityAttributes>?
     private static var diningActivity: Activity<ThrillTrackActivityAttributes>?
-    private static var ropeDropActivity: Activity<ThrillTrackActivityAttributes>?
     private static var nextBookingActivity: Activity<ThrillTrackActivityAttributes>?
 
     // MARK: - Return time (Lightning Lane / Express Now / DAS / AAP)
@@ -87,25 +85,6 @@ enum LiveActivityManager {
     /// Lets scene-active sync avoid restarting the activity every foreground.
     static var diningReservationTime: Date? {
         diningActivity?.content.state.countdownEnd
-    }
-
-    // MARK: - Rope drop (park opening) countdown
-
-    static func startRopeDrop(parkName: String, openingTime: Date) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        endRopeDrop()
-        let attributes = ThrillTrackActivityAttributes(
-            mode: .ropeDrop, label: "Rope Drop", title: parkName, subtitle: ""
-        )
-        let state = ThrillTrackActivityAttributes.ContentState(countdownEnd: openingTime, startedAt: nil, postedMinutes: nil)
-        let content = ActivityContent(state: state, staleDate: openingTime)
-        ropeDropActivity = try? Activity.request(attributes: attributes, content: content)
-    }
-
-    static func endRopeDrop() {
-        guard let activity = ropeDropActivity else { return }
-        ropeDropActivity = nil
-        Task { await activity.end(nil, dismissalPolicy: .immediate) }
     }
 
     // MARK: - Next Lightning Lane booking eligibility countdown

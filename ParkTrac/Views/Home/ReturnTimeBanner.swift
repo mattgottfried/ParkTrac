@@ -44,6 +44,7 @@ struct ReturnTimeBanner: View {
                     Button {
                         withAnimation { pass.isDone = true }
                         try? context.save()
+                        NotificationService.shared.cancelLLReminder(passId: pass.id.uuidString)
                     } label: {
                         Text("Done")
                             .font(.caption.weight(.semibold))

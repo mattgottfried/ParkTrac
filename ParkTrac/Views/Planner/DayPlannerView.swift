@@ -41,6 +41,7 @@ struct DayPlannerView: View {
                                     Button("Done", role: .destructive) {
                                         pass.isDone = true
                                         LiveActivityManager.endReturnTime()
+                                        NotificationService.shared.cancelLLReminder(passId: pass.id.uuidString)
                                     }
                                 }
                         }
@@ -253,6 +254,7 @@ private struct LLPassRow: View {
                 Button("Done") {
                     pass.isDone = true
                     LiveActivityManager.endReturnTime()
+                    NotificationService.shared.cancelLLReminder(passId: pass.id.uuidString)
                 }
                     .font(.caption.weight(.semibold))
                     .padding(.horizontal, 8)

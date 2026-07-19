@@ -165,11 +165,10 @@ struct BookReturnTimeSheet: View {
         if trackNextBooking && !isOpenEnded && nextBookingAt > .now {
             LiveActivityManager.startNextBooking(rideName: ride.name, eligibleAt: nextBookingAt)
         }
-        let passId = "\(ride.id)-\(Int(returnStart.timeIntervalSince1970))"
         Task {
             await NotificationService.shared.requestAuthorization()
             NotificationService.shared.scheduleLLReminder(
-                passId: passId,
+                passId: item.id.uuidString,
                 rideName: ride.name,
                 returnEnd: returnEnd
             )
