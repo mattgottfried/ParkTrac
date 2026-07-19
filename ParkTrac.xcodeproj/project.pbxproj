@@ -14,7 +14,6 @@
 		AA000000000000000000002B /* ParkAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002A /* ParkAPIService.swift */; };
 		AA000000000000000000002D /* WaitTimesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002C /* WaitTimesViewModel.swift */; };
 		AA000000000000000000002F /* ParkMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002E /* ParkMapView.swift */; };
-		AA0000000000000000000031 /* WaitTimeAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000030 /* WaitTimeAnnotation.swift */; };
 		AA0000000000000000000033 /* RideCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000032 /* RideCardView.swift */; };
 		AA0000000000000000000035 /* RideDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000034 /* RideDetailSheet.swift */; };
 		AA0000000000000000000037 /* RidePredictionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000036 /* RidePredictionView.swift */; };
@@ -47,8 +46,6 @@
 		AA0000000000000000000105 /* BadgeDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000104 /* BadgeDefinition.swift */; };
 		AA0000000000000000000107 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000106 /* StatsView.swift */; };
 		AA0000000000000000000109 /* BadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000108 /* BadgesView.swift */; };
-		AA000000000000000000010B /* RideRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010A /* RideRowView.swift */; };
-		AA000000000000000000010D /* WaitBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010C /* WaitBadgeView.swift */; };
 		AA0000000000000000000111 /* ParkHoursHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000110 /* ParkHoursHeaderView.swift */; };
 		AA0000000000000000000113 /* RideLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000112 /* RideLog.swift */; };
 		AA0000000000000000000115 /* DiningReservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000114 /* DiningReservation.swift */; };
@@ -71,7 +68,6 @@
 		AA0000000000000000000137 /* HeightCheckerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000136 /* HeightCheckerView.swift */; };
 		AA0000000000000000000139 /* TodayBlockOutBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000138 /* TodayBlockOutBanner.swift */; };
 		AA000000000000000000013C /* AnnualPassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013B /* AnnualPassView.swift */; };
-		AA000000000000000000013E /* APOffersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013D /* APOffersView.swift */; };
 		AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013F /* GuestPickerSheet.swift */; };
 		AA0000000000000000000151 /* Guest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000152 /* Guest.swift */; };
 		AA0000000000000000000153 /* BlockOutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000154 /* BlockOutService.swift */; };
@@ -98,6 +94,16 @@
 		C972E4CA300AADAF00E01CAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4C9300AADAF00E01CAC /* WidgetKit.framework */; };
 		C972E4CC300AADAF00E01CAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4CB300AADAF00E01CAC /* SwiftUI.framework */; };
 		C972E4DD300AADB000E01CAC /* TrillTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA0000000000000000000190 /* HouseholdSyncIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000018F /* HouseholdSyncIndex.swift */; };
+		AA0000000000000000000192 /* HouseholdRecordMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000191 /* HouseholdRecordMapping.swift */; };
+		AA0000000000000000000194 /* HouseholdSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000193 /* HouseholdSyncService.swift */; };
+		AA0000000000000000000196 /* HouseholdBackgroundTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000195 /* HouseholdBackgroundTask.swift */; };
+		AA0000000000000000000198 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000197 /* AppDelegate.swift */; };
+		AA000000000000000000019A /* HouseholdSharingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000199 /* HouseholdSharingView.swift */; };
+		AA000000000000000000019C /* JoinHouseholdSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000019B /* JoinHouseholdSheet.swift */; };
+		AA000000000000000000019F /* RestaurantRating.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000019E /* RestaurantRating.swift */; };
+		AA00000000000000000001A1 /* HotelRating.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A0 /* HotelRating.swift */; };
+		AA00000000000000000001A3 /* RatingMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A2 /* RatingMigrationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -132,7 +138,6 @@
 		AA000000000000000000002A /* ParkAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkAPIService.swift; sourceTree = "<group>"; };
 		AA000000000000000000002C /* WaitTimesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimesViewModel.swift; sourceTree = "<group>"; };
 		AA000000000000000000002E /* ParkMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkMapView.swift; sourceTree = "<group>"; };
-		AA0000000000000000000030 /* WaitTimeAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimeAnnotation.swift; sourceTree = "<group>"; };
 		AA0000000000000000000032 /* RideCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideCardView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000034 /* RideDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideDetailSheet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000036 /* RidePredictionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidePredictionView.swift; sourceTree = "<group>"; };
@@ -166,8 +171,6 @@
 		AA0000000000000000000104 /* BadgeDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeDefinition.swift; sourceTree = "<group>"; };
 		AA0000000000000000000106 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000108 /* BadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesView.swift; sourceTree = "<group>"; };
-		AA000000000000000000010A /* RideRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideRowView.swift; sourceTree = "<group>"; };
-		AA000000000000000000010C /* WaitBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitBadgeView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000110 /* ParkHoursHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkHoursHeaderView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000112 /* RideLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLog.swift; sourceTree = "<group>"; };
 		AA0000000000000000000114 /* DiningReservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiningReservation.swift; sourceTree = "<group>"; };
@@ -190,7 +193,6 @@
 		AA0000000000000000000136 /* HeightCheckerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeightCheckerView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000138 /* TodayBlockOutBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayBlockOutBanner.swift; sourceTree = "<group>"; };
 		AA000000000000000000013B /* AnnualPassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnualPassView.swift; sourceTree = "<group>"; };
-		AA000000000000000000013D /* APOffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersView.swift; sourceTree = "<group>"; };
 		AA000000000000000000013F /* GuestPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestPickerSheet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000141 /* ParkTrac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ParkTrac.entitlements; sourceTree = "<group>"; };
 		AA0000000000000000000152 /* Guest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guest.swift; sourceTree = "<group>"; };
@@ -217,6 +219,16 @@
 		C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrillTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C972E4C9300AADAF00E01CAC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C972E4CB300AADAF00E01CAC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		AA000000000000000000018F /* HouseholdSyncIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdSyncIndex.swift; sourceTree = "<group>"; };
+		AA0000000000000000000191 /* HouseholdRecordMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdRecordMapping.swift; sourceTree = "<group>"; };
+		AA0000000000000000000193 /* HouseholdSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdSyncService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000195 /* HouseholdBackgroundTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdBackgroundTask.swift; sourceTree = "<group>"; };
+		AA0000000000000000000197 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AA0000000000000000000199 /* HouseholdSharingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdSharingView.swift; sourceTree = "<group>"; };
+		AA000000000000000000019B /* JoinHouseholdSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinHouseholdSheet.swift; sourceTree = "<group>"; };
+		AA000000000000000000019E /* RestaurantRating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantRating.swift; sourceTree = "<group>"; };
+		AA00000000000000000001A0 /* HotelRating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotelRating.swift; sourceTree = "<group>"; };
+		AA00000000000000000001A2 /* RatingMigrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingMigrationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -257,6 +269,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000020 /* ParkTracApp.swift */,
+				AA0000000000000000000197 /* AppDelegate.swift */,
 				AA0000000000000000000022 /* ContentView.swift */,
 				AA0000000000000000000141 /* ParkTrac.entitlements */,
 				AA0000000000000000000061 /* Models */,
@@ -307,6 +320,8 @@
 				AA0000000000000000000152 /* Guest.swift */,
 				AA0000000000000000000165 /* WaitTimerLog.swift */,
 				AA0000000000000000000167 /* VisitSaving.swift */,
+				AA000000000000000000019E /* RestaurantRating.swift */,
+				AA00000000000000000001A0 /* HotelRating.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -335,8 +350,21 @@
 				AA000000000000000000018C /* DiningEmailIntent.swift */,
 				AA0000000000000000000187 /* LiveActivityManager.swift */,
 				AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */,
+				AA00000000000000000001A2 /* RatingMigrationService.swift */,
+				AA000000000000000000019D /* HouseholdSync */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000019D /* HouseholdSync */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000193 /* HouseholdSyncService.swift */,
+				AA0000000000000000000191 /* HouseholdRecordMapping.swift */,
+				AA000000000000000000018F /* HouseholdSyncIndex.swift */,
+				AA0000000000000000000195 /* HouseholdBackgroundTask.swift */,
+			);
+			path = HouseholdSync;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000063 /* ViewModels */ = {
@@ -366,14 +394,11 @@
 			isa = PBXGroup;
 			children = (
 				AA000000000000000000002E /* ParkMapView.swift */,
-				AA0000000000000000000030 /* WaitTimeAnnotation.swift */,
 				AA0000000000000000000032 /* RideCardView.swift */,
 				AA0000000000000000000034 /* RideDetailSheet.swift */,
 				AA00000000000000000000F8 /* ParkComparisonView.swift */,
 				AA0000000000000000000036 /* RidePredictionView.swift */,
 				AA0000000000000000000100 /* WaitTimeColor.swift */,
-				AA000000000000000000010A /* RideRowView.swift */,
-				AA000000000000000000010C /* WaitBadgeView.swift */,
 				AA0000000000000000000110 /* ParkHoursHeaderView.swift */,
 				AA0000000000000000000128 /* ShowsListView.swift */,
 				AA000000000000000000012A /* SetAlertSheet.swift */,
@@ -413,6 +438,8 @@
 				AA0000000000000000000136 /* HeightCheckerView.swift */,
 				AA000000000000000000013B /* AnnualPassView.swift */,
 				AA000000000000000000017E /* PassSavingsView.swift */,
+				AA0000000000000000000199 /* HouseholdSharingView.swift */,
+				AA000000000000000000019B /* JoinHouseholdSheet.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -427,7 +454,6 @@
 				AA000000000000000000011C /* VisitHistoryView.swift */,
 				AA0000000000000000000132 /* WeatherCardView.swift */,
 				AA0000000000000000000134 /* SpendingView.swift */,
-				AA000000000000000000013D /* APOffersView.swift */,
 				AA0000000000000000000163 /* WaitAccuracyCard.swift */,
 				AA0000000000000000000180 /* LocationPickerView.swift */,
 			);
@@ -593,7 +619,6 @@
 				AA000000000000000000002B /* ParkAPIService.swift in Sources */,
 				AA000000000000000000002D /* WaitTimesViewModel.swift in Sources */,
 				AA000000000000000000002F /* ParkMapView.swift in Sources */,
-				AA0000000000000000000031 /* WaitTimeAnnotation.swift in Sources */,
 				AA0000000000000000000033 /* RideCardView.swift in Sources */,
 				AA0000000000000000000035 /* RideDetailSheet.swift in Sources */,
 				AA0000000000000000000037 /* RidePredictionView.swift in Sources */,
@@ -617,8 +642,6 @@
 				AA0000000000000000000105 /* BadgeDefinition.swift in Sources */,
 				AA0000000000000000000107 /* StatsView.swift in Sources */,
 				AA0000000000000000000109 /* BadgesView.swift in Sources */,
-				AA000000000000000000010B /* RideRowView.swift in Sources */,
-				AA000000000000000000010D /* WaitBadgeView.swift in Sources */,
 				AA0000000000000000000111 /* ParkHoursHeaderView.swift in Sources */,
 				AA0000000000000000000113 /* RideLog.swift in Sources */,
 				AA0000000000000000000115 /* DiningReservation.swift in Sources */,
@@ -644,7 +667,6 @@
 				AA0000000000000000000137 /* HeightCheckerView.swift in Sources */,
 				AA0000000000000000000139 /* TodayBlockOutBanner.swift in Sources */,
 				AA000000000000000000013C /* AnnualPassView.swift in Sources */,
-				AA000000000000000000013E /* APOffersView.swift in Sources */,
 				AA0000000000000000000140 /* GuestPickerSheet.swift in Sources */,
 				AA0000000000000000000160 /* WaitStopwatchSection.swift in Sources */,
 				AA0000000000000000000162 /* WaitAccuracyCard.swift in Sources */,
@@ -664,6 +686,16 @@
 				AA000000000000000000018D /* DiningEmailIntent.swift in Sources */,
 				AA0000000000000000000188 /* LiveActivityManager.swift in Sources */,
 				AA000000000000000000018A /* ThrillTrackActivityAttributes.swift in Sources */,
+				AA0000000000000000000190 /* HouseholdSyncIndex.swift in Sources */,
+				AA0000000000000000000192 /* HouseholdRecordMapping.swift in Sources */,
+				AA0000000000000000000194 /* HouseholdSyncService.swift in Sources */,
+				AA0000000000000000000196 /* HouseholdBackgroundTask.swift in Sources */,
+				AA0000000000000000000198 /* AppDelegate.swift in Sources */,
+				AA000000000000000000019A /* HouseholdSharingView.swift in Sources */,
+				AA000000000000000000019C /* JoinHouseholdSheet.swift in Sources */,
+				AA000000000000000000019F /* RestaurantRating.swift in Sources */,
+				AA00000000000000000001A1 /* HotelRating.swift in Sources */,
+				AA00000000000000000001A3 /* RatingMigrationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -808,7 +840,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ParkTrac/ParkTrac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = X796Z5UW4P;
 				ENABLE_PREVIEWS = YES;
@@ -834,7 +866,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ParkTrac/ParkTrac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = X796Z5UW4P;
 				ENABLE_PREVIEWS = YES;
@@ -860,7 +892,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = X796Z5UW4P;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrillTrackWidget/Info.plist;
@@ -893,7 +925,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = X796Z5UW4P;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrillTrackWidget/Info.plist;

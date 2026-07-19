@@ -3,10 +3,12 @@ import SwiftData
 
 struct StatsView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \BucketRestaurant.name) private var allRestaurants: [BucketRestaurant]
     @Query(sort: \HotelStay.hotelName)   private var allHotels: [HotelStay]
     @Query(sort: \RideLog.riddenAt, order: .reverse) private var allRideLogs: [RideLog]
     @Query private var allVisitSavings: [VisitSaving]
+    @Query(sort: \Guest.name) private var allGuests: [Guest]
 
     private var resort: String { appState.selectedResort.rawValue }
 
@@ -15,15 +17,14 @@ struct StatsView: View {
     private var resortRestaurants: [BucketRestaurant] { allRestaurants.filter { $0.resort == resort } }
     private var visitedRestaurants: [BucketRestaurant] { resortRestaurants.filter(\.isVisited) }
 
-    private var avgMattRestaurant: Double? {
-        let rated = visitedRestaurants.filter { $0.mattRating > 0 }
-        guard !rated.isEmpty else { return nil }
-        return rated.map(\.mattRating).reduce(0, +) / Double(rated.count)
-    }
-    private var avgHeatRestaurant: Double? {
-        let rated = visitedRestaurants.filter { $0.wifeRating > 0 }
-        guard !rated.isEmpty else { return nil }
-        return rated.map(\.wifeRating).reduce(0, +) / Double(rated.count)
+    private var perGuestRestaurantAverages: [(guest: Guest, avg: Double)] {
+        allGuests.compactMap { guest in
+            let ratings = visitedRestaurants.map {
+                RestaurantRating.current(restaurantId: $0.id, guestId: guest.id, context: modelContext)
+            }.filter { $0 > 0 }
+            guard !ratings.isEmpty else { return nil }
+            return (guest, Double(ratings.reduce(0, +)) / Double(ratings.count))
+        }
     }
     private var topRestaurant: BucketRestaurant? {
         visitedRestaurants.filter { ($0.averageRating ?? 0) > 0 }
@@ -36,15 +37,14 @@ struct StatsView: View {
     private var visitedHotels: [HotelStay] { resortHotels.filter(\.isVisited) }
 
     private var totalNights: Int { visitedHotels.compactMap(\.nightsStayed).reduce(0, +) }
-    private var avgMattHotel: Double? {
-        let rated = visitedHotels.filter { $0.mattRating > 0 }
-        guard !rated.isEmpty else { return nil }
-        return Double(rated.map(\.mattRating).reduce(0, +)) / Double(rated.count)
-    }
-    private var avgHeatHotel: Double? {
-        let rated = visitedHotels.filter { $0.wifeRating > 0 }
-        guard !rated.isEmpty else { return nil }
-        return Double(rated.map(\.wifeRating).reduce(0, +)) / Double(rated.count)
+    private var perGuestHotelAverages: [(guest: Guest, avg: Double)] {
+        allGuests.compactMap { guest in
+            let ratings = visitedHotels.map {
+                HotelRating.current(hotelId: $0.id, guestId: guest.id, context: modelContext)
+            }.filter { $0 > 0 }
+            guard !ratings.isEmpty else { return nil }
+            return (guest, Double(ratings.reduce(0, +)) / Double(ratings.count))
+        }
     }
     private var topHotel: HotelStay? {
         visitedHotels.filter { ($0.averageRating ?? 0) > 0 }
@@ -117,8 +117,8 @@ struct StatsView: View {
                         .padding(.horizontal, -4)
                         categoryRow(restaurants: resortRestaurants)
                         Divider()
-                        if avgMattRestaurant != nil || avgHeatRestaurant != nil {
-                            ratingsRow(matt: avgMattRestaurant, heat: avgHeatRestaurant)
+                        if !perGuestRestaurantAverages.isEmpty {
+                            ratingsRow(perGuestRestaurantAverages)
                             Divider()
                         }
                         if let top = topRestaurant {
@@ -144,8 +144,8 @@ struct StatsView: View {
                             }
                             Divider()
                         }
-                        if avgMattHotel != nil || avgHeatHotel != nil {
-                            ratingsRow(matt: avgMattHotel, heat: avgHeatHotel)
+                        if !perGuestHotelAverages.isEmpty {
+                            ratingsRow(perGuestHotelAverages)
                             Divider()
                         }
                         if let top = topHotel {
@@ -274,10 +274,11 @@ struct StatsView: View {
         }
     }
 
-    private func ratingsRow(matt: Double?, heat: Double?) -> some View {
+    private func ratingsRow(_ entries: [(guest: Guest, avg: Double)]) -> some View {
         HStack(spacing: 16) {
-            if let m = matt { ratingChip(label: "Matt", rating: m) }
-            if let h = heat { ratingChip(label: "Heather", rating: h) }
+            ForEach(entries, id: \.guest.id) { entry in
+                ratingChip(label: entry.guest.name, rating: entry.avg)
+            }
             Spacer()
         }
     }

@@ -3,6 +3,7 @@ import SwiftData
 
 @Model
 final class RideLog {
+    var id: UUID = UUID()
     var rideId: String = ""
     var rideName: String = ""
     var parkId: String = ""
@@ -12,6 +13,7 @@ final class RideLog {
     var waitMinutes: Int?
     var actualWaitMinutes: Int? = nil
     var notes: String = ""
+    var syncUpdatedAt: Date = Date()
 
     init(
         rideId: String,
@@ -24,6 +26,7 @@ final class RideLog {
         actualWaitMinutes: Int? = nil,
         notes: String = ""
     ) {
+        self.id                 = UUID()
         self.rideId             = rideId
         self.rideName           = rideName
         self.parkId             = parkId
@@ -33,6 +36,7 @@ final class RideLog {
         self.waitMinutes        = waitMinutes
         self.actualWaitMinutes  = actualWaitMinutes
         self.notes              = notes
+        self.syncUpdatedAt      = Date()
     }
 }
 

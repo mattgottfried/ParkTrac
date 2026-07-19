@@ -67,6 +67,17 @@ struct SettingsView: View {
                     Text("Resort")
                 }
 
+                // MARK: Guests
+                Section {
+                    NavigationLink {
+                        GuestPickerSheet()
+                    } label: {
+                        Label("Guests", systemImage: "person.3.fill")
+                    }
+                } header: {
+                    Text("Guests")
+                }
+
                 // MARK: Annual Passes
                 Section {
                     NavigationLink {
@@ -92,6 +103,17 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Tools")
+                }
+
+                // MARK: Household Sharing
+                Section {
+                    NavigationLink {
+                        HouseholdSharingView()
+                    } label: {
+                        Label("Household Sharing", systemImage: "person.2.fill")
+                    }
+                } header: {
+                    Text("Household")
                 }
 
                 // MARK: About
