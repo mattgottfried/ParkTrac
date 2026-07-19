@@ -10,6 +10,7 @@ struct DayPlannerView: View {
     @State private var showAddSheet = false
     @State private var showGuestPicker = false
     @State private var showSmartPlanner = false
+    @State private var deleteFeedbackTrigger = false
 
     private var today: Date { Calendar.current.startOfDay(for: .now) }
     private var resort: String { appState.selectedResort.rawValue }
@@ -33,6 +34,11 @@ struct DayPlannerView: View {
     var body: some View {
         NavigationStack {
             List {
+                Text(today, format: .dateTime.weekday(.wide).month(.wide).day())
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .listRowSeparator(.hidden)
+
                 if !llPasses.isEmpty {
                     Section {
                         ForEach(llPasses) { pass in
@@ -61,7 +67,7 @@ struct DayPlannerView: View {
                         HStack {
                             Label("\(appState.todayGuestIds.count) guest\(appState.todayGuestIds.count == 1 ? "" : "s") coming", systemImage: "person.2.fill")
                             Spacer()
-                            Button("Edit") { showGuestPicker = true }
+                            Button("Change") { showGuestPicker = true }
                                 .font(.caption)
                         }
                     }
@@ -77,7 +83,10 @@ struct DayPlannerView: View {
                         ForEach(planItems) { item in
                             PlanItemRow(item: item, liveWait: liveWait(for: item))
                                 .swipeActions(edge: .trailing) {
-                                    Button("Delete", role: .destructive) { context.delete(item) }
+                                    Button("Delete", role: .destructive) {
+                                        context.delete(item)
+                                        deleteFeedbackTrigger.toggle()
+                                    }
                                 }
                         }
                         .onMove { from, to in movePlanItems(planItems, from: from, to: to) }
@@ -85,19 +94,26 @@ struct DayPlannerView: View {
                 }
             }
             .navigationTitle("My Day")
+            .sensoryFeedback(.success, trigger: deleteFeedbackTrigger)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 16) {
                         Button { showSmartPlanner = true } label: {
                             Image(systemName: "wand.and.stars")
+                                .frame(minWidth: 44, minHeight: 44)
                         }
+                        .accessibilityLabel("Build my schedule")
                         Button { showAddSheet = true } label: {
                             Image(systemName: "plus")
+                                .frame(minWidth: 44, minHeight: 44)
                         }
+                        .accessibilityLabel("Add plan item")
                     }
                 }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    EditButton()
+                if !planItems.isEmpty {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        EditButton()
+                    }
                 }
             }
             .sheet(isPresented: $showAddSheet) {

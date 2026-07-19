@@ -343,11 +343,22 @@ struct StatsView: View {
     private var passSavingsCard: some View {
         statsCard(title: "Pass Savings", systemImage: "ticket.fill", color: .mint) {
             VStack(alignment: .leading, spacing: 10) {
-                Text(hasAnyPass
-                    ? "See if your annual pass has paid for itself yet"
-                    : "Set up a pass in Settings to start tracking")
+                if hasAnyPass {
+                    Text("See if your annual pass has paid for itself yet")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    NavigationLink {
+                        AnnualPassView()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Set up a pass to start tracking savings")
+                            Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
+                        }
+                    }
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.mint)
+                }
 
                 NavigationLink {
                     PassSavingsView()

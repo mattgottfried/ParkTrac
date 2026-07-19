@@ -51,17 +51,20 @@ struct SettingsView: View {
 
                 // MARK: Resort
                 Section {
-                    HStack {
-                        Label("Current Resort", systemImage: appState.selectedResort == .disney
-                              ? "crown.fill" : "globe.americas.fill")
-                        Spacer()
-                        Text(appState.selectedResort.rawValue)
-                            .foregroundStyle(.secondary)
-                    }
                     Button {
                         appState.showResortPicker = true
                     } label: {
-                        Label("Switch Resort", systemImage: "arrow.left.arrow.right")
+                        HStack {
+                            Label("Resort", systemImage: appState.selectedResort == .disney
+                                  ? "crown.fill" : "globe.americas.fill")
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(appState.selectedResort.rawValue)
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 } header: {
                     Text("Resort")

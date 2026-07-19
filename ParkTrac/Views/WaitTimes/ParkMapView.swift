@@ -262,6 +262,7 @@ struct ParkMapView: View {
                             .padding(8)
                             .background(.regularMaterial, in: Circle())
                     }
+                    .accessibilityLabel(mapStyleIsHybrid ? "Switch to standard map" : "Switch to satellite map")
                     Spacer()
                 }
                 .padding(.horizontal)
@@ -328,7 +329,7 @@ struct ParkMapView: View {
                 VStack(spacing: 0) {
                     Spacer()
                     rideListPanel
-                        .frame(height: panelExpanded ? geo.size.height * 0.82 : 320)
+                        .frame(height: panelExpanded ? geo.size.height * 0.82 : 420)
                         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: panelExpanded)
                 }
             }
@@ -472,17 +473,20 @@ struct ParkMapView: View {
 
     private var rideListPanel: some View {
         VStack(spacing: 0) {
-            Capsule()
-                .fill(.secondary.opacity(0.4))
-                .frame(width: 36, height: 4)
-                .padding(.top, 8).padding(.bottom, 6)
-                .onTapGesture { panelExpanded.toggle() }
-                .gesture(DragGesture(minimumDistance: 20).onEnded { v in
-                    if v.translation.height < -30 { panelExpanded = true }
-                    else if v.translation.height > 30 { panelExpanded = false }
-                })
+            VStack(spacing: 0) {
+                Capsule()
+                    .fill(.secondary.opacity(0.4))
+                    .frame(width: 36, height: 4)
+                    .padding(.top, 8).padding(.bottom, 6)
 
-            panelHeader
+                panelHeader
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { panelExpanded.toggle() }
+            .gesture(DragGesture(minimumDistance: 20).onEnded { v in
+                if v.translation.height < -30 { panelExpanded = true }
+                else if v.translation.height > 30 { panelExpanded = false }
+            })
 
             // Park Hours Header
             if let park = viewModel.filterPark ?? viewModel.currentParks.first {
@@ -511,7 +515,8 @@ struct ParkMapView: View {
 
             if showTab == .shows {
                 ShowsListView(shows: viewModel.currentShows, theme: theme)
-            } else if viewModel.isLoadingParks || (viewModel.isLoading && viewModel.allRides.isEmpty) {
+            } else if viewModel.isLoadingParks || viewModel.isLoading
+                || (viewModel.allRides.isEmpty && viewModel.errorMessage == nil) {
                 ProgressView("Loading…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let errorMsg = viewModel.errorMessage {
                 VStack(spacing: 16) {
@@ -536,7 +541,7 @@ struct ParkMapView: View {
                                 .onTapGesture { selectedRide = ride }
                         }
                     }
-                    .padding(.horizontal).padding(.vertical, 8)
+                    .padding(.horizontal).padding(.top, 8).padding(.bottom, panelExpanded ? 8 : 90)
                 }
                 .refreshable { await viewModel.refresh() }
             }

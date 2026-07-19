@@ -25,6 +25,16 @@ struct CrowdCalendarCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+            // Weekday header — grid always starts on Sunday, so columns line up
+            HStack(spacing: 2) {
+                ForEach(Self.weekdaySymbols, id: \.self) { sym in
+                    Text(sym)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
             // Compact 3-week look-ahead grid
             MiniCalendarGrid(resort: resort, selectedDate: $selectedDate, weeks: 5)
 
@@ -59,6 +69,8 @@ struct CrowdCalendarCard: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
+
+    static let weekdaySymbols = ["S", "M", "T", "W", "T", "F", "S"]
 }
 
 // MARK: - Full Crowd Calendar View
@@ -232,6 +244,10 @@ struct DayCell: View {
     private var level: CrowdLevel { CrowdCalendarService.crowdLevel(for: date, resort: resort) }
     private var isToday: Bool { Calendar.current.isDateInToday(date) }
     private var isPast: Bool { date < Calendar.current.startOfDay(for: .now) }
+    private var isFirstOfMonth: Bool { Calendar.current.component(.day, from: date) == 1 }
+    private var monthAbbreviation: String {
+        let f = DateFormatter(); f.dateFormat = "MMM"; return f.string(from: date)
+    }
 
     var body: some View {
         ZStack {
@@ -248,9 +264,16 @@ struct DayCell: View {
                     .strokeBorder(.primary, lineWidth: 2)
             }
 
-            Text("\(Calendar.current.component(.day, from: date))")
-                .font(.system(size: 11, weight: isToday ? .bold : .regular))
-                .foregroundStyle(isPast ? Color.secondary : Color.white)
+            VStack(spacing: 0) {
+                if isFirstOfMonth {
+                    Text(monthAbbreviation)
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(isPast ? Color.secondary : Color.white.opacity(0.85))
+                }
+                Text("\(Calendar.current.component(.day, from: date))")
+                    .font(.system(size: 13, weight: isToday ? .bold : .regular))
+                    .foregroundStyle(isPast ? Color.secondary : Color.white)
+            }
         }
         .overlay(alignment: .topTrailing) {
             if resort == .disney && BlockOutService.isBlockedOut(date, disney: disneyTier) ||
