@@ -238,7 +238,22 @@ struct ParkMapView: View {
     @State private var lastAutoZoomedParkId: String? = nil
     @State private var showTab: BottomTab = .rides
     @State private var showMustDoOnly: Bool = false
+    @State private var showIndoorOnly: Bool = false
+    @State private var weather: WeatherSnapshot?
     var theme: ParkTheme { viewModel.selectedGroup.theme }
+
+    private var resortCoordinate: (lat: Double, lon: Double) {
+        switch viewModel.selectedGroup {
+        case .disney:    return (28.3772, -81.5707)
+        case .universal: return (28.4793, -81.4643)
+        }
+    }
+
+    @MainActor
+    private func loadWeather() async {
+        let (lat, lon) = resortCoordinate
+        weather = await WeatherService.fetch(latitude: lat, longitude: lon)
+    }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -298,6 +313,20 @@ struct ParkMapView: View {
                             .background(showMustDoOnly ? Color.yellow : Color(.systemBackground).opacity(0.85))
                             .clipShape(Capsule()).shadow(radius: 1)
 
+                            Button {
+                                showIndoorOnly.toggle()
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "house.fill")
+                                    Text("Indoor")
+                                }
+                            }
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(showIndoorOnly ? theme.annotationTextColor : .primary)
+                            .padding(.horizontal, 12).padding(.vertical, 6)
+                            .background(showIndoorOnly ? Color.blue : Color(.systemBackground).opacity(0.85))
+                            .clipShape(Capsule()).shadow(radius: 1)
+
                             ForEach(viewModel.currentParks) { park in
                                 Button(park.name) {
                                     viewModel.filterPark = park
@@ -321,6 +350,23 @@ struct ParkMapView: View {
                         .padding(.horizontal)
                     }
                 }
+
+                if weather?.rainLikelySoon == true && !showIndoorOnly {
+                    Button {
+                        showIndoorOnly = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "cloud.rain.fill")
+                            Text("Rain expected soon · Tap for indoor picks")
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(Color.blue, in: Capsule())
+                        .shadow(radius: 1)
+                    }
+                    .padding(.horizontal)
+                }
             }
             .padding(.top, 8)
         }
@@ -343,6 +389,7 @@ struct ParkMapView: View {
             await viewModel.loadAllParks()
             viewModel.startAutoRefresh()
             locationService.requestAndStart()
+            await loadWeather()
         }
         .onDisappear {
             viewModel.stopAutoRefresh()
@@ -355,7 +402,9 @@ struct ParkMapView: View {
         .onChange(of: appState.selectedResort) { _, resort in
             viewModel.selectedGroup = resort
             lastAutoZoomedParkId = nil
+            showIndoorOnly = false
             withAnimation { region = resort.defaultRegion }
+            Task { await loadWeather() }
         }
         .onChange(of: viewModel.selectedGroup) { _, group in
             withAnimation { region = group.defaultRegion }
@@ -467,7 +516,8 @@ struct ParkMapView: View {
 
     private var displayedRides: [DisplayRide] {
         viewModel.filteredRides.filter { ride in
-            !showMustDoOnly || appState.wishList.contains(ride.id)
+            (!showMustDoOnly || appState.wishList.contains(ride.id))
+                && (!showIndoorOnly || rideMetadata[ride.name]?.isIndoor == true)
         }
     }
 
@@ -527,11 +577,13 @@ struct ParkMapView: View {
                 .padding().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if displayedRides.isEmpty {
                 ContentUnavailableView(
-                    showMustDoOnly ? "No Must-Do Rides" : "No Rides",
-                    systemImage: showMustDoOnly ? "star" : "figure.walk",
+                    showMustDoOnly ? "No Must-Do Rides" : (showIndoorOnly ? "No Indoor Rides" : "No Rides"),
+                    systemImage: showMustDoOnly ? "star" : (showIndoorOnly ? "house" : "figure.walk"),
                     description: Text(showMustDoOnly
                         ? "Star rides in their detail page to add to your Must-Do list."
-                        : (viewModel.searchText.isEmpty ? "Loading wait times…" : "No rides match \"\(viewModel.searchText)\"."))
+                        : (showIndoorOnly
+                            ? "No rides at this park are tagged indoor yet."
+                            : (viewModel.searchText.isEmpty ? "Loading wait times…" : "No rides match \"\(viewModel.searchText)\".")))
                 )
             } else {
                 ScrollView {

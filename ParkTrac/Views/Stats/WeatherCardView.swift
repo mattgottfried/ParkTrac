@@ -60,43 +60,7 @@ struct WeatherCardView: View {
     private func loadWeather() async {
         isLoading = true
         let (lat, lon) = coordinate
-        let urlStr = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=auto&forecast_days=1"
-        guard let url = URL(string: urlStr),
-              let (data, _) = try? await URLSession.shared.data(from: url),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            isLoading = false; return
-        }
-        if let current = json["current"] as? [String: Any],
-           let daily = json["daily"] as? [String: Any] {
-            let temp = current["temperature_2m"] as? Double ?? 0
-            let code = current["weathercode"] as? Int ?? 0
-            let rain = current["precipitation_probability"] as? Int ?? 0
-            let highs = daily["temperature_2m_max"] as? [Double] ?? []
-            let lows  = daily["temperature_2m_min"] as? [Double] ?? []
-            weather = WeatherSnapshot(currentTemp: temp, high: highs.first ?? 0, low: lows.first ?? 0,
-                                      rainChance: rain, weatherCode: code)
-        }
+        weather = await WeatherService.fetch(latitude: lat, longitude: lon)
         isLoading = false
-    }
-}
-
-struct WeatherSnapshot {
-    let currentTemp: Double
-    let high: Double
-    let low: Double
-    let rainChance: Int
-    let weatherCode: Int
-
-    var conditionLabel: String {
-        switch weatherCode {
-        case 0: return "Clear"
-        case 1, 2, 3: return "Partly Cloudy"
-        case 45, 48: return "Foggy"
-        case 51...67: return "Drizzle/Rain"
-        case 71...77: return "Snow"
-        case 80...82: return "Showers"
-        case 95...99: return "Thunderstorm"
-        default: return "Cloudy"
-        }
     }
 }

@@ -87,13 +87,13 @@
 		AA0000000000000000000182 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000181 /* PersistenceController.swift */; };
 		AA0000000000000000000184 /* RideLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000183 /* RideLookupService.swift */; };
 		AA0000000000000000000186 /* RideWaitTimeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000185 /* RideWaitTimeIntent.swift */; };
-		AA000000000000000000018D /* DiningEmailIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000018C /* DiningEmailIntent.swift */; };
 		AA0000000000000000000188 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000187 /* LiveActivityManager.swift */; };
 		AA000000000000000000018A /* ThrillTrackActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */; };
 		AA000000000000000000018B /* ThrillTrackActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */; };
-		C972E4CA300AADAF00E01CAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4C9300AADAF00E01CAC /* WidgetKit.framework */; };
-		C972E4CC300AADAF00E01CAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4CB300AADAF00E01CAC /* SwiftUI.framework */; };
-		C972E4DD300AADB000E01CAC /* TrillTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA00000000000000000001A6 /* ParkDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000024 /* ParkDestination.swift */; };
+		AA00000000000000000001A7 /* ParkModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000026 /* ParkModels.swift */; };
+		AA00000000000000000001A8 /* ParkAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002A /* ParkAPIService.swift */; };
+		AA000000000000000000018D /* DiningEmailIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000018C /* DiningEmailIntent.swift */; };
 		AA0000000000000000000190 /* HouseholdSyncIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000018F /* HouseholdSyncIndex.swift */; };
 		AA0000000000000000000192 /* HouseholdRecordMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000191 /* HouseholdRecordMapping.swift */; };
 		AA0000000000000000000194 /* HouseholdSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000193 /* HouseholdSyncService.swift */; };
@@ -104,6 +104,10 @@
 		AA000000000000000000019F /* RestaurantRating.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000019E /* RestaurantRating.swift */; };
 		AA00000000000000000001A1 /* HotelRating.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A0 /* HotelRating.swift */; };
 		AA00000000000000000001A3 /* RatingMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A2 /* RatingMigrationService.swift */; };
+		AA00000000000000000001A5 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A4 /* WeatherService.swift */; };
+		C972E4CA300AADAF00E01CAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4C9300AADAF00E01CAC /* WidgetKit.framework */; };
+		C972E4CC300AADAF00E01CAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4CB300AADAF00E01CAC /* SwiftUI.framework */; };
+		C972E4DD300AADB000E01CAC /* TrillTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -213,12 +217,9 @@
 		AA0000000000000000000181 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		AA0000000000000000000183 /* RideLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLookupService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000185 /* RideWaitTimeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideWaitTimeIntent.swift; sourceTree = "<group>"; };
-		AA000000000000000000018C /* DiningEmailIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiningEmailIntent.swift; sourceTree = "<group>"; };
 		AA0000000000000000000187 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrillTrackActivityAttributes.swift; sourceTree = "<group>"; };
-		C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrillTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		C972E4C9300AADAF00E01CAC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		C972E4CB300AADAF00E01CAC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		AA000000000000000000018C /* DiningEmailIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiningEmailIntent.swift; sourceTree = "<group>"; };
 		AA000000000000000000018F /* HouseholdSyncIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdSyncIndex.swift; sourceTree = "<group>"; };
 		AA0000000000000000000191 /* HouseholdRecordMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdRecordMapping.swift; sourceTree = "<group>"; };
 		AA0000000000000000000193 /* HouseholdSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdSyncService.swift; sourceTree = "<group>"; };
@@ -229,6 +230,10 @@
 		AA000000000000000000019E /* RestaurantRating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantRating.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A0 /* HotelRating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotelRating.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A2 /* RatingMigrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingMigrationService.swift; sourceTree = "<group>"; };
+		AA00000000000000000001A4 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
+		C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrillTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C972E4C9300AADAF00E01CAC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C972E4CB300AADAF00E01CAC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -351,20 +356,10 @@
 				AA0000000000000000000187 /* LiveActivityManager.swift */,
 				AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */,
 				AA00000000000000000001A2 /* RatingMigrationService.swift */,
+				AA00000000000000000001A4 /* WeatherService.swift */,
 				AA000000000000000000019D /* HouseholdSync */,
 			);
 			path = Services;
-			sourceTree = "<group>";
-		};
-		AA000000000000000000019D /* HouseholdSync */ = {
-			isa = PBXGroup;
-			children = (
-				AA0000000000000000000193 /* HouseholdSyncService.swift */,
-				AA0000000000000000000191 /* HouseholdRecordMapping.swift */,
-				AA000000000000000000018F /* HouseholdSyncIndex.swift */,
-				AA0000000000000000000195 /* HouseholdBackgroundTask.swift */,
-			);
-			path = HouseholdSync;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000063 /* ViewModels */ = {
@@ -487,6 +482,17 @@
 				AA000000000000000000016F /* OnboardingView.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000019D /* HouseholdSync */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000193 /* HouseholdSyncService.swift */,
+				AA0000000000000000000191 /* HouseholdRecordMapping.swift */,
+				AA000000000000000000018F /* HouseholdSyncIndex.swift */,
+				AA0000000000000000000195 /* HouseholdBackgroundTask.swift */,
+			);
+			path = HouseholdSync;
 			sourceTree = "<group>";
 		};
 		C972E4C8300AADAF00E01CAC /* Frameworks */ = {
@@ -696,6 +702,7 @@
 				AA000000000000000000019F /* RestaurantRating.swift in Sources */,
 				AA00000000000000000001A1 /* HotelRating.swift in Sources */,
 				AA00000000000000000001A3 /* RatingMigrationService.swift in Sources */,
+				AA00000000000000000001A5 /* WeatherService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -704,6 +711,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000000000000000000018B /* ThrillTrackActivityAttributes.swift in Sources */,
+				AA00000000000000000001A6 /* ParkDestination.swift in Sources */,
+				AA00000000000000000001A7 /* ParkModels.swift in Sources */,
+				AA00000000000000000001A8 /* ParkAPIService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
