@@ -14,7 +14,58 @@ Goal: a set of small, low-risk updates in phases. Each phase can ship as its own
 
 ---
 
-## Phase 1: Bugs and quick wins (small, high value)
+## ▶ Current step: implement Phase 2 (Phase 1 pushed as 4e7ecc6, not yet built on the Mac)
+
+Work on branch `claude/compassionate-brahmagupta-vrjn15`, on top of Phase 1. This needs no new files, so no pbxproj edits.
+
+**2a. Haptics** (`.sensoryFeedback`, iOS 17):
+- `ParkMapView`:
+  - `.selection`, triggered by `viewModel.filterPark?.id`, `showMustDoOnly` and `showTab`
+  - `.success`, triggered by `viewModel.lastRefreshed`, only after a user pull-to-refresh. Use a `@State var userRefreshCount` that is bumped inside `.refreshable`, and trigger on that instead.
+- `DayPlannerView.PlanItemRow`: `.success` when `item.isDone` flips to true, using the `trigger:condition:` form.
+- `LLPassRow` and the Lightning Lane swipe Done: `.success`.
+- `RideDetailSheet`: `.success` on Rode It save (the `toastMessage` set) and on the star toggle (`.selection`).
+- DOWN warning: skipped. The plumbing through `WaitTimeRecorder` is too invasive for this phase.
+
+**2b. Long-press menu on ride cards** (`ParkMapView.swift`, the `ForEach(displayedRides)` loop):
+- Add `.contextMenu` to `RideCardView` with these items:
+  - "Add to Must-Do" / "Remove from Must-Do": `appState.toggleWish(ride.id)`
+  - "Add to My Day": presents the existing `AddPlanItemView(resort:prefillRide:prefillPark:)`
+  - "Set Wait Alert": presents the existing `SetAlertSheet(ride:)`
+  - "Details / Rode It": sets `selectedRide = ride`, which opens the existing `RideDetailSheet`
+- Drive the presentation with a new `@State private var rideAction: RideMenuAction?`, an `Identifiable` enum with cases `.addToPlan(DisplayRide)` and `.alert(DisplayRide)`, plus one `.sheet(item:)`. The sheets are reused, so no `RideActions` extraction is needed.
+- Add a `.contentShape(RoundedRectangle(...))` so the menu preview is the card shape.
+- Map pins get no menu for now. They're UIKit annotation views, so a menu there would need `UIContextMenuInteraction`; deferred.
+
+**2c. Sort and filter menu** (Wait Times panel):
+- `WaitTimesViewModel`:
+  - Add `enum RideSort: String, CaseIterable { case longestWait, shortestWait, name }` and replace `sortAlphabetical: Bool` with `var rideSort: RideSort`.
+  - Update the comparator in `filteredRides`. `.shortestWait` puts operating rides first, ordered by wait ascending.
+  - Keep `filteredRides` free of the hide/max filters, because `currentCrowdLevel` and `currentAverageWait` use it and must not be skewed.
+- `ParkMapView`:
+  - Add `@AppStorage("rideSort")`, `@AppStorage("hideClosedRides")` and `@AppStorage("maxWaitFilter") Int` (0 means off).
+  - Apply the hide/max filters in `displayedRides` next to the existing Must-Do filter.
+  - Put a `Menu` with `line.3.horizontal.decrease.circle` beside the `searchBar` TextField. It holds a sort Picker, a "Hide closed rides" Toggle, and a "Max wait" Picker (Any / 15 / 30 / 45 / 60). The icon shows `.fill` when any filter is active.
+  - Update the empty-state text when filters hide everything ("No rides match your filters" plus a "Clear filters" button).
+- Settings keeps its "Sort Rides A–Z" toggle, now mapped onto the same `rideSort` storage. `.task` and `.onChange` set `viewModel.rideSort` from `@AppStorage` instead of from `appState.sortRidesAlphabetically`. Change the Settings toggle to a Picker bound to `@AppStorage("rideSort")`, and one-time migrate the old bool (if `sortRidesAlphabetically` was true, set `rideSort = .name`). Check `AppState.sortRidesAlphabetically` for other users first and leave it in place if anything else reads it.
+
+**2d. Out-of-date data warning** (`ParkMapView.panelHeader`):
+- Wrap the "Updated … ago" line in `TimelineView(.periodic(from: .now, by: 30))`.
+- If `now - lastRefreshed > 5 min`, show an orange capsule, "⚠︎ Wait times from N min ago — pull to refresh". Otherwise keep the current caption.
+- No view-model change is needed; a partial failure already leaves `lastRefreshed` stale only when every park failed. To make partial failures stale too, set `lastRefreshed` only when `successCount > 0` in `loadAllParksInGroup` (`WaitTimesViewModel.swift:~264`). This matters because the recorder's `onChange(of: lastRefreshed)` would otherwise re-record the same stale data.
+
+**Phase 2 verification:** same as the Verification section below, plus:
+- long-press a ride → each menu item opens the right sheet
+- set Max wait 30 → only rides ≤30 min and still open show
+- sort changes in the menu are reflected in Settings, and the reverse
+- airplane mode for 5+ min → orange warning appears
+- haptics are felt on a device (the simulator gives no haptics)
+
+Commit, push, and tell the user to rebuild on the Mac.
+
+---
+
+## Phase 1: Bugs and quick wins (small, high value): DONE in 4e7ecc6
 1. **Fix the nested NavigationStack.** Pull `DayPlannerView`'s body into a `DayPlannerContent` view with no stack. The tab keeps `NavigationStack { DayPlannerContent() }`, and `StatsView` pushes `DayPlannerContent()`. Apply the same check to other views that are both tab roots and pushed destinations (`grep NavigationStack Views/` lists the candidates).
 2. **Lightning Lane "Done" swipe.** Replace the red `.destructive` role with `.tint(.green)` and a `checkmark` icon.
 3. **Undo for deletes.** Add a small `UndoToast` view plus a helper that snapshots the model's fields before the delete. Delete immediately, show "Deleted · Undo" for about 4 seconds, and re-insert if the user taps Undo. Apply it at every `context.delete` call in `DayPlannerView`, `MyDiningView`, `SpendingView`, `RideCounterView` and `VisitHistoryView`. `SetAlertSheet`'s replace-old-alert delete is internal and gets no toast.

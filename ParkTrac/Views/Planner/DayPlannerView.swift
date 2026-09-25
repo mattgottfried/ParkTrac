@@ -102,6 +102,8 @@ struct DayPlannerView: View {
                 }
             }
         }
+        // A pass leaves the list when marked Done (swipe or button)
+        .sensoryFeedback(.success, trigger: llPasses.count) { old, new in new < old }
         .navigationTitle("My Day")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -200,6 +202,7 @@ private struct PlanItemRow: View {
             }
         }
         .padding(.vertical, 2)
+        .sensoryFeedback(.success, trigger: item.isDone) { _, done in done }
     }
 
     private func waitColor(_ minutes: Int) -> Color {

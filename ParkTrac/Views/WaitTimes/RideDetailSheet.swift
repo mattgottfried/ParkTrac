@@ -228,6 +228,8 @@ struct RideDetailSheet: View {
         }
         .presentationDetents([.fraction(0.6), .large])
         .presentationDragIndicator(.hidden)
+        .sensoryFeedback(.success, trigger: showToast) { _, shown in shown }
+        .sensoryFeedback(.selection, trigger: appState.wishList.contains(ride.id))
         .sheet(isPresented: $showLogSheet) {
             LogRideSheet(
                 ride: ride,
