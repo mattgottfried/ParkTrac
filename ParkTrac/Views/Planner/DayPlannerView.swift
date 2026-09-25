@@ -11,11 +11,18 @@ struct DayPlannerView: View {
     @State private var showGuestPicker = false
     @State private var showSmartPlanner = false
 
+    /// True when pushed onto another NavigationStack (e.g. from Stats) — skips wrapping in our own.
+    private let embedded: Bool
+
+    init(embedded: Bool = false) {
+        self.embedded = embedded
+    }
+
     private var today: Date { Calendar.current.startOfDay(for: .now) }
     private var resort: String { appState.selectedResort.rawValue }
 
     private var todayItems: [PlanItem] {
-        allItems.filter { Calendar.current.isDate($0.date, inSameDayAs: today) && $0.resort == resort }
+        allItems.filter { Calendar.current.isDate($0.date, inSameDayAs: today) && $0.resort == resort && !UndoDeleteCenter.shared.isHidden($0) }
     }
     private var llPasses: [PlanItem] {
         todayItems.filter { $0.kind == "ll" && !$0.isDone }
@@ -31,83 +38,94 @@ struct DayPlannerView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                if !llPasses.isEmpty {
-                    Section {
-                        ForEach(llPasses) { pass in
-                            LLPassRow(pass: pass)
-                                .swipeActions {
-                                    Button("Done", role: .destructive) {
-                                        pass.isDone = true
-                                        LiveActivityManager.endReturnTime()
-                                    }
-                                }
-                        }
-                    } header: {
-                        Label("Lightning Lane / Express Pass", systemImage: "bolt.fill")
-                            .foregroundStyle(.yellow)
-                    }
-                }
+        if embedded {
+            content
+        } else {
+            NavigationStack { content }
+        }
+    }
 
-                // Who's Coming section
+    private var content: some View {
+        List {
+            if !llPasses.isEmpty {
                 Section {
-                    if appState.todayGuestIds.isEmpty {
-                        Button { showGuestPicker = true } label: {
-                            Label("Add Guests", systemImage: "person.badge.plus")
-                        }
-                    } else {
-                        HStack {
-                            Label("\(appState.todayGuestIds.count) guest\(appState.todayGuestIds.count == 1 ? "" : "s") coming", systemImage: "person.2.fill")
-                            Spacer()
-                            Button("Edit") { showGuestPicker = true }
-                                .font(.caption)
-                        }
+                    ForEach(llPasses) { pass in
+                        LLPassRow(pass: pass)
+                            .swipeActions {
+                                Button {
+                                    pass.isDone = true
+                                    LiveActivityManager.endReturnTime()
+                                } label: {
+                                    Label("Done", systemImage: "checkmark")
+                                }
+                                .tint(.green)
+                            }
                     }
                 } header: {
-                    Text("Who's Coming?")
+                    Label("Lightning Lane / Express Pass", systemImage: "bolt.fill")
+                        .foregroundStyle(.yellow)
                 }
+            }
 
-                if planItems.isEmpty && llPasses.isEmpty {
-                    ContentUnavailableView("No Plans Yet", systemImage: "calendar.badge.plus",
-                        description: Text("Tap + to add rides, shows, or dining to today's plan."))
-                } else if !planItems.isEmpty {
-                    Section("Today's Plan") {
-                        ForEach(planItems) { item in
-                            PlanItemRow(item: item, liveWait: liveWait(for: item))
-                                .swipeActions(edge: .trailing) {
-                                    Button("Delete", role: .destructive) { context.delete(item) }
+            // Who's Coming section
+            Section {
+                if appState.todayGuestIds.isEmpty {
+                    Button { showGuestPicker = true } label: {
+                        Label("Add Guests", systemImage: "person.badge.plus")
+                    }
+                } else {
+                    HStack {
+                        Label("\(appState.todayGuestIds.count) guest\(appState.todayGuestIds.count == 1 ? "" : "s") coming", systemImage: "person.2.fill")
+                        Spacer()
+                        Button("Edit") { showGuestPicker = true }
+                            .font(.caption)
+                    }
+                }
+            } header: {
+                Text("Who's Coming?")
+            }
+
+            if planItems.isEmpty && llPasses.isEmpty {
+                ContentUnavailableView("No Plans Yet", systemImage: "calendar.badge.plus",
+                    description: Text("Tap + to add rides, shows, or dining to today's plan."))
+            } else if !planItems.isEmpty {
+                Section("Today's Plan") {
+                    ForEach(planItems) { item in
+                        PlanItemRow(item: item, liveWait: liveWait(for: item))
+                            .swipeActions(edge: .trailing) {
+                                Button("Delete", role: .destructive) {
+                                    UndoDeleteCenter.shared.delete([item], message: "Deleted \u{201C}\(item.title)\u{201D}", in: context)
                                 }
-                        }
-                        .onMove { from, to in movePlanItems(planItems, from: from, to: to) }
+                            }
+                    }
+                    .onMove { from, to in movePlanItems(planItems, from: from, to: to) }
+                }
+            }
+        }
+        .navigationTitle("My Day")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack(spacing: 4) {
+                    Button { showSmartPlanner = true } label: {
+                        Image(systemName: "wand.and.stars")
+                    }
+                    Button { showAddSheet = true } label: {
+                        Image(systemName: "plus")
                     }
                 }
             }
-            .navigationTitle("My Day")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 4) {
-                        Button { showSmartPlanner = true } label: {
-                            Image(systemName: "wand.and.stars")
-                        }
-                        Button { showAddSheet = true } label: {
-                            Image(systemName: "plus")
-                        }
-                    }
-                }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    EditButton()
-                }
+            ToolbarItem(placement: .navigationBarLeading) {
+                EditButton()
             }
-            .sheet(isPresented: $showAddSheet) {
-                AddPlanItemView(resort: resort)
-            }
-            .sheet(isPresented: $showGuestPicker) {
-                GuestPickerSheet()
-            }
-            .sheet(isPresented: $showSmartPlanner) {
-                SmartPlannerView()
-            }
+        }
+        .sheet(isPresented: $showAddSheet) {
+            AddPlanItemView(resort: resort)
+        }
+        .sheet(isPresented: $showGuestPicker) {
+            GuestPickerSheet()
+        }
+        .sheet(isPresented: $showSmartPlanner) {
+            SmartPlannerView()
         }
     }
 

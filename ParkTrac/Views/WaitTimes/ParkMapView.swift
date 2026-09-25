@@ -223,7 +223,7 @@ struct StyledMapUIView: UIViewRepresentable {
 // MARK: - Main Park Map View
 
 // MARK: - Show Tab enum
-private enum BottomTab { case rides, shows }
+private enum BottomTab: String { case rides, shows }
 
 struct ParkMapView: View {
     @Environment(AppState.self) private var appState
@@ -236,7 +236,7 @@ struct ParkMapView: View {
     @State private var panelExpanded: Bool = false
     @State private var mapStyleIsHybrid: Bool = false
     @State private var lastAutoZoomedParkId: String? = nil
-    @State private var showTab: BottomTab = .rides
+    @AppStorage("waitTimesBottomTab") private var showTab: BottomTab = .rides
     @State private var showMustDoOnly: Bool = false
     /// "<parkId>-<openingTime>" of the rope-drop activity we last started —
     /// prevents the 60s auto-refresh from restarting it every cycle.

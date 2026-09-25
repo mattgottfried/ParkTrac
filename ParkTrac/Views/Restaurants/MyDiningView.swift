@@ -22,19 +22,20 @@ struct MyDiningView: View {
     private var upcomingReservations: [DiningReservation] {
         let now = Date()
         return allReservations
-            .filter { $0.resort == appState.selectedResort.rawValue && $0.date >= now && !$0.isCompleted }
+            .filter { $0.resort == appState.selectedResort.rawValue && $0.date >= now && !$0.isCompleted && !UndoDeleteCenter.shared.isHidden($0) }
             .sorted { $0.date < $1.date }
     }
 
     private var pastReservations: [DiningReservation] {
         let now = Date()
         return allReservations
-            .filter { $0.resort == appState.selectedResort.rawValue && ($0.date < now || $0.isCompleted) }
+            .filter { $0.resort == appState.selectedResort.rawValue && ($0.date < now || $0.isCompleted) && !UndoDeleteCenter.shared.isHidden($0) }
             .sorted { $0.date > $1.date }
     }
 
     var body: some View {
-        NavigationStack {
+        // Pushed from the Stats tab's NavigationStack — don't nest another.
+        Group {
             List {
                 // Upcoming Reservations section
                 Section {
@@ -131,11 +132,10 @@ struct MyDiningView: View {
     @Environment(\.modelContext) private var context
 
     private func deleteReservations(_ list: [DiningReservation], at offsets: IndexSet) {
-        for index in offsets {
-            context.delete(list[index])
+        let doomed = offsets.map { list[$0] }
+        UndoDeleteCenter.shared.delete(doomed, message: deleteMessage(doomed), in: context) {
+            LiveActivityManager.syncDiningActivity(context: context)
         }
-        try? context.save()
-        LiveActivityManager.syncDiningActivity(context: context)
     }
 }
 
@@ -149,7 +149,7 @@ private struct PastReservationsListView: View {
 
     private var pastReservations: [DiningReservation] {
         let now = Date()
-        return allReservations.filter { $0.resort == resort && ($0.date < now || $0.isCompleted) }
+        return allReservations.filter { $0.resort == resort && ($0.date < now || $0.isCompleted) && !UndoDeleteCenter.shared.isHidden($0) }
     }
 
     var body: some View {
@@ -158,10 +158,8 @@ private struct PastReservationsListView: View {
                 ReservationRow(reservation: res)
             }
             .onDelete { offsets in
-                for index in offsets {
-                    context.delete(pastReservations[index])
-                }
-                try? context.save()
+                let doomed = offsets.map { pastReservations[$0] }
+                UndoDeleteCenter.shared.delete(doomed, message: deleteMessage(doomed), in: context)
             }
         }
         .listStyle(.insetGrouped)
@@ -380,4 +378,8 @@ private struct DiningRow: View {
         default:                 return .gray
         }
     }
+}
+
+private func deleteMessage(_ reservations: [DiningReservation]) -> String {
+    reservations.count == 1 ? "Reservation deleted" : "\(reservations.count) reservations deleted"
 }

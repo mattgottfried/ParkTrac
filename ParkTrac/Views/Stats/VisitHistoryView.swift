@@ -6,7 +6,7 @@ struct VisitHistoryView: View {
     @Query(sort: \RideLog.riddenAt, order: .reverse) private var allLogs: [RideLog]
 
     private var resortLogs: [RideLog] {
-        allLogs.filter { $0.resort == appState.selectedResort.rawValue }
+        allLogs.filter { $0.resort == appState.selectedResort.rawValue && !UndoDeleteCenter.shared.isHidden($0) }
     }
 
     private var visitDays: [VisitDay] {
@@ -151,7 +151,6 @@ struct VisitDayDetailView: View {
     let visit: VisitDay
 
     @Environment(\.modelContext) private var context
-    @State private var deletedIds: Set<PersistentIdentifier> = []
 
     private var dateStr: String {
         let f = DateFormatter()
@@ -162,7 +161,8 @@ struct VisitDayDetailView: View {
 
     private var entriesByPark: [(park: String, logs: [RideLog])] {
         var byPark: [String: [RideLog]] = [:]
-        for log in visit.entries where !deletedIds.contains(log.persistentModelID) {
+        // Deleted IDs stay hidden for the session, so this snapshot never touches a deleted model
+        for log in visit.entries where !UndoDeleteCenter.shared.isHidden(log) {
             byPark[log.parkName, default: []].append(log)
         }
         return byPark.map { (park: $0.key, logs: $0.value.sorted { $0.riddenAt < $1.riddenAt }) }
@@ -170,9 +170,7 @@ struct VisitDayDetailView: View {
     }
 
     private func delete(_ log: RideLog) {
-        deletedIds.insert(log.persistentModelID)
-        context.delete(log)
-        try? context.save()
+        UndoDeleteCenter.shared.delete([log], message: "Deleted \u{201C}\(log.rideName)\u{201D}", in: context)
     }
 
     private static let timeFmt: DateFormatter = {

@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var appState = AppState()
     @State private var waitTimesVM = WaitTimesViewModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,6 +46,16 @@ struct ContentView: View {
             }
             .preferredColorScheme(appState.selectedResort.theme.preferredColorScheme)
             .tint(appState.selectedResort.theme.tabBarTint)
+        }
+        .overlay(alignment: .bottom) {
+            // Sits just above the tab bar
+            UndoToast()
+                .padding(.bottom, 60)
+                .animation(.spring(duration: 0.3), value: UndoDeleteCenter.shared.message)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Don't leave a deletion pending if the app gets suspended or killed
+            if phase == .background { UndoDeleteCenter.shared.commit() }
         }
         .environment(appState)
         .environment(waitTimesVM)

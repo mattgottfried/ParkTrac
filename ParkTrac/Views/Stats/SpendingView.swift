@@ -9,7 +9,7 @@ struct SpendingView: View {
     @State private var showAddSheet = false
 
     private var resort: String { appState.selectedResort.rawValue }
-    private var resortPurchases: [PurchaseLog] { allPurchases.filter { $0.resort == resort } }
+    private var resortPurchases: [PurchaseLog] { allPurchases.filter { $0.resort == resort && !UndoDeleteCenter.shared.isHidden($0) } }
 
     private var todayTotal: Double {
         resortPurchases.filter { Calendar.current.isDateInToday($0.date) }.map(\.amount).reduce(0, +)
@@ -23,7 +23,8 @@ struct SpendingView: View {
     ]
 
     var body: some View {
-        NavigationStack {
+        // Pushed from the Stats tab's NavigationStack — don't nest another.
+        Group {
             List {
                 Section {
                     HStack(spacing: 0) {
@@ -68,7 +69,8 @@ struct SpendingView: View {
                             }
                         }
                         .onDelete { indexSet in
-                            for i in indexSet { context.delete(resortPurchases[i]) }
+                            let doomed = indexSet.map { resortPurchases[$0] }
+                            UndoDeleteCenter.shared.delete(doomed, message: doomed.count == 1 ? "Purchase deleted" : "\(doomed.count) purchases deleted", in: context)
                         }
                     }
                 }
