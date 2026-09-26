@@ -45,8 +45,9 @@ Xcode Cloud reads `TestFlight/WhatToTest.en-US.txt` as the build's "What to Test
 
 Every push to `claude/vigilant-lamport-6DitA` triggers an Xcode Cloud archive + TestFlight upload, and App Store Connect caps uploads per app per day (ITMS-90382 "Upload limit reached" — wait a day). Xcode Cloud manages build numbers itself (uploads use its number, not `CURRENT_PROJECT_VERSION`).
 
-- **Minor merges get `[ci skip]` in the merge commit title/message** so they don't build: docs-only changes (CLAUDE.md, ideas.md, docs/), comment-only edits, test-only changes, and other changes the user doesn't need on a device.
-- App changes the user should test on device merge **without** `[ci skip]`, and update `TestFlight/WhatToTest.en-US.txt`.
+- **Default: every merge gets `[ci skip]`** in the merge commit title/message — including app changes. The user builds only when there's an absolute need to test something on device, or when they explicitly ask. Batch features between builds.
+- Keep `TestFlight/WhatToTest.en-US.txt` **cumulative since the last build**: each app change adds to it, so the next build's notes cover everything unbuilt.
+- To build (user asked / testing truly needed): merge without `[ci skip]`, or have the user start the workflow in Xcode Cloud on the latest commit. Changes that need a new App ID capability (push, Time Sensitive, …) must wait until the user has enabled it in the developer portal.
 - When merging via the GitHub API, pass `commit_title: "Merge pull request #N … [ci skip]"`.
 
 ### Five-Tab Structure (`ContentView.swift`)
