@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WeatherCardView: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var tempSize: CGFloat = 36
     let resort: ParkGroup
 
     @State private var weather: WeatherSnapshot?
@@ -24,7 +25,7 @@ struct WeatherCardView: View {
                 HStack(spacing: 20) {
                     VStack(spacing: 4) {
                         Text("\(Int(w.currentTemp))°F")
-                            .font(.system(size: 36, weight: .bold, design: .rounded))
+                            .font(.system(size: tempSize, weight: .bold, design: .rounded))
                         Text(w.conditionLabel)
                             .font(.caption).foregroundStyle(.secondary)
                     }

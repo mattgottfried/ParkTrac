@@ -407,7 +407,7 @@ struct StatsView: View {
                                         .fill(Color(.systemFill))
                                         .frame(width: 44, height: 44)
                                     Image(systemName: badge.systemImage)
-                                        .font(.system(size: 18))
+                                        .font(.title3)
                                         .foregroundStyle(.secondary.opacity(0.5))
                                 }
                                 Text(badge.title)

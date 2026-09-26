@@ -3,6 +3,8 @@ import Charts
 import SwiftData
 
 struct RidePredictionView: View {
+    /// Chart annotations stay compact but still follow Dynamic Type
+    @ScaledMetric(relativeTo: .caption2) private var chartLabelSize: CGFloat = 8
     let ride: DisplayRide
     let parkGroup: ParkGroup
     let parkName: String
@@ -124,7 +126,7 @@ struct RidePredictionView: View {
                 .foregroundStyle(.secondary.opacity(0.6))
                 .annotation(position: .top, alignment: .center) {
                     Text("Now")
-                        .font(.system(size: 8, weight: .medium))
+                        .font(.system(size: chartLabelSize, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
         }
@@ -242,7 +244,7 @@ struct RidePredictionView: View {
                     .font(.subheadline.weight(.medium))
                 if isOverdue {
                     Image(systemName: "circle.fill")
-                        .font(.system(size: 8))
+                        .font(.system(size: chartLabelSize))
                         .foregroundStyle(.red)
                 }
             }

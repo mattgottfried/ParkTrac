@@ -30,6 +30,7 @@ struct ContentView: View {
                 StorageWarningBanner()
             }
             ResortBannerView(appState: appState)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             TodayBlockOutBanner(appState: appState)
             ReturnTimeBanner()
             if appState.activeTimerRideId != nil {
@@ -74,6 +75,7 @@ struct ContentView: View {
         .overlay(alignment: .bottom) {
             // Sits just above the tab bar
             UndoToast()
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .padding(.bottom, 60)
                 .animation(.spring(duration: 0.3), value: UndoDeleteCenter.shared.message)
         }
@@ -131,7 +133,7 @@ private struct StorageWarningBanner: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.footnote.weight(.semibold))
             Text("Storage unavailable — changes won't be saved")
                 .font(.caption.weight(.semibold))
             Spacer()
@@ -155,7 +157,7 @@ private struct ResortBannerView: View {
             HStack(spacing: 10) {
                 Image(systemName: appState.selectedResort == .disney
                     ? "crown.fill" : "globe.americas.fill")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
 
                 Text(appState.selectedResort.rawValue)
                     .font(.subheadline.weight(.semibold))
@@ -167,7 +169,7 @@ private struct ResortBannerView: View {
                     .opacity(0.75)
 
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption2.weight(.semibold))
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 16)
@@ -181,6 +183,7 @@ private struct ResortBannerView: View {
 // MARK: - Resort Picker Sheet
 
 private struct ResortPickerSheet: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var resortIconSize: CGFloat = 36
     let appState: AppState
     @Environment(\.dismiss) private var dismiss
 
@@ -210,7 +213,7 @@ private struct ResortPickerSheet: View {
         } label: {
             VStack(spacing: 12) {
                 Image(systemName: resort == .disney ? "crown.fill" : "globe.americas.fill")
-                    .font(.system(size: 36))
+                    .font(.system(size: resortIconSize))
                     .foregroundStyle(isSelected ? Color.white : resort.theme.primaryColor)
 
                 Text(resort.rawValue)
@@ -220,11 +223,11 @@ private struct ResortPickerSheet: View {
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 18))
+                        .font(.title3)
                         .foregroundStyle(.white.opacity(0.9))
                 } else {
                     Image(systemName: "circle")
-                        .font(.system(size: 18))
+                        .font(.title3)
                         .foregroundStyle(.secondary)
                 }
             }

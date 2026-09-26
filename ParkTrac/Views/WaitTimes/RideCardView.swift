@@ -4,6 +4,10 @@ struct RideCardView: View {
     let ride: DisplayRide
     let theme: ParkTheme
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// Big wait number keeps its rounded look but grows with Dynamic Type.
+    @ScaledMetric(relativeTo: .title2) private var waitNumberSize: CGFloat = 28
+
     private var badgeColor: Color {
         waitTimeColor(minutes: ride.waitMinutes, isOperating: ride.isOperating, status: ride.status)
     }
@@ -18,7 +22,11 @@ struct RideCardView: View {
                 .frame(width: 3)
                 .clipShape(UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 12))
 
-            HStack(alignment: .center, spacing: 12) {
+            // At accessibility text sizes the wait moves under the name instead of beside it
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+                : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+            layout {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(ride.name)
                         .font(.subheadline.weight(.semibold))
@@ -40,11 +48,11 @@ struct RideCardView: View {
                         }
                     }
                 }
-                Spacer()
+                if !dynamicTypeSize.isAccessibilitySize { Spacer() }
                 if ride.isOperating, let minutes = ride.waitMinutes {
                     VStack(spacing: 0) {
                         Text("\(minutes)")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.system(size: waitNumberSize, weight: .bold, design: .rounded))
                             .foregroundStyle(badgeColor)
                         Text("min")
                             .font(.caption2.weight(.medium))
@@ -72,6 +80,16 @@ struct RideCardView: View {
         .shadow(color: .black.opacity(theme.cardShadowOpacity), radius: 6, x: 0, y: 2)
         // Down rides stay prominent so the caution state is noticed; closed dims
         .opacity(ride.isOperating || ride.status == "DOWN" ? 1.0 : 0.6)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(ride.name)
+        .accessibilityValue(accessibilityValue)
+        .accessibilityHint("Shows wait predictions and details")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private var accessibilityValue: String {
+        guard let h = meta?.heightInches else { return ride.spokenStatus }
+        return "\(ride.spokenStatus), height requirement \(h) inches"
     }
 
     private func statusBadge(icon: String, label: String, color: Color) -> some View {

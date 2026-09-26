@@ -63,6 +63,7 @@ struct MyDiningView: View {
                                 .foregroundStyle(.blue)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Add reservation")
                     }
                 }
 

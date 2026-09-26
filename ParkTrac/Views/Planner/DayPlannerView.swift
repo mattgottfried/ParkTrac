@@ -111,9 +111,11 @@ struct DayPlannerView: View {
                     Button { showSmartPlanner = true } label: {
                         Image(systemName: "wand.and.stars")
                     }
+                    .accessibilityLabel("Smart Planner")
                     Button { showAddSheet = true } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityLabel("Add to plan")
                 }
             }
             ToolbarItem(placement: .navigationBarLeading) {
@@ -168,10 +170,11 @@ private struct PlanItemRow: View {
                 }
             } label: {
                 Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                    .font(.title2)
                     .foregroundStyle(item.isDone ? Color.green : Color.secondary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(item.isDone ? "Mark \(item.title) not done" : "Mark \(item.title) done")
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title)

@@ -97,6 +97,7 @@ struct HotelListView: View {
                         ? "line.3.horizontal.decrease.circle.fill"
                         : "line.3.horizontal.decrease.circle")
                 }
+                .accessibilityLabel("Filter and sort")
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -104,6 +105,7 @@ struct HotelListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add hotel")
             }
         }
         .onChange(of: appState.selectedResort) { _, _ in tierFilter = nil }

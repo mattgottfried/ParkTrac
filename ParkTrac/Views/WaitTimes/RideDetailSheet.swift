@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct RideDetailSheet: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var waitNumberSize: CGFloat = 72
+    @ScaledMetric(relativeTo: .largeTitle) private var statusIconSize: CGFloat = 52
     let ride: DisplayRide
     let theme: ParkTheme
     let parkGroup: ParkGroup
@@ -54,7 +56,7 @@ struct RideDetailSheet: View {
                 if ride.isOperating, let minutes = ride.waitMinutes {
                     VStack(spacing: 2) {
                         Text("\(minutes)")
-                            .font(.system(size: 72, weight: .bold, design: .rounded))
+                            .font(.system(size: waitNumberSize, weight: .bold, design: .rounded))
                             .foregroundStyle(badgeColor)
                         Text("minute wait")
                             .font(.headline)
@@ -64,7 +66,7 @@ struct RideDetailSheet: View {
                     Image(systemName: ride.status == "DOWN"
                           ? "exclamationmark.triangle.fill"
                           : "xmark.circle.fill")
-                        .font(.system(size: 52))
+                        .font(.system(size: statusIconSize))
                         .foregroundStyle(ride.status == "DOWN" ? .orange : .gray)
                 }
 
@@ -101,12 +103,13 @@ struct RideDetailSheet: View {
                             appState.toggleWish(ride.id)
                         } label: {
                             Image(systemName: appState.wishList.contains(ride.id) ? "star.fill" : "star")
-                                .font(.system(size: 20))
+                                .font(.title3)
                                 .foregroundStyle(appState.wishList.contains(ride.id) ? .yellow : .secondary)
                                 .padding(10)
                                 .background(Color(.systemFill), in: Circle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(appState.wishList.contains(ride.id) ? "Remove from Must-Do" : "Add to Must-Do")
                     }
 
                     if rideCount > 0 {

@@ -247,6 +247,14 @@ struct DisplayRide: Identifiable {
         }
     }
 
+    /// VoiceOver phrasing of the wait/status (map pins and ride cards).
+    var spokenStatus: String {
+        if status == "DOWN" { return "Temporarily down" }
+        guard isOperating else { return statusDisplay }
+        guard let minutes = waitMinutes else { return "Open, no posted wait" }
+        return minutes == 1 ? "1 minute wait" : "\(minutes) minute wait"
+    }
+
     init(live: LiveDataEntry, parkId: String, location: CLLocationCoordinate2D?) {
         self.id = live.id
         self.name = live.name

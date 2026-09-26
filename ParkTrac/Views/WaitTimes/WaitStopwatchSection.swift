@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WaitStopwatchSection: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var clockSize: CGFloat = 48
     let ride: DisplayRide
     let parkName: String
     let postedWait: Int?         // ride.waitMinutes at the moment timing starts
@@ -27,7 +28,7 @@ struct WaitStopwatchSection: View {
                 let mins = Int(elapsed) / 60
                 let secs = Int(elapsed) % 60
                 Text(String(format: "%d:%02d", mins, secs))
-                    .font(.system(size: 48, weight: .bold, design: .monospaced))
+                    .font(.system(size: clockSize, weight: .bold, design: .monospaced))
                     .foregroundStyle(.orange)
                     .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
                         if let start = appState.activeTimerStart {

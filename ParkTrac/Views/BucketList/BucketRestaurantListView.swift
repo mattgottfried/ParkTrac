@@ -101,6 +101,7 @@ struct BucketRestaurantListView: View {
                         ? "line.3.horizontal.decrease.circle.fill"
                         : "line.3.horizontal.decrease.circle")
                 }
+                .accessibilityLabel("Filter and sort")
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -108,6 +109,7 @@ struct BucketRestaurantListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add restaurant")
             }
         }
         .sheet(item: $selectedRestaurant) { BucketRestaurantDetailView(restaurant: $0) }

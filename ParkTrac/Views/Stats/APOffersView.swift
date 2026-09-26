@@ -76,6 +76,8 @@ private struct OfferRow: View {
                     .foregroundStyle(used ? .green : .secondary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Used")
+            .accessibilityAddTraits(used ? .isSelected : [])
         }
         .padding(.vertical, 2)
     }
