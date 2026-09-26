@@ -6,6 +6,8 @@ import UserNotifications
 @main
 struct ParkTracApp: App {
     let container: ModelContainer = PersistenceController.container
+    /// Receives the push token for instant alerts
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
         // Must be set before launch finishes so a tap that launched the app is delivered
@@ -36,6 +38,7 @@ struct ParkTracApp: App {
             // so iOS always has a fresh request to schedule against
             if phase == .active {
                 BackgroundRefreshService.schedule()
+                InstantAlertsService.shared.appBecameActive()
                 // Refresh the dining countdown for the soonest reservation later
                 // today — covers reservations created outside a view (e.g. the
                 // email-scraping AppIntent) and clears stale/past activities.

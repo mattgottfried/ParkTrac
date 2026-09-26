@@ -410,8 +410,9 @@ struct ParkMapView: View {
             syncRopeDropActivity()
         }
         .onDisappear {
-            // Keep refreshing on other tabs while a Lightning Lane watch is running
-            if !LightningLaneWatchService.shared.hasActiveWatches {
+            // Keep refreshing on other tabs while a Lightning Lane or reopen watch is running
+            if !LightningLaneWatchService.shared.hasActiveWatches
+                && !ReopenWatchService.shared.watches.contains(where: \.isToday) {
                 viewModel.stopAutoRefresh()
             }
             locationService.stop()

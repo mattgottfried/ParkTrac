@@ -1,20 +1,17 @@
-NEW: Japan ride heights + Super Nintendo World timed entry
+NEW: Instant Alerts + "back up" alerts
 
-Ride heights in cm (Tokyo Disney Resort & Universal Studios Japan)
-• Ride cards and ride details at the Japan resorts show height minimums in cm (e.g. "102 cm"); Orlando stays in inches.
-• The Flying Dinosaur and Raging Spirits also show their maximum height.
-• These heights come from the parks' published requirements — please check them against the signs at each ride entrance in November.
+Instant Alerts (Settings → Instant Alerts)
+• Turn it on and your ThrillTrack alert server watches wait times every minute and sends a push, even when the app is closed — no more waiting for iOS's hourly background check.
+• Covers Lightning Lane / Priority Pass watches, wait-time alerts (DAS/AAP alerts keep their Book / I Booked It buttons), and the new reopen alerts.
+• The Settings row shows how many alerts the server is watching and when it last synced. If the server can't be reached, the app falls back to its own checks automatically.
+• The server has to be set up once first (Apple push key + Deno Deploy) — see server/README.md.
 
-Height Checker (Settings)
-• New resort picker: Orlando / Tokyo Disney / USJ.
-• Uses cm automatically in Japan (the "Use centimetres" switch still works, and your choice is remembered).
-• Your child's height is remembered between visits.
-
-Super Nintendo World timed entry (USJ)
-• My Day at Universal Studios Japan has "Log Area Timed Entry". Enter the time from your USJ app ticket.
-• It shows up with your Express Passes, starts a Live Activity, notifies you when the entry window opens and 10 minutes before it closes.
+Alert Me When It's Back Up
+• A down or closed ride's detail sheet has "Alert Me When It's Back Up" (or "…When It Opens"). You get one notification when it's operating again. Watches show in My Day and last for today.
 
 Please check:
-• Switch to Tokyo Disney → Wait Times: height tags read in cm on rides like Big Thunder Mountain, Tower of Terror, Indiana Jones.
-• Settings → Height Checker: switch resorts, flip cm/inches, step the height — the ride lists update.
-• Switch to USJ → My Day → Log Area Timed Entry with a time a couple of minutes ahead — you get the "entry is open" notification.
+• Settings → Instant Alerts on → allow notifications → status turns green ("Watching N alerts · synced just now").
+• Set a wait alert above a ride's current wait, close the app — the push should arrive within about a minute.
+• On a down ride, tap "Alert Me When It's Back Up" — it appears in My Day; Cancel removes it.
+• Tap a pushed alert — it opens that ride; the DAS/AAP/Lightning Lane buttons still work from the push.
+• You should get one alert per event, not two (server + app).

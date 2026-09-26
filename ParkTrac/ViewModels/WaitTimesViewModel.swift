@@ -294,6 +294,8 @@ final class WaitTimesViewModel {
         rebuildAllRides()
         if successCount > 0 {
             LightningLaneWatchService.shared.check(rides: allRides)
+            ReopenWatchService.shared.check(rides: allRides)
+            InstantAlertsService.shared.refreshIfStale()
         }
         // Only advance on real data — a stale timestamp drives the "out of date" warning
         // and keeps the recorder from re-recording cached waits as new snapshots.
