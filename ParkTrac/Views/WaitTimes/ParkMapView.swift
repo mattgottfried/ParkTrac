@@ -519,6 +519,7 @@ struct ParkMapView: View {
                 parkNames: Dictionary(viewModel.currentParks.map { ($0.id, $0.name) },
                                       uniquingKeysWith: { first, _ in first }))
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
+            GoodTimeService.shared.update(rides: viewModel.allRides, mustDo: appState.wishList, context: modelContext)
             syncRopeDropActivity()
             // Schedules may have just loaded — (re)arm the "parks close soon" car reminder
             ParkingReminder.refresh(resort: viewModel.selectedGroup,
@@ -709,6 +710,45 @@ struct ParkMapView: View {
 
     /// List-only filters. Kept out of `viewModel.filteredRides` so crowd level / average wait
     /// still reflect the whole park.
+    /// Rides whose wait is well below usual right now — Must-Dos first
+    @ViewBuilder
+    private var goodTimeStrip: some View {
+        let picks = GoodTimeService.shared.ranked(rides: displayedRides, mustDo: appState.wishList)
+        if !picks.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Good Time to Ride", systemImage: "arrow.down.circle.fill")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.green)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(picks, id: \.ride.id) { pick in
+                            Button { selectedRide = pick.ride } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 4) {
+                                        if appState.wishList.contains(pick.ride.id) {
+                                            Image(systemName: "star.fill").foregroundStyle(.yellow)
+                                        }
+                                        Text(pick.ride.name).lineLimit(1)
+                                    }
+                                    .font(.caption.weight(.semibold))
+                                    Text("\(pick.deal.wait) min · \(pick.deal.shortText)")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.horizontal, 10).padding(.vertical, 6)
+                                .background(Color.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("\(pick.ride.name), \(pick.deal.wait) minutes, \(pick.deal.longText)")
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 4)
+        }
+    }
+
     private var displayedRides: [DisplayRide] {
         viewModel.filteredRides.filter { ride in
             if showMustDoOnly && !appState.wishList.contains(ride.id) { return false }
@@ -874,11 +914,13 @@ struct ParkMapView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 8) {
+                            goodTimeStrip
                             ForEach(displayedRides) { ride in
                                 RideCardView(ride: ride, theme: theme, walkMinutes: walkMinutes(to: ride),
                                              returnPassShort: viewModel.selectedGroup.returnPassNames.short,
                                              returnPassName: viewModel.selectedGroup.returnPassNames.free,
-                                             resort: viewModel.selectedGroup)
+                                             resort: viewModel.selectedGroup,
+                                             goodTime: GoodTimeService.shared.deal(for: ride.id))
                                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     .onTapGesture { selectedRide = ride }
                                     .contextMenu { rideContextMenu(for: ride) }

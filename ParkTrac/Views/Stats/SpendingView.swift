@@ -17,6 +17,9 @@ struct SpendingView: View {
     private var tripTotal: Double { resortPurchases.map(\.amount).reduce(0, +) }
 
     private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
+    /// Japan resorts log yen; show ≈ dollars beside it
+    private var showsDollars: Bool { appState.selectedResort.currencyCode == "JPY" }
+    private let currency = CurrencyConverter.shared
     private let categoryColors: [String: Color] = [
         "Food": .orange, "Merchandise": .blue, "Tickets": .purple,
         "Lightning Lane": .yellow, "Other": .gray
@@ -71,8 +74,14 @@ struct SpendingView: View {
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Text(p.amount, format: .currency(code: appState.selectedResort.currencyCode))
-                                    .font(.subheadline.weight(.semibold))
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text(p.amount, format: .currency(code: appState.selectedResort.currencyCode))
+                                        .font(.subheadline.weight(.semibold))
+                                    if showsDollars {
+                                        Text(currency.dollarsText(yen: p.amount))
+                                            .font(.caption2).foregroundStyle(.secondary)
+                                    }
+                                }
                             }
                         }
                         .onDelete { indexSet in
@@ -96,6 +105,7 @@ struct SpendingView: View {
                 }
             }
             .sheet(isPresented: $showAddSheet) { AddPurchaseView(resort: resort) }
+            .task { if showsDollars { await currency.refresh() } }
         }
     }
 
@@ -103,6 +113,9 @@ struct SpendingView: View {
         VStack(spacing: 4) {
             Text(value, format: .currency(code: appState.selectedResort.currencyCode))
                 .font(.title3.weight(.bold)).foregroundStyle(color)
+            if showsDollars {
+                Text(currency.dollarsText(yen: value)).font(.caption2).foregroundStyle(.secondary)
+            }
             Text(label).font(.caption).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -120,14 +133,22 @@ struct AddPurchaseView: View {
     @State private var selectedPark = ""
     @State private var showLocationPicker = false
     private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
+    /// Japan resorts are logged in yen
+    private var isYen: Bool { ParkGroup(rawValue: resort)?.currencyCode == "JPY" }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Amount") {
+                Section {
                     HStack {
-                        Text("$")
-                        TextField("0.00", text: $amount).keyboardType(.decimalPad)
+                        Text(isYen ? "¥" : "$")
+                        TextField(isYen ? "0" : "0.00", text: $amount).keyboardType(isYen ? .numberPad : .decimalPad)
+                    }
+                } header: {
+                    Text("Amount")
+                } footer: {
+                    if isYen, let yen = Double(amount), yen > 0 {
+                        Text(CurrencyConverter.shared.dollarsText(yen: yen))
                     }
                 }
                 Section("Category") {

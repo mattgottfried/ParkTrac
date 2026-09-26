@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var showClearHistoryConfirm = false
     @Query private var allRideLogs: [RideLog]
     @Query private var allPurchases: [PurchaseLog]
+    @AppStorage(GoodTimeService.alertsEnabledKey) private var goodTimeAlerts = true
     @AppStorage(BookingApp.disney.useShortcutKey) private var disneyViaShortcut = false
     @AppStorage(BookingApp.universal.useShortcutKey) private var universalViaShortcut = false
     @AppStorage(BookingApp.tokyoDisney.useShortcutKey) private var tokyoDisneyViaShortcut = false
@@ -117,6 +118,15 @@ struct SettingsView: View {
 
                 // MARK: Instant Alerts
                 InstantAlertsSection()
+
+                // MARK: Good Time to Ride
+                Section {
+                    Toggle(isOn: $goodTimeAlerts) {
+                        Label("Good Time to Ride Alerts", systemImage: "arrow.down.circle")
+                    }
+                } footer: {
+                    Text("Once a day per ride, a heads-up when a Must-Do's wait is well below what it usually is at that time — based on the waits ThrillTrack has recorded on this phone. The more you use the app, the better it gets.")
+                }
 
                 // MARK: Booking Apps
                 Section {

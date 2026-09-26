@@ -50,6 +50,16 @@ struct DayPlannerView: View {
 
     private var content: some View {
         List {
+            // Upcoming / current trip countdown (Trip Planner)
+            if let countdown = TripService.shared.countdownText {
+                NavigationLink {
+                    TripPlannerView()
+                } label: {
+                    Label(countdown, systemImage: "airplane")
+                        .font(.subheadline.weight(.semibold))
+                }
+            }
+
             if !llPasses.isEmpty {
                 Section {
                     ForEach(llPasses) { pass in

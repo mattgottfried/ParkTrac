@@ -10,6 +10,8 @@ struct RideCardView: View {
     var returnPassName: String = "Lightning Lane"
     /// Picks the resort's metadata table and height unit (cm in Japan)
     var resort: ParkGroup = .disney
+    /// Wait well below this ride's usual (GoodTimeService)
+    var goodTime: GoodTimeToRide.Deal? = nil
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Big wait number keeps its rounded look but grows with Dynamic Type.
@@ -40,6 +42,11 @@ struct RideCardView: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(ride.isOperating ? .primary : .secondary)
                         .lineLimit(2)
+                    if let goodTime {
+                        Label("Good time · \(goodTime.shortText)", systemImage: "arrow.down.circle.fill")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.green)
+                    }
                     HStack(spacing: 6) {
                         Text(ride.statusDisplay)
                             .font(.caption2)
@@ -123,6 +130,7 @@ struct RideCardView: View {
         if LightningLaneWatchService.shared.watch(for: ride.id) != nil {
             parts.append("watching for \(returnPassName) openings")
         }
+        if let goodTime { parts.append("good time to ride, \(goodTime.longText)") }
         if let walk = walkMinutes { parts.append("about \(walk) minute walk") }
         if let meta, let h = HeightFormat.spoken(meta, metric: metric) { parts.append("height requirement \(h)") }
         return parts.joined(separator: ", ")

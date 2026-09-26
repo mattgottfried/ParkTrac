@@ -51,6 +51,22 @@ final class NotificationService {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// A Must-Do ride's wait is well below its usual (GoodTimeService, once per ride per day).
+    func fireGoodTimeToRide(rideId: String, rideName: String, deal: GoodTimeToRide.Deal) {
+        let content = UNMutableNotificationContent()
+        content.title = "🎢 Good time to ride \(rideName)"
+        content.body = "\(deal.wait) min now — \(deal.longText)."
+        content.sound = .default
+        content.threadIdentifier = "good-time"
+        content.userInfo = [
+            DeepLink.userInfoKey: DeepLink.ride(id: rideId).url.absoluteString,
+            NotificationKeys.rideId: rideId,
+            NotificationKeys.rideName: rideName,
+        ]
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: "goodtime-\(rideId)", content: content, trigger: nil))
+    }
+
     /// A ride you were watching is operating again.
     func fireRideReopened(watch: ReopenWatch, wait: Int?) {
         let content = UNMutableNotificationContent()

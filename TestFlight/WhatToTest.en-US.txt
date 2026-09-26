@@ -1,16 +1,19 @@
 NEW since the last build (car locator roll-up):
 
+Good Time to Ride
+• Rides whose wait is well below usual get a green "Good time · usually ~70" tag, and a "Good Time to Ride" strip sits at the top of the ride list (Must-Dos first).
+• "Usual" comes from the waits ThrillTrack has recorded on this phone — the same time of day on earlier days, or earlier today. It needs a few visits' worth of data, so it gets better the more you use the app.
+• Must-Do rides send one heads-up per ride per day ("Slinky Dog Dash 35 min now — usually ~70 min at this time"). Turn it off in Settings → Good Time to Ride Alerts.
+
+Trip Planner (Stats → Trip Planner)
+• "Plan Japan Trip" sets up a trip with a countdown (also shown at the top of My Day), and a pre-trip checklist: passports, Visit Japan Web, Tokyo Disney / USJ tickets and apps, Suica, eSIM, yen and more. Edit, reorder, add or delete items; it syncs to Heather's phone.
+• Yen ↔ dollar: live rate (or set your own). At the Japan resorts, Spending shows ≈ $ beside every yen amount, and Add Purchase takes yen.
+
 Time Sensitive alerts
-
-Ride alerts now get through Focus modes (Sleep, Work, Driving, Do Not Disturb) and stay on the Lock Screen for an hour:
-• Wait-time drop alerts (including DAS/AAP), Lightning Lane / Priority Pass openings, "back up" alerts
-• Return time is open / closing soon, Super Nintendo World entry open
-• "Parks close soon — your car is at…"
-Confirmations ("… logged") and pass-renewal reminders stay normal.
-
-The first time one arrives during a Focus, iOS asks whether to keep allowing ThrillTrack's Time Sensitive notifications — choose Allow. You can change it any time in iOS Settings → Notifications → ThrillTrack → Time Sensitive Notifications.
+• Ride alerts get through Focus modes (Sleep, Work, Driving). The first time, iOS asks — choose Allow.
 
 Please check:
-• Turn on a Focus (e.g. Do Not Disturb), set a wait alert just above a ride's current wait, and lock the phone — the alert still comes through, labeled Time Sensitive.
-• Instant Alerts (server pushes) come through the same way.
-• Car locator, lot menus and Home Screen shortcuts from the last build still work.
+• After a few park visits, a green "Good time" tag appears on a ride that's unusually short, and a Must-Do sends a heads-up.
+• Trip Planner: set dates, tick items on one phone, see them on the other.
+• Switch to Tokyo Disney → Stats → Spending → add ¥1,500 — it shows ≈ $10.
+• With Do Not Disturb on, a wait alert still comes through.
