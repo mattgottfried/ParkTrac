@@ -96,6 +96,19 @@ final class NotificationService {
             UNNotificationRequest(identifier: "return-\(passId)", content: content, trigger: trigger))
     }
 
+    /// Area timed entry (USJ Super Nintendo World): fires when the entry window opens.
+    func scheduleAreaEntryOpen(passId: String, areaName: String, start: Date, end: Date) {
+        guard start > .now.addingTimeInterval(30) else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "🍄 \(areaName) entry is open"
+        content.body = "Head to the entrance — your timed entry window closes at \(end.formatted(date: .omitted, time: .shortened))."
+        content.sound = .default
+        content.userInfo = [DeepLink.userInfoKey: DeepLink.plan.url.absoluteString]
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: start.timeIntervalSinceNow, repeats: false)
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: "entry-\(passId)", content: content, trigger: trigger))
+    }
+
     /// Confirmation after "I Booked It" from a notification (the app may not be open).
     func confirmAccessPassLogged(passLabel: String, rideName: String, returnStart: Date, isOpenEnded: Bool = true) {
         let content = UNMutableNotificationContent()

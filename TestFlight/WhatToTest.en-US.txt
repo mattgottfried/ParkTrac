@@ -1,19 +1,20 @@
-NEW: Friendlier empty screens + guest names
+NEW: Japan ride heights + Super Nintendo World timed entry
 
-Guest names
-• My Day now shows who's coming by name — your party (from setup) and today's guests, e.g. "With Jake & Sam".
-• Fixed: today's guest selection was lost after closing the app (and checkmarks sometimes didn't update when tapped).
-• The My Day share summary lists who came.
+Ride heights in cm (Tokyo Disney Resort & Universal Studios Japan)
+• Ride cards and ride details at the Japan resorts show height minimums in cm (e.g. "102 cm"); Orlando stays in inches.
+• The Flying Dinosaur and Raging Spirits also show their maximum height.
+• These heights come from the parks' published requirements — please check them against the signs at each ride entrance in November.
 
-Empty screens now have a next step
-• My Day: "Add to Plan" and "Smart Planner" buttons.
-• Ride Counter / Visit History: "Open Wait Times".
-• Bucket List at a resort with no entries (e.g. Tokyo): "No Restaurants/Hotels Yet" with an Add button; filtered-out lists get "Clear Filters".
-• Dining: "Add Reservation" and "Open Bucket List"; Spending: "Add Purchase".
+Height Checker (Settings)
+• New resort picker: Orlando / Tokyo Disney / USJ.
+• Uses cm automatically in Japan (the "Use centimetres" switch still works, and your choice is remembered).
+• Your child's height is remembered between visits.
 
-Also in this build (if you haven't tested yet)
-• Resort-switch crash fix, Japan map pins, Japan park loading.
+Super Nintendo World timed entry (USJ)
+• My Day at Universal Studios Japan has "Log Area Timed Entry". Enter the time from your USJ app ticket.
+• It shows up with your Express Passes, starts a Live Activity, notifies you when the entry window opens and 10 minutes before it closes.
 
 Please check:
-• Pick guests, close and reopen the app — they're still selected and named in My Day.
-• Tap each empty-screen button — it goes to the right place.
+• Switch to Tokyo Disney → Wait Times: height tags read in cm on rides like Big Thunder Mountain, Tower of Terror, Indiana Jones.
+• Settings → Height Checker: switch resorts, flip cm/inches, step the height — the ride lists update.
+• Switch to USJ → My Day → Log Area Timed Entry with a time a couple of minutes ahead — you get the "entry is open" notification.
