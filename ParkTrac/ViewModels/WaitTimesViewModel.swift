@@ -86,6 +86,9 @@ final class WaitTimesViewModel {
         return "\(c.year ?? 0)-\(c.month ?? 0)-\(c.day ?? 0)"
     }
 
+    // Main-actor isolated: concurrent park loads (several at once when switching resorts)
+    // used to write catalogsByPark from background threads, corrupting the dictionary → crash.
+    @MainActor
     private func loadCatalog(for parkId: String) -> [CatalogRide]? {
         if let cached = catalogsByPark[parkId] { return cached }
         guard let data = UserDefaults.standard.data(forKey: "rideCatalog_\(parkId)"),
@@ -94,6 +97,7 @@ final class WaitTimesViewModel {
         return catalog
     }
 
+    @MainActor
     private func refreshCatalogIfNeeded(for park: ParkEntity) async {
         let dayKey = "rideCatalogDay_\(park.id)"
         if UserDefaults.standard.string(forKey: dayKey) == todayKey,

@@ -1,4 +1,7 @@
-FIXES: Japan parks + build versions (build 101)
+FIXES: resort-switch crash, Japan parks, build versions
+
+Crash when switching resorts
+• Fixed a crash that could happen while switching resorts (parks loading at the same time wrote to shared data). Switch back and forth between all four resorts quickly — it should never crash.
 
 Japan parks
 • Tokyo Disney and Universal Studios Japan now retry loading when you switch to them. If they still can't load, you'll see a message saying why instead of an empty list — please screenshot it.
