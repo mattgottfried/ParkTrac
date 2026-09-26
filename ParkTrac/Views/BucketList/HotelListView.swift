@@ -11,9 +11,12 @@ struct HotelListView: View {
     @State private var showAddSheet = false
 
     static func tiers(for resort: ParkGroup) -> [String] {
-        resort == .disney
-            ? ["Value", "Moderate", "Deluxe", "Disney Vacation Club"]
-            : ["Premier", "Preferred", "Standard"]
+        switch resort {
+        case .disney:         return ["Value", "Moderate", "Deluxe", "Disney Vacation Club"]
+        case .universal:      return ["Premier", "Preferred", "Standard"]
+        case .tokyoDisney:    return ["Disney Hotel", "Official Hotel", "Partner Hotel", "Good Neighbor Hotel"]
+        case .universalJapan: return ["Official Hotel", "Partner Hotel"]
+        }
     }
 
     private var resortHotels: [HotelStay] {
@@ -137,6 +140,14 @@ struct HotelListView: View {
                         visited: allHotels.filter { $0.resort == resort && $0.tier == "Value" && $0.isVisited }.count,
                         total: allHotels.filter { $0.resort == resort && $0.tier == "Value" }.count,
                         color: .green)
+                } else if !appState.selectedResort.isOrlando {
+                    // Japan: one card per that resort's own tiers
+                    ForEach(Self.tiers(for: appState.selectedResort), id: \.self) { tier in
+                        hotelStatCard(label: tier,
+                            visited: allHotels.filter { $0.resort == resort && $0.tier == tier && $0.isVisited }.count,
+                            total: allHotels.filter { $0.resort == resort && $0.tier == tier }.count,
+                            color: .purple)
+                    }
                 } else {
                     hotelStatCard(label: "Premier",
                         visited: allHotels.filter { $0.resort == resort && $0.tier == "Premier" && $0.isVisited }.count,

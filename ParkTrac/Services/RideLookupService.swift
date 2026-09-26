@@ -18,7 +18,7 @@ enum RideLookupService {
         guard !trimmed.isEmpty else { return nil }
 
         for group in ParkGroup.allCases {
-            guard let parks = try? await ParkAPIService.shared.fetchDestinationChildren(destinationId: group.destinationId) else { continue }
+            guard let parks = try? await ParkAPIService.shared.fetchParks(for: group) else { continue }
             for park in parks {
                 guard let liveEntries = try? await ParkAPIService.shared.fetchLiveData(for: park.id) else { continue }
                 if let entry = liveEntries.first(where: {

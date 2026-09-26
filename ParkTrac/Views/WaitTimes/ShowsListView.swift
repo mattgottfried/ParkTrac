@@ -3,12 +3,10 @@ import SwiftUI
 struct ShowsListView: View {
     let shows: [DisplayShow]
     let theme: ParkTheme
+    /// Show times in the park's time zone
+    var timeZone: TimeZone = .current
 
-    private static let timeFmt: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "h:mm a"
-        return f
-    }()
+    private var timeFmt: DateFormatter { ParkTime.formatter("h:mm a", timeZone) }
 
     var body: some View {
         if shows.isEmpty {
@@ -18,7 +16,7 @@ struct ShowsListView: View {
             ScrollView {
                 LazyVStack(spacing: 8) {
                     ForEach(shows) { show in
-                        ShowRowView(show: show, theme: theme, timeFmt: Self.timeFmt)
+                        ShowRowView(show: show, theme: theme, timeFmt: timeFmt)
                     }
                 }
                 .padding(.horizontal).padding(.vertical, 8)

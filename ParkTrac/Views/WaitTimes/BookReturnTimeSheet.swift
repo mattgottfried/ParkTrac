@@ -32,26 +32,37 @@ struct BookReturnTimeSheet: View {
         case das         = "DAS"
         case expressNow  = "Express Now"
         case aap         = "AAP"
+        // Tokyo Disney Resort
+        case priorityPass  = "Priority Pass"
+        case premierAccess = "Premier Access"
+        // Universal Studios Japan
+        case expressPass   = "Express Pass"
         var id: Self { self }
         var icon: String {
             switch self {
-            case .ll, .expressNow: return "bolt.fill"
+            case .ll, .expressNow, .priorityPass, .premierAccess: return "bolt.fill"
+            case .expressPass:     return "ticket.fill"
             case .das, .aap:       return "figure.roll"
             }
         }
     }
 
     private var availableKinds: [PassKind] {
-        if parkGroup == .disney {
+        switch parkGroup {
+        case .disney:
             var kinds: [PassKind] = []
             if appState.hasLightningLane { kinds.append(.ll) }
             if appState.hasDAS { kinds.append(.das) }
             return kinds
-        } else {
+        case .universal:
             var kinds: [PassKind] = []
             if appState.universalExpressType == .expressNow { kinds.append(.expressNow) }
             if appState.hasAAP { kinds.append(.aap) }
             return kinds
+        case .tokyoDisney:
+            return [.priorityPass, .premierAccess]
+        case .universalJapan:
+            return [.expressPass]
         }
     }
 
@@ -143,7 +154,7 @@ struct BookReturnTimeSheet: View {
         switch passKind {
         case .aap: returnStart = AccessPass.aap.estimatedReturn(postedWait: ride.waitMinutes)
         case .das: returnStart = AccessPass.das.estimatedReturn(postedWait: ride.waitMinutes)
-        case .ll, .expressNow: returnStart = Date()
+        case .ll, .expressNow, .priorityPass, .premierAccess, .expressPass: returnStart = Date()
         }
     }
 

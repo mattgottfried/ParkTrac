@@ -205,11 +205,14 @@ struct StatsView: View {
                     // Spending card
                     spendingCard
 
-                    // Pass Savings card
-                    passSavingsCard
+                    // Annual-pass savings and the US-holiday crowd calendar are Orlando-only
+                    if appState.selectedResort.isOrlando {
+                        // Pass Savings card
+                        passSavingsCard
 
-                    // Crowd Calendar card
-                    CrowdCalendarCard(resort: appState.selectedResort)
+                        // Crowd Calendar card
+                        CrowdCalendarCard(resort: appState.selectedResort)
+                    }
 
                     // Badges teaser
                     badgesTeaser

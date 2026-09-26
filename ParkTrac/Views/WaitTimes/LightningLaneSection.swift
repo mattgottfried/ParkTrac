@@ -5,6 +5,12 @@ import SwiftData
 struct LightningLaneSection: View {
     let ride: DisplayRide
     var parkName: String = ""
+    /// Names differ by resort: Lightning Lane Multi/Single Pass in Orlando,
+    /// Priority Pass / Premier Access at Tokyo Disney Resort.
+    var resort: ParkGroup = .disney
+
+    private var names: (free: String, paid: String, section: String, short: String) { resort.returnPassNames }
+    private var bookingApp: BookingApp { .for(resort) }
 
     @Environment(\.modelContext) private var context
     @Query(filter: #Predicate<PlanItem> { $0.kind == "ll" && !$0.isDone }) private var openLLReturns: [PlanItem]
@@ -18,15 +24,15 @@ struct LightningLaneSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Lightning Lane", systemImage: "bolt.fill")
+            Label(names.section, systemImage: "bolt.fill")
                 .font(.headline)
                 .foregroundStyle(.yellow)
 
             if let multi = ride.multiPass {
-                row(title: "Multi Pass", info: multi)
+                row(title: names.free, info: multi)
             }
             if let single = ride.singlePass {
-                row(title: single.price.map { "Single Pass · \($0)" } ?? "Single Pass", info: single)
+                row(title: single.price.map { "\(names.paid) · \($0)" } ?? names.paid, info: single)
             }
 
             // Already booked → no need to keep watching
@@ -45,9 +51,9 @@ struct LightningLaneSection: View {
             } else {
                 HStack(spacing: 10) {
                     Button {
-                        BookingApp.disney.open()
+                        bookingApp.open()
                     } label: {
-                        Label("Book in Disney App", systemImage: "arrow.up.forward.app")
+                        Label("Book in \(bookingApp.shortLabel)", systemImage: "arrow.up.forward.app")
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
                     }
@@ -84,7 +90,7 @@ struct LightningLaneSection: View {
         if let start = ride.multiPass?.returnStart, ride.multiPass?.isAvailable == true {
             return "\"I Booked It\" logs the \(start.formatted(date: .omitted, time: .shortened)) return shown above. Booked a different time? Use Log Return Time below."
         }
-        return "Booking happens in Disney's app. Use Log Return Time below to record what you booked."
+        return "Booking happens in the \(bookingApp.appName). Use Log Return Time below to record what you booked."
     }
 
     private func windowText(start: Date, end: Date?) -> String {
@@ -97,7 +103,8 @@ struct LightningLaneSection: View {
         guard let multi = ride.multiPass, multi.isAvailable, let start = multi.returnStart else { return }
         ReturnTimeLogger.logLightningLaneNow(
             rideId: ride.id, rideName: ride.name, parkName: parkName,
-            returnStart: start, returnEnd: multi.returnEnd, context: context)
+            returnStart: start, returnEnd: multi.returnEnd,
+            resort: resort, passLabel: names.free, context: context)
     }
 
     // MARK: Rows
@@ -147,7 +154,7 @@ struct LightningLaneSection: View {
             }
         } else {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Alert me when a Multi Pass return opens between:")
+                Text("Alert me when a \(names.free) return opens between:")
                     .font(.subheadline)
                 DatePicker("Earliest", selection: $windowStart, displayedComponents: .hourAndMinute)
                 DatePicker("Latest", selection: $windowEnd, in: windowStart..., displayedComponents: .hourAndMinute)
@@ -180,6 +187,8 @@ struct LightningLaneSection: View {
             rideId: ride.id, rideName: ride.name, parkId: ride.parkId, parkName: parkName,
             day: Calendar.current.startOfDay(for: .now),
             windowStart: start, windowEnd: end)
+        watch.passName = names.free
+        watch.resortRaw = resort.rawValue
         watch.windowStart = start
         watch.windowEnd = end
         service.save(watch)

@@ -38,6 +38,10 @@ struct WaitTimePredictionService {
             return "Best times: Rope drop (9–10am) or evenings after 7pm"
         case .universal:
             return "Best times: First 2 hours after open or last hour before close"
+        case .tokyoDisney:
+            return "Best times: Be at the gate well before opening — lines build early — or the last 2 hours"
+        case .universalJapan:
+            return "Best times: Before opening or the last hour; Super Nintendo World may need an area timed-entry ticket"
         }
     }
 

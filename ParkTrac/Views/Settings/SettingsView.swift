@@ -10,6 +10,8 @@ struct SettingsView: View {
     @Query private var allPurchases: [PurchaseLog]
     @AppStorage(BookingApp.disney.useShortcutKey) private var disneyViaShortcut = false
     @AppStorage(BookingApp.universal.useShortcutKey) private var universalViaShortcut = false
+    @AppStorage(BookingApp.tokyoDisney.useShortcutKey) private var tokyoDisneyViaShortcut = false
+    @AppStorage(BookingApp.universalJapan.useShortcutKey) private var universalJapanViaShortcut = false
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -38,8 +40,7 @@ struct SettingsView: View {
                 // MARK: Resort
                 Section {
                     HStack {
-                        Label("Current Resort", systemImage: appState.selectedResort == .disney
-                              ? "crown.fill" : "globe.americas.fill")
+                        Label("Current Resort", systemImage: appState.selectedResort.systemImage)
                         Spacer()
                         Text(appState.selectedResort.rawValue)
                             .foregroundStyle(.secondary)
@@ -122,6 +123,12 @@ struct SettingsView: View {
                     Toggle(isOn: $universalViaShortcut) {
                         Label("Use \"\(BookingApp.universal.shortcutName)\" Shortcut", systemImage: "wand.and.stars")
                     }
+                    Toggle(isOn: $tokyoDisneyViaShortcut) {
+                        Label("Use \"\(BookingApp.tokyoDisney.shortcutName)\" Shortcut", systemImage: "wand.and.stars")
+                    }
+                    Toggle(isOn: $universalJapanViaShortcut) {
+                        Label("Use \"\(BookingApp.universalJapan.shortcutName)\" Shortcut", systemImage: "wand.and.stars")
+                    }
                     Button {
                         if let url = URL(string: "shortcuts://create-shortcut") { UIApplication.shared.open(url) }
                     } label: {
@@ -130,7 +137,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Booking Apps")
                 } footer: {
-                    Text("\"Book in … App\" buttons try to open My Disney Experience / the Universal app directly, and fall back to the website. For a guaranteed jump, create a shortcut named exactly \"\(BookingApp.disney.shortcutName)\" (or \"\(BookingApp.universal.shortcutName)\") with one Open App action, then turn it on here.")
+                    Text("\"Book in … App\" buttons open the park's website unless you turn on a Shortcut here. To jump straight into the app, create a shortcut named exactly as shown (e.g. \"\(BookingApp.disney.shortcutName)\") with one Open App action for that park's app, then turn it on here.")
                 }
 
                 // MARK: Tools
