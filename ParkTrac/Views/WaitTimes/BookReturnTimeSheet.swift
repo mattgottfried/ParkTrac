@@ -137,12 +137,14 @@ struct BookReturnTimeSheet: View {
         }
     }
 
-    /// DAS/AAP return times come from the current standby wait, so start there;
-    /// timed passes default to now. The user can still edit either.
+    /// DAS/AAP return times come from the current standby wait (per-pass rule in
+    /// `AccessPass.returnDelayMinutes`); timed passes default to now. Either is editable.
     private func applyDefaultReturn() {
-        returnStart = isOpenEnded
-            ? AccessPass.estimatedReturn(postedWait: ride.waitMinutes)
-            : Date()
+        switch passKind {
+        case .aap: returnStart = AccessPass.aap.estimatedReturn(postedWait: ride.waitMinutes)
+        case .das: returnStart = AccessPass.das.estimatedReturn(postedWait: ride.waitMinutes)
+        case .ll, .expressNow: returnStart = Date()
+        }
     }
 
     private func save() {
