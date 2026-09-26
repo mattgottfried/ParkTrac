@@ -5,6 +5,8 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var context
     @State private var showResetDiningConfirm = false
+    @AppStorage(BookingApp.disney.useShortcutKey) private var disneyViaShortcut = false
+    @AppStorage(BookingApp.universal.useShortcutKey) private var universalViaShortcut = false
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -78,6 +80,25 @@ struct SettingsView: View {
                     Text(PersistenceController.storageMode == .cloud
                          ? "Marks every restaurant as not visited and clears both ratings on all devices signed in to this Apple ID. This can't be undone."
                          : "Marks every restaurant as not visited and clears both ratings. This can't be undone.")
+                }
+
+                // MARK: Booking Apps
+                Section {
+                    Toggle(isOn: $disneyViaShortcut) {
+                        Label("Use \"\(BookingApp.disney.shortcutName)\" Shortcut", systemImage: "wand.and.stars")
+                    }
+                    Toggle(isOn: $universalViaShortcut) {
+                        Label("Use \"\(BookingApp.universal.shortcutName)\" Shortcut", systemImage: "wand.and.stars")
+                    }
+                    Button {
+                        if let url = URL(string: "shortcuts://create-shortcut") { UIApplication.shared.open(url) }
+                    } label: {
+                        Label("Create Shortcut in the Shortcuts App", systemImage: "plus.app")
+                    }
+                } header: {
+                    Text("Booking Apps")
+                } footer: {
+                    Text("\"Book in … App\" buttons try to open My Disney Experience / the Universal app directly, and fall back to the website. For a guaranteed jump, create a shortcut named exactly \"\(BookingApp.disney.shortcutName)\" (or \"\(BookingApp.universal.shortcutName)\") with one Open App action, then turn it on here.")
                 }
 
                 // MARK: Resort

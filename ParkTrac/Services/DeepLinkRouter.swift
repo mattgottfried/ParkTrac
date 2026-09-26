@@ -125,7 +125,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                 if let raw = info[DeepLink.userInfoKey] as? String, let url = URL(string: raw) {
                     _ = DeepLinkRouter.shared.open(url: url)
                 }
-                UIApplication.shared.open(pass.bookingURL)
+                pass.bookingApp.open()
             }
 
         case NotificationKeys.loggedReturnAction:

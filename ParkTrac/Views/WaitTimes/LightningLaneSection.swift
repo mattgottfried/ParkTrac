@@ -11,9 +11,6 @@ struct LightningLaneSection: View {
     @State private var windowEnd: Date = LightningLaneSection.defaultEnd()
     @State private var editing = false
 
-    /// Opens Disney's site, which hands off to the My Disney Experience app when installed.
-    private static let disneyURL = URL(string: "https://disneyworld.disney.go.com/")!
-
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Lightning Lane", systemImage: "bolt.fill")
@@ -31,7 +28,9 @@ struct LightningLaneSection: View {
                 watchControls
             }
 
-            Link(destination: Self.disneyURL) {
+            Button {
+                BookingApp.disney.open()
+            } label: {
                 Label("Book in the Disney App", systemImage: "arrow.up.forward.app")
                     .font(.subheadline.weight(.semibold))
                     .frame(maxWidth: .infinity)
