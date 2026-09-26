@@ -5,6 +5,9 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var context
     @State private var showResetDiningConfirm = false
+    @State private var showClearHistoryConfirm = false
+    @Query private var allRideLogs: [RideLog]
+    @Query private var allPurchases: [PurchaseLog]
     @AppStorage(BookingApp.disney.useShortcutKey) private var disneyViaShortcut = false
     @AppStorage(BookingApp.universal.useShortcutKey) private var universalViaShortcut = false
 
@@ -32,6 +35,35 @@ struct SettingsView: View {
         @Bindable var state = appState
         NavigationStack {
             Form {
+                // MARK: Resort
+                Section {
+                    HStack {
+                        Label("Current Resort", systemImage: appState.selectedResort == .disney
+                              ? "crown.fill" : "globe.americas.fill")
+                        Spacer()
+                        Text(appState.selectedResort.rawValue)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button {
+                        appState.showResortPicker = true
+                    } label: {
+                        Label("Switch Resort", systemImage: "arrow.left.arrow.right")
+                    }
+                } header: {
+                    Text("Resort")
+                }
+
+                // MARK: Annual Passes
+                Section {
+                    NavigationLink {
+                        AnnualPassView()
+                    } label: {
+                        Label("Annual Passes", systemImage: "creditcard.fill")
+                    }
+                } header: {
+                    Text("Passes")
+                }
+
                 // MARK: Map
                 Section {
                     Toggle(isOn: $state.defaultMapIsSatellite) {
@@ -101,35 +133,6 @@ struct SettingsView: View {
                     Text("\"Book in … App\" buttons try to open My Disney Experience / the Universal app directly, and fall back to the website. For a guaranteed jump, create a shortcut named exactly \"\(BookingApp.disney.shortcutName)\" (or \"\(BookingApp.universal.shortcutName)\") with one Open App action, then turn it on here.")
                 }
 
-                // MARK: Resort
-                Section {
-                    HStack {
-                        Label("Current Resort", systemImage: appState.selectedResort == .disney
-                              ? "crown.fill" : "globe.americas.fill")
-                        Spacer()
-                        Text(appState.selectedResort.rawValue)
-                            .foregroundStyle(.secondary)
-                    }
-                    Button {
-                        appState.showResortPicker = true
-                    } label: {
-                        Label("Switch Resort", systemImage: "arrow.left.arrow.right")
-                    }
-                } header: {
-                    Text("Resort")
-                }
-
-                // MARK: Annual Passes
-                Section {
-                    NavigationLink {
-                        AnnualPassView()
-                    } label: {
-                        Label("Annual Passes", systemImage: "creditcard.fill")
-                    }
-                } header: {
-                    Text("Passes")
-                }
-
                 // MARK: Tools
                 Section {
                     NavigationLink {
@@ -144,6 +147,37 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Tools")
+                }
+
+                // MARK: Data & Sync
+                Section {
+                    ShareLink(item: DataExport.rideLog(allRideLogs),
+                              preview: SharePreview("ThrillTrack Rides.csv")) {
+                        Label("Export Ride Log (CSV)", systemImage: "square.and.arrow.up")
+                    }
+                    ShareLink(item: DataExport.purchases(allPurchases),
+                              preview: SharePreview("ThrillTrack Spending.csv")) {
+                        Label("Export Spending (CSV)", systemImage: "square.and.arrow.up")
+                    }
+                    Button(role: .destructive) {
+                        showClearHistoryConfirm = true
+                    } label: {
+                        Label("Clear Wait-Time History…", systemImage: "chart.line.downtrend.xyaxis")
+                    }
+                    Button {
+                        appState.hasCompletedOnboarding = false
+                    } label: {
+                        Label("Show Welcome Screen Again", systemImage: "hand.wave")
+                    }
+                } header: {
+                    Text("Data & Sync")
+                } footer: {
+                    Text("Exports open the share sheet — save to Files or open in Numbers. Wait-time history powers your personal predictions; it's stored only on this device and rebuilds as you use the app.")
+                }
+                .confirmationDialog("Clear Wait-Time History?", isPresented: $showClearHistoryConfirm, titleVisibility: .visible) {
+                    Button("Clear History", role: .destructive) { clearWaitHistory() }
+                } message: {
+                    Text("Deletes recorded wait-time snapshots and downtime on this device. Community baselines are unaffected, and your rides, plans and ratings are kept.")
                 }
 
                 // MARK: About
@@ -173,6 +207,13 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .toolbarBackground(.visible, for: .navigationBar)
         }
+    }
+
+    /// Local telemetry only (WaitTimeRecord / DowntimeRecord live in the non-synced store)
+    private func clearWaitHistory() {
+        try? context.delete(model: WaitTimeRecord.self)
+        try? context.delete(model: DowntimeRecord.self)
+        try? context.save()
     }
 
     private func resetDiningHistory() {

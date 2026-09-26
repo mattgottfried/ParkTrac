@@ -3,6 +3,8 @@ import SwiftUI
 struct RideCardView: View {
     let ride: DisplayRide
     let theme: ParkTheme
+    /// Estimated walk from the user's location (nil when location is off or they're not in the park)
+    var walkMinutes: Int? = nil
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Big wait number keeps its rounded look but grows with Dynamic Type.
@@ -40,6 +42,12 @@ struct RideCardView: View {
                             Text(ll.shortText)
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(ll.isAvailable ? Color.orange : Color.secondary)
+                        }
+                        if let walk = walkMinutes {
+                            Label("\(walk) min", systemImage: "figure.walk")
+                                .labelStyle(.titleAndIcon)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
                         }
                         if LightningLaneWatchService.shared.watch(for: ride.id) != nil {
                             Image(systemName: "bell.fill")
@@ -109,6 +117,7 @@ struct RideCardView: View {
         if LightningLaneWatchService.shared.watch(for: ride.id) != nil {
             parts.append("watching for Lightning Lane openings")
         }
+        if let walk = walkMinutes { parts.append("about \(walk) minute walk") }
         if let h = meta?.heightInches { parts.append("height requirement \(h) inches") }
         return parts.joined(separator: ", ")
     }

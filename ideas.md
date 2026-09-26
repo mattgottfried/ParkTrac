@@ -1,23 +1,21 @@
-# ThrillTrack — Feature Ideas
+# ThrillTrack — Backlog
 
-## Wait Time Stopwatch
+Shipped work is tracked in `docs/usability-plan.md` and the merged PRs. This file is what's next.
 
-Track actual time spent in line vs. the posted wait time for each ride.
+## Next: Japan (trip in November)
+Tokyo Disney Resort (Tokyo Disneyland, Tokyo DisneySea) and Universal Studios Japan are covered by themeparks.wiki.
+1. Resorts become a list, not Disney-vs-Universal: add cases for Tokyo Disney and USJ with their own destination IDs, regions and themes. **Don't rename existing `ParkGroup` raw values** — they're stored in SwiftData.
+2. Show times in the park's time zone (Asia/Tokyo) rather than the phone's.
+3. Tokyo Disney Premier Access (paid) and Priority Pass (free): likely the same `PAID_RETURN_TIME` / `RETURN_TIME` queues — reuse the Lightning Lane watcher + "I Booked It" with Tokyo labels. Verify against live data first.
+4. USJ Express Pass as a pass type in Log Return Time.
+5. Hide Orlando-only features at Japan resorts (ticket prices, AP blockouts, US-holiday crowd calendar, Orlando shop/restaurant lists); yen where prices show.
+6. Nice to have: heights in cm, Japanese ride names.
 
-**How it works:**
-- In `RideDetailSheet`, add a "Start Timer" button when you join a queue
-- Stopwatch runs in the foreground; persists across app backgrounding via a `startedAt: Date` stored in `AppState` (or UserDefaults)
-- When you tap "I'm on!" (or a new "Done waiting" button), it stops and records the elapsed time alongside the posted wait at that moment
-- Result saved to a new field on `RideLog` (e.g. `actualWaitMinutes: Int?`) or a lightweight `WaitAccuracyRecord` model
+## Open questions
+- Disney DAS return rule — currently "posted wait" (`AccessPass.returnDelayMinutes`); confirm whether Disney subtracts anything.
+- Unmerged branch `claude/app-optimization-usability-vkx9bi` (Jul 19): household sharing + per-guest ratings (CloudKit), wait-time Home Screen widget, weather-aware indoor filter, data-race + LL notification fixes. Predates everything since PR #19 — would need re-applying piece by piece rather than merging.
 
-**What to show:**
-- Live elapsed time on the ride card / detail sheet while timing is active
-- After stopping: "Posted: 45 min · Actual: 38 min · Saved 7 min"
-- In `StatsView`: aggregate accuracy stats — "Disney posted times are X% accurate based on your Y rides"
-- Could feed into `WaitTimePredictionService` as a personal correction factor
-
-**Implementation notes:**
-- Only one ride can be timed at once — starting a new timer cancels the previous
-- `AppState` holds `activeTimerRideId: String?` and `activeTimerStart: Date?`
-- No SwiftData model needed for the timer state itself — just UserDefaults
-- `WaitAccuracyRecord` (or a field on `RideLog`): `postedWait: Int`, `actualWait: Int`, `date: Date`, `rideId: String`
+## Later
+- Faster background Lightning Lane alerts need a small server (iOS background refresh is ≈hourly).
+- Empty states with a call to action (Ride Counter, Dining).
+- Real guest names in "who's riding" labels.

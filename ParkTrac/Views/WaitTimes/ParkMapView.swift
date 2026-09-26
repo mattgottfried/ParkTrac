@@ -16,7 +16,7 @@ final class RidePointAnnotation: MKPointAnnotation {
 
 // MARK: - Custom UIKit Annotation View
 
-final class RideAnnotationView: MKAnnotationView {
+final class RideAnnotationView: MKAnnotationView, UIContextMenuInteractionDelegate {
     static let reuseID = "RideAnnotationView"
 
     private let bubble = UIView()
@@ -24,6 +24,8 @@ final class RideAnnotationView: MKAnnotationView {
     private let pointer = UIView()
 
     var onTap: (() -> Void)?
+    /// Long-press menu (same actions as the ride card's context menu), built on demand
+    var menuProvider: (() -> UIMenu?)?
     /// Last configuration, so a Dynamic Type change can re-lay out the pin.
     private var current: (ride: DisplayRide, theme: ParkTheme)?
 
@@ -58,6 +60,7 @@ final class RideAnnotationView: MKAnnotationView {
         addSubview(pointer)
 
         addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapped)))
+        addInteraction(UIContextMenuInteraction(delegate: self))
 
         // VoiceOver: the pin is one button; label/value are set in configure()
         isAccessibilityElement = true
@@ -127,6 +130,14 @@ final class RideAnnotationView: MKAnnotationView {
 
     @objc private func tapped() { onTap?() }
 
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction,
+                                configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        guard menuProvider != nil else { return nil }
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
+            self?.menuProvider?()
+        }
+    }
+
     override func accessibilityActivate() -> Bool {
         onTap?()
         return true
@@ -141,6 +152,7 @@ struct StyledMapUIView: UIViewRepresentable {
     var theme: ParkTheme
     var isSatellite: Bool
     var onSelectRide: (DisplayRide) -> Void
+    var makeMenu: (DisplayRide) -> UIMenu? = { _ in nil }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -218,6 +230,7 @@ struct StyledMapUIView: UIViewRepresentable {
             let view = map.dequeueReusableAnnotationView(withIdentifier: RideAnnotationView.reuseID, for: annotation) as! RideAnnotationView
             view.configure(ride: ra.ride, theme: parent.theme)
             view.onTap = { [weak self] in self?.parent.onSelectRide(ra.ride) }
+            view.menuProvider = { [weak self] in self?.parent.makeMenu(ra.ride) }
             return view
         }
 
@@ -275,6 +288,10 @@ struct ParkMapView: View {
     @State private var rideAction: RideMenuAction?
     /// Bumped only by a user pull-to-refresh, so the success haptic doesn't fire on the 60s auto-refresh.
     @State private var userRefreshCount = 0
+    /// Status per ride from the previous refresh, to spot rides that just went DOWN
+    @State private var lastStatuses: [String: String] = [:]
+    /// Bumped when a Must-Do ride goes DOWN → warning haptic
+    @State private var mustDoDownCount = 0
     /// "<parkId>-<openingTime>" of the rope-drop activity we last started —
     /// prevents the 60s auto-refresh from restarting it every cycle.
     @State private var lastRopeDropKey: String? = nil
@@ -288,7 +305,8 @@ struct ParkMapView: View {
                 rides: viewModel.ridesWithLocation,
                 theme: theme,
                 isSatellite: mapStyleIsHybrid,
-                onSelectRide: { selectedRide = $0 }
+                onSelectRide: { selectedRide = $0 },
+                makeMenu: { pinMenu(for: $0) }
             )
             .ignoresSafeArea()
 
@@ -439,6 +457,7 @@ struct ParkMapView: View {
         }
         .onChange(of: viewModel.lastRefreshed) { _, _ in
             openPendingRide()
+            noteMustDoDowntime()
             NotificationService.shared.checkAlerts(
                 rides: viewModel.allRides, context: modelContext, resort: viewModel.selectedGroup,
                 parkNames: Dictionary(viewModel.currentParks.map { ($0.id, $0.name) },
@@ -459,10 +478,32 @@ struct ParkMapView: View {
         .sensoryFeedback(.selection, trigger: showMustDoOnly)
         .sensoryFeedback(.selection, trigger: showTab)
         .sensoryFeedback(.success, trigger: userRefreshCount)
+        .sensoryFeedback(.warning, trigger: mustDoDownCount)
         .sheet(item: $selectedRide) { ride in
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
             RideDetailSheet(ride: ride, theme: theme, parkGroup: viewModel.selectedGroup, parkName: parkName)
         }
+    }
+
+    // MARK: - Walking time
+
+    private func walkMinutes(to ride: DisplayRide) -> Int? {
+        guard let me = locationService.userCoordinate, let there = ride.coordinate else { return nil }
+        return WalkEstimate.minutes(from: me, to: there)
+    }
+
+    // MARK: - Must-Do downtime
+
+    /// Warning haptic when a Must-Do ride flips to DOWN between refreshes (first load doesn't count).
+    private func noteMustDoDowntime() {
+        let wentDown = viewModel.allRides.contains { ride in
+            guard ride.status == "DOWN", appState.wishList.contains(ride.id),
+                  let previous = lastStatuses[ride.id] else { return false }
+            return previous != "DOWN"
+        }
+        lastStatuses = Dictionary(viewModel.allRides.map { ($0.id, $0.status ?? "") },
+                                  uniquingKeysWith: { first, _ in first })
+        if wentDown { mustDoDownCount += 1 }
     }
 
     // MARK: - Deep Link
@@ -656,6 +697,26 @@ struct ParkMapView: View {
         maxWait = 0
     }
 
+    /// UIKit version of `rideContextMenu` for long-pressing a map pin.
+    private func pinMenu(for ride: DisplayRide) -> UIMenu {
+        let isMustDo = appState.wishList.contains(ride.id)
+        return UIMenu(title: ride.name, children: [
+            UIAction(title: isMustDo ? "Remove from Must-Do" : "Add to Must-Do",
+                     image: UIImage(systemName: isMustDo ? "star.slash" : "star")) { _ in
+                appState.toggleWish(ride.id)
+            },
+            UIAction(title: "Add to My Day", image: UIImage(systemName: "calendar.badge.plus")) { _ in
+                rideAction = .addToPlan(ride)
+            },
+            UIAction(title: "Set Wait Alert", image: UIImage(systemName: "bell.badge")) { _ in
+                rideAction = .alert(ride)
+            },
+            UIAction(title: "Details & Rode It", image: UIImage(systemName: "info.circle")) { _ in
+                selectedRide = ride
+            },
+        ])
+    }
+
     @ViewBuilder
     private func rideContextMenu(for ride: DisplayRide) -> some View {
         let isMustDo = appState.wishList.contains(ride.id)
@@ -754,7 +815,7 @@ struct ParkMapView: View {
                     ScrollView {
                         LazyVStack(spacing: 8) {
                             ForEach(displayedRides) { ride in
-                                RideCardView(ride: ride, theme: theme)
+                                RideCardView(ride: ride, theme: theme, walkMinutes: walkMinutes(to: ride))
                                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     .onTapGesture { selectedRide = ride }
                                     .contextMenu { rideContextMenu(for: ride) }
