@@ -104,13 +104,16 @@ struct DayPlannerView: View {
 
             // Who's Coming section
             Section {
-                if appState.todayGuestIds.isEmpty {
+                if !appState.namedPartyMembers.isEmpty {
+                    Label(NameList.format(appState.namedPartyMembers), systemImage: "person.2.fill")
+                }
+                if appState.todayGuestNames.isEmpty {
                     Button { showGuestPicker = true } label: {
                         Label("Add Guests", systemImage: "person.badge.plus")
                     }
                 } else {
                     HStack {
-                        Label("\(appState.todayGuestIds.count) guest\(appState.todayGuestIds.count == 1 ? "" : "s") coming", systemImage: "person.2.fill")
+                        Label("With \(NameList.format(appState.todayGuestNames))", systemImage: "person.badge.plus")
                         Spacer()
                         Button("Edit") { showGuestPicker = true }
                             .font(.caption)
@@ -121,8 +124,16 @@ struct DayPlannerView: View {
             }
 
             if planItems.isEmpty && llPasses.isEmpty {
-                ContentUnavailableView("No Plans Yet", systemImage: "calendar.badge.plus",
-                    description: Text("Tap + to add rides, shows, or dining to today's plan."))
+                ContentUnavailableView {
+                    Label("No Plans Yet", systemImage: "calendar.badge.plus")
+                } description: {
+                    Text("Add rides, shows, or dining — or let Smart Planner build a day for you.")
+                } actions: {
+                    Button("Add to Plan") { showAddSheet = true }
+                        .buttonStyle(.borderedProminent)
+                    Button("Smart Planner") { showSmartPlanner = true }
+                        .buttonStyle(.bordered)
+                }
             } else if !planItems.isEmpty {
                 Section("Today's Plan") {
                     ForEach(planItems) { item in
@@ -184,7 +195,8 @@ struct DayPlannerView: View {
         return DaySummary.text(date: .now, resort: resort, rides: rides,
                                planDone: todayItems.filter(\.isDone).count,
                                planTotal: todayItems.count, spent: spent,
-                               currencyCode: appState.selectedResort.currencyCode)
+                               currencyCode: appState.selectedResort.currencyCode,
+                               people: appState.namedPartyMembers + appState.todayGuestNames)
     }
 
     private func movePlanItems(_ items: [PlanItem], from: IndexSet, to: Int) {

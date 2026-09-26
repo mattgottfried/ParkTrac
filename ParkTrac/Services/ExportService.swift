@@ -76,8 +76,11 @@ enum DaySummary {
 
     static func text(date: Date, resort: String, rides: [Ride],
                      planDone: Int, planTotal: Int, spent: Double,
-                     currencyCode: String = "USD") -> String {
+                     currencyCode: String = "USD", people: [String] = []) -> String {
         var lines = ["🎢 ThrillTrack · \(date.formatted(date: .abbreviated, time: .omitted)) · \(resort)"]
+        if !people.isEmpty {
+            lines.append("With \(NameList.format(people, maxShown: 6))")
+        }
 
         if rides.isEmpty {
             lines.append("No rides logged yet.")
@@ -116,5 +119,21 @@ enum DaySummary {
             lines.append("Spent: \(spent.formatted(.currency(code: currencyCode)))")
         }
         return lines.joined(separator: "\n")
+    }
+}
+
+// MARK: - Name lists
+
+/// "Matt", "Matt & Heather", "Matt, Heather & Jake", "Matt, Heather, Jake & 2 more"
+enum NameList {
+    static func format(_ names: [String], maxShown: Int = 3) -> String {
+        let clean = names.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        guard !clean.isEmpty else { return "" }
+        if clean.count > maxShown {
+            let shown = clean.prefix(maxShown).joined(separator: ", ")
+            return "\(shown) & \(clean.count - maxShown) more"
+        }
+        if clean.count == 1 { return clean[0] }
+        return clean.dropLast().joined(separator: ", ") + " & " + clean.last!
     }
 }

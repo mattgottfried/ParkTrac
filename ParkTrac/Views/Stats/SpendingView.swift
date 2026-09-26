@@ -53,7 +53,14 @@ struct SpendingView: View {
 
                 Section("All Purchases") {
                     if resortPurchases.isEmpty {
-                        Text("No purchases logged yet.").foregroundStyle(.secondary).font(.subheadline)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("No purchases logged yet.").foregroundStyle(.secondary).font(.subheadline)
+                            Button {
+                                showAddSheet = true
+                            } label: {
+                                Label("Add Purchase", systemImage: "plus.circle.fill")
+                            }
+                        }
                     } else {
                         ForEach(resortPurchases) { p in
                             HStack {

@@ -63,12 +63,29 @@ struct BucketRestaurantListView: View {
                 if !searchText.isEmpty && filtered.isEmpty {
                     ContentUnavailableView.search(text: searchText)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if resortRestaurants.isEmpty {
+                    // Nothing at this resort yet (e.g. Japan — the seeded list is Orlando-only)
+                    ContentUnavailableView {
+                        Label("No Restaurants Yet", systemImage: "fork.knife")
+                    } description: {
+                        Text("Add the places you want to try at \(appState.selectedResort.shortName).")
+                    } actions: {
+                        Button("Add Restaurant") { showAddSheet = true }
+                            .buttonStyle(.borderedProminent)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if filtered.isEmpty {
-                    ContentUnavailableView(
-                        "No Matches",
-                        systemImage: "line.3.horizontal.decrease.circle",
-                        description: Text("No restaurants match the current filters.")
-                    )
+                    ContentUnavailableView {
+                        Label("No Matches", systemImage: "line.3.horizontal.decrease.circle")
+                    } description: {
+                        Text("No restaurants match the current filters.")
+                    } actions: {
+                        Button("Clear Filters") {
+                            visitedFilter = .all
+                            categoryFilter = nil
+                        }
+                        .buttonStyle(.bordered)
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {

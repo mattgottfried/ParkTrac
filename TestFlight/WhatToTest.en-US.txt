@@ -1,21 +1,19 @@
-FIXES: resort-switch crash, Japan map pins, Japan parks, build versions
+NEW: Friendlier empty screens + guest names
 
-Crash when switching resorts
-• Fixed a crash that could happen while switching resorts (parks loading at the same time wrote to shared data). Switch back and forth between all four resorts quickly — it should never crash.
+Guest names
+• My Day now shows who's coming by name — your party (from setup) and today's guests, e.g. "With Jake & Sam".
+• Fixed: today's guest selection was lost after closing the app (and checkmarks sometimes didn't update when tapped).
+• The My Day share summary lists who came.
 
-Japan map pins
-• Tokyo Disney and USJ rides now get their map pins (a single odd ride location used to wipe out every pin in that park). Check that pins appear on the map at both Japan resorts.
+Empty screens now have a next step
+• My Day: "Add to Plan" and "Smart Planner" buttons.
+• Ride Counter / Visit History: "Open Wait Times".
+• Bucket List at a resort with no entries (e.g. Tokyo): "No Restaurants/Hotels Yet" with an Add button; filtered-out lists get "Clear Filters".
+• Dining: "Add Reservation" and "Open Bucket List"; Spending: "Add Purchase".
 
-Japan parks
-• Tokyo Disney and Universal Studios Japan now retry loading when you switch to them. If they still can't load, you'll see a message saying why instead of an empty list — please screenshot it.
-• Park lookup is more forgiving about how the park data service names these resorts.
+Also in this build (if you haven't tested yet)
+• Resort-switch crash fix, Japan map pins, Japan park loading.
 
 Please check:
-• Switch to Tokyo Disney: do the park chips (Tokyo Disneyland / Tokyo DisneySea) appear? Do rides and wait times show?
-• Same for Universal Studios Japan.
-• If you see an error message, send the exact text.
-• Orlando still loads as before.
-
-Behind the scenes
-• The widget and app now share one version/build number (the mismatch warning in Xcode Cloud should be gone).
-• Cleaned up build warnings.
+• Pick guests, close and reopen the app — they're still selected and named in My Day.
+• Tap each empty-screen button — it goes to the right place.

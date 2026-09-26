@@ -17,6 +17,7 @@ enum DeepLink: Equatable {
     case plan
     case dining
     case settings
+    case bucketList
 
     static let scheme = "thrilltrack"
 
@@ -32,6 +33,7 @@ enum DeepLink: Equatable {
         case "plan":      self = .plan
         case "dining":    self = .dining
         case "settings":  self = .settings
+        case "bucketlist": self = .bucketList
         default:          return nil
         }
     }
@@ -46,6 +48,7 @@ enum DeepLink: Equatable {
         case .plan:            return URL(string: "\(Self.scheme)://plan")!
         case .dining:          return URL(string: "\(Self.scheme)://dining")!
         case .settings:        return URL(string: "\(Self.scheme)://settings")!
+        case .bucketList:      return URL(string: "\(Self.scheme)://bucketlist")!
         }
     }
 

@@ -54,15 +54,20 @@ struct GuestPickerSheet: View {
         }
     }
 
+    /// Guests are keyed by name — stable across launches and readable in My Day
+    private func key(_ guest: Guest) -> String {
+        guest.name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     private func isSelected(_ guest: Guest) -> Bool {
-        appState.todayGuestIds.contains(guest.persistentModelID.hashValue.description)
+        appState.todayGuestNames.contains(key(guest))
     }
     private func toggle(_ guest: Guest) {
-        let key = guest.persistentModelID.hashValue.description
-        if appState.todayGuestIds.contains(key) {
-            appState.todayGuestIds.removeAll { $0 == key }
+        let name = key(guest)
+        guard !name.isEmpty else { return }
+        if appState.todayGuestNames.contains(name) {
+            appState.todayGuestNames.removeAll { $0 == name }
         } else {
-            appState.todayGuestIds.append(key)
+            appState.todayGuestNames.append(name)
         }
     }
 
