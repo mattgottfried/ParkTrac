@@ -1,30 +1,14 @@
-NEW: Car Locator (with Disney-style lot menus) + Home Screen shortcuts
-This build rolls up everything since the Instant Alerts build.
+NEW: Time Sensitive alerts
 
-Save where you parked
-• Tap the car button on the Wait Times map (top right), "Save Parking Spot" in My Day → Parking, or long-press the ThrillTrack icon → Find My Car.
-• Standing by the car, tap "Save Spot Here" — ThrillTrack takes a precise GPS fix (a few seconds).
-• Pick where you parked from menus, like the Disney app: Lot (Magic Kingdom, EPCOT, Hollywood Studios, Animal Kingdom, Disney Springs, CityWalk Garages, Epic Universe) → Section (e.g. Heroes/Villains → Zurg) → Row. Disney Springs garages also have a Level.
-• Snap a photo of the row sign, and add a note if you like.
-• No GPS needed: "Save Section & Row Only" saves just what you picked.
+Ride alerts now get through Focus modes (Sleep, Work, Driving, Do Not Disturb) and stay on the Lock Screen for an hour:
+• Wait-time drop alerts (including DAS/AAP), Lightning Lane / Priority Pass openings, "back up" alerts
+• Return time is open / closing soon, Super Nintendo World entry open
+• "Parks close soon — your car is at…"
+Confirmations ("… logged") and pass-renewal reminders stay normal.
 
-Find your car
-• A blue car pin shows on the Wait Times map; the car button turns blue.
-• Open it for a mini map, distance and walk time, and "Walk There in Maps" for walking directions.
-• The spot and note sync to your other devices on the same iCloud account; the photo stays on the phone that took it.
-• A spot lasts the park day (20 hours). "Move Spot to Here" and "Clear Spot" are in the sheet.
-• No GPS (location off, deep garage)? The note and photo still save.
-
-Reminder before parks close
-• With a spot saved, you get "Parks close at 9:00 PM — Your car: Magic Kingdom · Zurg · Row 112" 30 minutes before the last park closes (after-hours parties don't count). Tap it for directions. Turn it off in the parking sheet.
-
-Home Screen shortcuts
-• Long-press the ThrillTrack icon: Find My Car, My Day, Wait Times.
+The first time one arrives during a Focus, iOS asks whether to keep allowing ThrillTrack's Time Sensitive notifications — choose Allow. You can change it any time in iOS Settings → Notifications → ThrillTrack → Time Sensitive Notifications.
 
 Please check:
-• Save a spot outside, walk away, reopen — the distance and walk time look right, and Walk There opens Maps.
-• The lot and section menus match the signs at your lot (tell me any names that are wrong or missing).
-• The camera asks permission once, and the photo shows in the sheet (tap to enlarge).
-• The car pin appears on the map, and tapping it opens the sheet.
-• Each Home Screen shortcut opens the right place, both when the app is closed and when it's running.
-• Instant Alerts still work.
+• Turn on a Focus (e.g. Do Not Disturb), set a wait alert just above a ride's current wait, and lock the phone — the alert still comes through, labeled Time Sensitive.
+• Instant Alerts (server pushes) come through the same way.
+• Car locator, lot menus and Home Screen shortcuts from the last build still work.

@@ -431,6 +431,7 @@ enum ParkingReminder {
             return
         }
         let content = UNMutableNotificationContent()
+        content.interruptionLevel = .timeSensitive
         content.title = "🚗 Parks close at \(when.closing.formatted(date: .omitted, time: .shortened))"
         content.body = spot.summary.isEmpty
             ? "Tap for walking directions back to your car."
