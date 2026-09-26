@@ -1,5 +1,65 @@
 import Foundation
 import SwiftData
+import UIKit
+
+// MARK: - Booking apps
+
+/// Opens My Disney Experience / the Universal Orlando app for booking.
+///
+/// Neither app documents a URL scheme, and their websites don't hand off to the apps,
+/// so we try, in order:
+/// 1. The user's own Shortcut ("Open Disney App" / "Open Universal App") if they turned it
+///    on in Settings — an "Open App" shortcut always works.
+/// 2. Candidate URL schemes (unverified guesses; `open` just reports false if unclaimed).
+/// 3. The website, as a last resort.
+enum BookingApp: String {
+    case disney, universal
+
+    var appName: String { self == .disney ? "My Disney Experience" : "Universal Orlando" }
+    var shortcutName: String { self == .disney ? "Open Disney App" : "Open Universal App" }
+    /// UserDefaults key for "use my Shortcut" (Settings → Booking Apps)
+    var useShortcutKey: String { "bookingShortcut_\(rawValue)" }
+
+    private var candidateSchemes: [String] {
+        switch self {
+        case .disney:    return ["mdx://", "mydisneyexperience://", "wdw://"]
+        case .universal: return ["uor://", "universalorlando://"]
+        }
+    }
+
+    var websiteURL: URL {
+        switch self {
+        case .disney:    return URL(string: "https://disneyworld.disney.go.com/")!
+        case .universal: return URL(string: "https://www.universalorlando.com/")!
+        }
+    }
+
+    var shortcutURL: URL? {
+        let name = shortcutName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? shortcutName
+        return URL(string: "shortcuts://run-shortcut?name=\(name)")
+    }
+
+    @MainActor
+    func open() {
+        if UserDefaults.standard.bool(forKey: useShortcutKey), let url = shortcutURL {
+            UIApplication.shared.open(url)
+            return
+        }
+        Self.tryOpen(candidateSchemes.compactMap(URL.init(string:)), fallback: websiteURL)
+    }
+
+    @MainActor
+    private static func tryOpen(_ urls: [URL], fallback: URL) {
+        guard let first = urls.first else {
+            UIApplication.shared.open(fallback)
+            return
+        }
+        UIApplication.shared.open(first, options: [:]) { opened in
+            if !opened { Task { @MainActor in tryOpen(Array(urls.dropFirst()), fallback: fallback) } }
+        }
+    }
+}
+
 
 // MARK: - Access passes (Disney DAS / Universal AAP)
 
@@ -12,14 +72,7 @@ enum AccessPass {
 
     var label: String { self == .das ? "DAS" : "AAP" }
     var bookingAppName: String { self == .das ? "Disney App" : "Universal App" }
-
-    /// Resort site; hands off to the official app when it's installed.
-    var bookingURL: URL {
-        switch self {
-        case .das: return URL(string: "https://disneyworld.disney.go.com/")!
-        case .aap: return URL(string: "https://www.universalorlando.com/")!
-        }
-    }
+    var bookingApp: BookingApp { self == .das ? .disney : .universal }
 
     /// The pass this user holds at `resort` (same UserDefaults keys AppState writes).
     static func held(at resort: ParkGroup) -> AccessPass? {

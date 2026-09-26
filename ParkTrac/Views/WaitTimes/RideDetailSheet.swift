@@ -53,7 +53,9 @@ struct RideDetailSheet: View {
                 Text("Book now to return around **\(back.formatted(date: .omitted, time: .shortened))** (posted wait \(ride.waitMinutes ?? 0) min).")
                     .font(.subheadline)
                 HStack(spacing: 10) {
-                    Link(destination: pass.bookingURL) {
+                    Button {
+                        pass.bookingApp.open()
+                    } label: {
                         Label("Book in \(pass.bookingAppName)", systemImage: "arrow.up.forward.app")
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
