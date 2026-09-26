@@ -91,3 +91,39 @@ final class LiveDataParsingTests: XCTestCase {
         XCTAssertNil(missing.eventName)
     }
 }
+
+/// Ride GPS decoding must survive odd entries (Japan parks showed rides but no pins).
+final class AttractionDecodingTests: XCTestCase {
+
+    func testOneBadAttractionDoesNotDropTheRest() throws {
+        let json = """
+        {"id":"tdl","name":"Tokyo Disneyland","entityType":"PARK","children":[
+          {"id":"a","name":"Big Thunder Mountain","entityType":"ATTRACTION","location":{"latitude":35.6341,"longitude":139.8785}},
+          {"id":"b","name":"Broken","location":{"latitude":1}},
+          null,
+          {"id":"c","name":"Pooh's Hunny Hunt","entityType":"ATTRACTION","location":{"latitude":"35.6308","longitude":"139.8812"}},
+          {"id":"d","name":"No GPS","entityType":"ATTRACTION","location":{"latitude":null,"longitude":null}},
+          {"id":"e","name":"Zero","entityType":"ATTRACTION","location":{"latitude":0,"longitude":0}}
+        ]}
+        """
+        let response = try JSONDecoder().decode(ParkChildrenResponse.self, from: Data(json.utf8))
+        // "b" lacks entityType and null isn't an entity → skipped; the rest survive
+        XCTAssertEqual(response.children.map(\.id), ["a", "c", "d", "e"])
+        XCTAssertNotNil(response.children[0].coordinate)
+        XCTAssertEqual(try XCTUnwrap(response.children[1].coordinate).latitude, 35.6308, accuracy: 0.0001, "string coords")
+        XCTAssertNil(response.children[2].coordinate, "null coords")
+        XCTAssertNil(response.children[3].coordinate, "0,0 placeholder")
+    }
+
+    func testParkChildrenAreLossyToo() throws {
+        let json = """
+        {"id":"tdr","name":"Tokyo Disney Resort","entityType":"DESTINATION","children":[
+          {"id":"p1","name":"Tokyo Disneyland","entityType":"PARK"},
+          {"id":"p2","name":"Tokyo DisneySea","entityType":"PARK","location":{"latitude":35.6267,"longitude":139.8851}},
+          {"broken":true}
+        ]}
+        """
+        let response = try JSONDecoder().decode(DestinationChildrenResponse.self, from: Data(json.utf8))
+        XCTAssertEqual(response.children.map(\.id), ["p1", "p2"])
+    }
+}

@@ -110,8 +110,9 @@ final class WaitTimesViewModel {
         let catalog = attractions
             .filter { $0.entityType == "ATTRACTION" }
             .map { CatalogRide(id: $0.id, name: $0.name,
-                               latitude: $0.location?.latitude,
-                               longitude: $0.location?.longitude) }
+                               // validated (both present, not a 0,0 placeholder)
+                               latitude: $0.coordinate?.latitude,
+                               longitude: $0.coordinate?.longitude) }
         catalogsByPark[park.id] = catalog
         if let data = try? JSONEncoder().encode(catalog) {
             UserDefaults.standard.set(data, forKey: "rideCatalog_\(park.id)")

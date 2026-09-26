@@ -47,7 +47,8 @@ struct DestinationChildrenResponse: Codable {
     let id: String
     let name: String
     let entityType: String
-    let children: [ParkEntity]
+    /// Lossy: one malformed child is skipped instead of failing the whole list
+    @LossyArray var children: [ParkEntity]
 }
 
 struct ParkEntity: Codable, Identifiable, Hashable {
@@ -56,15 +57,68 @@ struct ParkEntity: Codable, Identifiable, Hashable {
     let entityType: String
     let location: LocationData?
 
+    var coordinate: CLLocationCoordinate2D? { location?.coordinate }
+}
+
+/// Entity GPS. Tolerant: latitude/longitude may be missing, null, or sent as strings
+/// (seen outside Orlando) — a bad location must not fail the whole children list.
+struct LocationData: Codable, Hashable {
+    let latitude: Double?
+    let longitude: Double?
+
+    init(latitude: Double?, longitude: Double?) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        latitude = Self.number(c, .latitude)
+        longitude = Self.number(c, .longitude)
+    }
+
+    private static func number(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys) -> Double? {
+        if let d = try? c.decodeIfPresent(Double.self, forKey: key) { return d }
+        if let s = try? c.decodeIfPresent(String.self, forKey: key) { return Double(s) }
+        return nil
+    }
+
+    /// Valid only when both are present and not the (0, 0) placeholder
     var coordinate: CLLocationCoordinate2D? {
-        guard let loc = location else { return nil }
-        return CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
+        guard let latitude, let longitude, !(latitude == 0 && longitude == 0),
+              (-90...90).contains(latitude), (-180...180).contains(longitude) else { return nil }
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 }
 
-struct LocationData: Codable, Hashable {
-    let latitude: Double
-    let longitude: Double
+/// Decodes an array element by element, dropping elements that fail to decode.
+@propertyWrapper
+struct LossyArray<Element: Codable>: Codable {
+    var wrappedValue: [Element]
+
+    init(wrappedValue: [Element]) { self.wrappedValue = wrappedValue }
+
+    /// Decodes (and so consumes) any element — object, null, number — without reading it
+    private struct Skip: Decodable {
+        init(from decoder: Decoder) throws {}
+    }
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        var items: [Element] = []
+        while !container.isAtEnd {
+            if let item = try? container.decode(Element.self) {
+                items.append(item)
+            } else {
+                _ = try? container.decode(Skip.self)  // advance past the bad element
+            }
+        }
+        wrappedValue = items
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try wrappedValue.encode(to: encoder)
+    }
 }
 
 // MARK: - Attraction Children
@@ -73,7 +127,8 @@ struct ParkChildrenResponse: Codable {
     let id: String
     let name: String
     let entityType: String
-    let children: [AttractionEntity]
+    /// Lossy: one malformed attraction is skipped instead of dropping every ride's GPS
+    @LossyArray var children: [AttractionEntity]
 }
 
 struct AttractionEntity: Codable, Identifiable {
@@ -82,10 +137,7 @@ struct AttractionEntity: Codable, Identifiable {
     let entityType: String
     let location: LocationData?
 
-    var coordinate: CLLocationCoordinate2D? {
-        guard let loc = location else { return nil }
-        return CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
-    }
+    var coordinate: CLLocationCoordinate2D? { location?.coordinate }
 }
 
 // MARK: - Live Data
