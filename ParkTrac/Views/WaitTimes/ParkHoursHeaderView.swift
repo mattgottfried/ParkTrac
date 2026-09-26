@@ -56,9 +56,10 @@ struct ParkHoursHeaderView: View {
                     Text(hoursText(extra))
                         .font(.caption2.weight(.medium))
                         .foregroundStyle(theme.accentColor)
-                    Text(extra.isExtraHours ? "Early/Late Entry" : "Ticketed Event")
+                    Text(extra.eventName ?? (extra.isExtraHours ? "Early/Late Entry" : "Ticketed Event"))
                         .font(.caption2)
                         .foregroundStyle(theme.accentColor.opacity(0.8))
+                        .lineLimit(1)
                 }
 
                 Spacer()
@@ -168,8 +169,8 @@ struct ParkHoursSheet: View {
 
     private func typeLabel(_ day: ParkScheduleDay) -> String {
         switch day.type {
-        case "EXTRA_HOURS":    return "Early/Late Entry"
-        case "TICKETED_EVENT": return "Ticketed Event"
+        case "EXTRA_HOURS":    return day.eventName ?? "Early/Late Entry"
+        case "TICKETED_EVENT": return day.eventName ?? "Ticketed Event"
         default:               return "Park Hours"
         }
     }

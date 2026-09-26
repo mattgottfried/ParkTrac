@@ -197,8 +197,18 @@ struct ParkScheduleDay: Codable, Identifiable {
     let openingTime: String?
     let closingTime: String?
     let type: String?
+    /// Event name from the API when it has one, e.g. "Mickey's Not-So-Scary Halloween Party"
+    /// or "Early Theme Park Entry". Optional — absent for plain operating hours.
+    let description: String?
 
-    var id: String { date + (type ?? "") }
+    // Opening time included so two events on the same day don't collide
+    var id: String { date + (type ?? "") + (openingTime ?? "") }
+
+    /// The API's name for this entry, if it's non-empty.
+    var eventName: String? {
+        guard let name = description?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else { return nil }
+        return name
+    }
 
     private static let formatter: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
