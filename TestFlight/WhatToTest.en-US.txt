@@ -1,14 +1,15 @@
-NEW: Tokyo Disney Resort & Universal Studios Japan
+FIXES: Japan parks + build versions
 
-Switch resorts (banner at the top) — the picker now has Orlando and Japan sections.
+Japan parks
+• Tokyo Disney and Universal Studios Japan now retry loading when you switch to them. If they still can't load, you'll see a message saying why instead of an empty list — please screenshot it.
+• Park lookup is more forgiving about how the park data service names these resorts.
 
 Please check:
-• Tokyo Disney and Universal Japan load their parks, map pins and wait times.
-• Park hours show in Japan time with a small "park time" label while you're in the US.
-• Tokyo rides show Priority Pass / Premier Access instead of Lightning Lane; the watcher and "I Booked It" work with those names.
-• Log Return Time offers Priority Pass / Premier Access (Tokyo) and Express Pass (USJ).
-• Spending shows yen at Japan resorts; Pass Savings and the Crowd Calendar are hidden there.
-• Settings → Booking Apps has Shortcut toggles for the Tokyo Disney and USJ apps.
-• Orlando still works exactly as before.
+• Switch to Tokyo Disney: do the park chips (Tokyo Disneyland / Tokyo DisneySea) appear? Do rides and wait times show?
+• Same for Universal Studios Japan.
+• If you see an error message, send the exact text.
+• Orlando still loads as before.
 
-Report anything that shows Orlando info at a Japan resort, or times that look 13 hours off.
+Behind the scenes
+• The widget and app now share one version/build number (the mismatch warning in Xcode Cloud should be gone).
+• Cleaned up build warnings.

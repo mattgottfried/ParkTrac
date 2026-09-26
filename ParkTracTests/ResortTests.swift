@@ -67,6 +67,32 @@ final class ResortTests: XCTestCase {
         XCTAssertEqual(decoded.destinations.first { $0.slug == ParkGroup.universalJapan.apiSlug }?.id, "ccc")
     }
 
+    private func dest(_ id: String, _ name: String, _ slug: String?) -> DestinationsResponse.Destination {
+        .init(id: id, name: name, slug: slug, parks: nil)
+    }
+
+    func testDestinationMatchExactSlugWins() {
+        let list = [dest("x", "Tokyo Disney Something", "tokyodisneyother"),
+                    dest("y", "Tokyo Disney Resort", "tokyodisneyresort")]
+        XCTAssertEqual(DestinationsResponse.match(list, for: .tokyoDisney)?.id, "y")
+    }
+
+    func testDestinationMatchIsLoose() {
+        // Different slug spelling / punctuation / trademark symbols still match by name
+        XCTAssertEqual(DestinationsResponse.match([dest("a", "Tokyo Disney Resort®", "tokyo-disney-resort")],
+                                                  for: .tokyoDisney)?.id, "a")
+        XCTAssertEqual(DestinationsResponse.match([dest("b", "Universal Studios Japan", nil)],
+                                                  for: .universalJapan)?.id, "b")
+        XCTAssertEqual(DestinationsResponse.match([dest("c", "USJ", "usj")], for: .universalJapan)?.id, "c")
+    }
+
+    func testDestinationNoMatch() {
+        let list = [dest("w", "Walt Disney World® Resort", "waltdisneyworldresort"),
+                    dest("u", "Universal Orlando Resort", "universalorlando")]
+        XCTAssertNil(DestinationsResponse.match(list, for: .tokyoDisney))
+        XCTAssertNil(DestinationsResponse.match(list, for: .universalJapan))
+    }
+
     /// Users created Shortcuts with these exact names — don't change them.
     func testOrlandoShortcutNamesUnchanged() {
         XCTAssertEqual(BookingApp.disney.shortcutName, "Open Disney App")

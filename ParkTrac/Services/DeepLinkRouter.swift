@@ -126,11 +126,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         case NotificationKeys.openBookingAppAction:
             guard let raw = info[NotificationKeys.resort] as? String,
                   let resort = ParkGroup(rawValue: raw) else { return }
+            // Pull values out first: `info` isn't Sendable, so don't capture it below
+            let rideLink = (info[DeepLink.userInfoKey] as? String).flatMap(URL.init(string:))
             await MainActor.run {
                 // Land on the ride when they come back, then hand off to the resort's app
-                if let raw = info[DeepLink.userInfoKey] as? String, let url = URL(string: raw) {
-                    _ = DeepLinkRouter.shared.open(url: url)
-                }
+                if let rideLink { _ = DeepLinkRouter.shared.open(url: rideLink) }
                 BookingApp.for(resort).open()
             }
 

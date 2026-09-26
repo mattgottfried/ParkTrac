@@ -3,11 +3,13 @@ import Foundation
 enum ParkAPIError: LocalizedError {
     case badResponse(Int)
     case decodingFailed(Error)
+    case destinationNotFound(String)
 
     var errorDescription: String? {
         switch self {
         case .badResponse(let code): return "Server returned status \(code)"
         case .decodingFailed(let err): return "Failed to decode response: \(err.localizedDescription)"
+        case .destinationNotFound(let name): return "Couldn't find \(name) in the park data service"
         }
     }
 }
@@ -27,33 +29,42 @@ actor ParkAPIService {
         }
     }
 
-    /// Parks for a resort. Orlando uses its hardcoded destination UUID; Japan's UUIDs are
-    /// looked up once from `/destinations` (by slug, then name) and cached.
+    /// Parks for a resort. Orlando uses its hardcoded destination UUID; Japan's destination
+    /// is found in `GET /destinations` (loose slug/name match, like the official JS client)
+    /// and its parks come from `/entity/{id}/children`, falling back to the park list that
+    /// `/destinations` itself includes.
     func fetchParks(for group: ParkGroup) async throws -> [ParkEntity] {
         if let id = group.destinationId {
             return try await fetchDestinationChildren(destinationId: id)
         }
-        if let id = try? await resolveDestinationId(for: group) {
-            return try await fetchDestinationChildren(destinationId: id)
+        let destination = try await findDestination(for: group)
+        if let parks = try? await fetchDestinationChildren(destinationId: destination.id), !parks.isEmpty {
+            return parks
         }
-        // Last resort: the API may accept the slug directly
-        return try await fetchDestinationChildren(destinationId: group.apiSlug)
+        let listed = (destination.parks ?? []).map {
+            ParkEntity(id: $0.id, name: $0.name, entityType: "PARK", location: nil)
+        }
+        guard !listed.isEmpty else { throw ParkAPIError.destinationNotFound(group.rawValue) }
+        return listed
     }
 
-    private func resolveDestinationId(for group: ParkGroup) async throws -> String? {
-        let cacheKey = "destinationId_\(group.apiSlug)"
-        if let cached = UserDefaults.standard.string(forKey: cacheKey) { return cached }
+    /// Looked-up destinations, kept for the session (one /destinations call per launch)
+    private var destinationCache: [ParkGroup: DestinationsResponse.Destination] = [:]
 
+    private func findDestination(for group: ParkGroup) async throws -> DestinationsResponse.Destination {
+        if let cached = destinationCache[group] { return cached }
         let data = try await get(base.appendingPathComponent("destinations"))
-        let destinations = try decoder.decode(DestinationsResponse.self, from: data).destinations
-        let match = destinations.first { $0.slug == group.apiSlug }
-            ?? destinations.first { dest in
-                group.apiNameKeywords.contains { dest.name.lowercased().contains($0) }
-            }
-        if let id = match?.id {
-            UserDefaults.standard.set(id, forKey: cacheKey)
+        let list: [DestinationsResponse.Destination]
+        do {
+            list = try decoder.decode(DestinationsResponse.self, from: data).destinations
+        } catch {
+            throw ParkAPIError.decodingFailed(error)
         }
-        return match?.id
+        guard let match = DestinationsResponse.match(list, for: group) else {
+            throw ParkAPIError.destinationNotFound(group.rawValue)
+        }
+        destinationCache[group] = match
+        return match
     }
 
     func fetchDestinationChildren(destinationId: String) async throws -> [ParkEntity] {
@@ -100,10 +111,28 @@ actor ParkAPIService {
 
 /// `GET /destinations` — every resort themeparks.wiki covers.
 struct DestinationsResponse: Codable {
+    struct Park: Codable {
+        let id: String
+        let name: String
+    }
     struct Destination: Codable {
         let id: String
         let name: String
         let slug: String?
+        let parks: [Park]?
     }
     let destinations: [Destination]
+
+    /// Loose, case/punctuation-insensitive match: exact slug first, then any slug or name
+    /// containing one of the resort's keywords. Pure — unit tested.
+    static func match(_ list: [Destination], for group: ParkGroup) -> Destination? {
+        func norm(_ s: String) -> String { s.lowercased().filter { $0.isLetter || $0.isNumber } }
+        let slug = norm(group.apiSlug)
+        if let exact = list.first(where: { norm($0.slug ?? "") == slug }) { return exact }
+        let keys = group.apiNameKeywords.map(norm)
+        return list.first { dest in
+            let hay = norm(dest.slug ?? "") + " " + norm(dest.name)
+            return keys.contains { hay.contains($0) }
+        }
+    }
 }

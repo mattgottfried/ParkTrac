@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct WaitStopwatchSection: View {
     @ScaledMetric(relativeTo: .largeTitle) private var clockSize: CGFloat = 48

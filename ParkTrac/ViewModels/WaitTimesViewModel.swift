@@ -245,7 +245,8 @@ final class WaitTimesViewModel {
 
     @MainActor
     func loadParksIfNeeded(for group: ParkGroup) async {
-        guard parksByGroup[group] == nil else { return }
+        // An empty list counts as "not loaded" so a failed lookup retries next time
+        guard parksByGroup[group]?.isEmpty ?? true else { return }
         isLoadingParks = true
         do {
             let parks = try await ParkAPIService.shared.fetchParks(for: group)
@@ -259,7 +260,17 @@ final class WaitTimesViewModel {
     /// Loads live ride data for every park in the current group in parallel.
     @MainActor
     func loadAllParksInGroup() async {
-        guard let parks = parksByGroup[selectedGroup], !parks.isEmpty else { return }
+        // Parks are fetched at launch; if that failed for this resort (e.g. Japan lookup),
+        // retry now instead of silently showing an empty list.
+        if parksByGroup[selectedGroup]?.isEmpty ?? true {
+            await loadParksIfNeeded(for: selectedGroup)
+        }
+        guard let parks = parksByGroup[selectedGroup], !parks.isEmpty else {
+            if errorMessage == nil {
+                errorMessage = "Couldn't load \(selectedGroup.rawValue) parks. Check your connection and pull to refresh."
+            }
+            return
+        }
         isLoading = true
         errorMessage = nil
         var successCount = 0
