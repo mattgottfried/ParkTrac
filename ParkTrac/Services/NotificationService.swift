@@ -27,6 +27,7 @@ final class NotificationService {
 
     private func fireNotification(for alert: RideAlert, currentWait: Int, resort: ParkGroup, parkName: String) {
         let content = UNMutableNotificationContent()
+        content.interruptionLevel = .timeSensitive   // gets through Focus (entitlement)
         content.title = "⏱ Wait time dropped!"
         content.body = "\(alert.rideName) is now \(currentWait) min — under your \(alert.thresholdMinutes) min alert."
         content.sound = .default
@@ -53,6 +54,7 @@ final class NotificationService {
     /// A ride you were watching is operating again.
     func fireRideReopened(watch: ReopenWatch, wait: Int?) {
         let content = UNMutableNotificationContent()
+        content.interruptionLevel = .timeSensitive   // gets through Focus (entitlement)
         content.title = "✅ \(watch.rideName) is back up"
         content.body = wait.map { "It's operating again — posted wait \($0) min." } ?? "It's operating again."
         content.sound = .default
@@ -73,6 +75,7 @@ final class NotificationService {
     func fireLightningLaneOpening(watch: LightningLaneWatch, returnStart: Date, returnEnd: Date?, previous: Date?) {
         let time = returnStart.formatted(date: .omitted, time: .shortened)
         let content = UNMutableNotificationContent()
+        content.interruptionLevel = .timeSensitive   // gets through Focus (entitlement)
         let pass = watch.passName ?? "Lightning Lane"
         let app = BookingApp.for(watch.resort).appName
         if let previous {
@@ -107,6 +110,7 @@ final class NotificationService {
     func scheduleReturnReady(passId: String, passLabel: String, rideName: String, at returnStart: Date) {
         guard returnStart > .now.addingTimeInterval(30) else { return }
         let content = UNMutableNotificationContent()
+        content.interruptionLevel = .timeSensitive   // gets through Focus (entitlement)
         content.title = "✅ \(passLabel) return is open"
         content.body = "You can ride \(rideName) now — your return is valid until park close."
         content.sound = .default
@@ -120,6 +124,7 @@ final class NotificationService {
     func scheduleAreaEntryOpen(passId: String, areaName: String, start: Date, end: Date) {
         guard start > .now.addingTimeInterval(30) else { return }
         let content = UNMutableNotificationContent()
+        content.interruptionLevel = .timeSensitive   // gets through Focus (entitlement)
         content.title = "🍄 \(areaName) entry is open"
         content.body = "Head to the entrance — your timed entry window closes at \(end.formatted(date: .omitted, time: .shortened))."
         content.sound = .default
@@ -149,6 +154,7 @@ final class NotificationService {
         let fireAt = returnEnd.addingTimeInterval(-600)  // 10 min before window closes
         guard fireAt > .now else { return }
         let content = UNMutableNotificationContent()
+        content.interruptionLevel = .timeSensitive   // gets through Focus (entitlement)
         content.title = "⚡ Lightning Lane expiring soon"
         content.body = "\(rideName) return window closes in 10 minutes!"
         content.sound = .default

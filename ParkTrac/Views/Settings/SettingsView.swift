@@ -287,7 +287,7 @@ private struct InstantAlertsSection: View {
         } header: {
             Text("Instant Alerts")
         } footer: {
-            Text("Lightning Lane watches, wait alerts (with DAS/AAP buttons) and \"back up\" alerts arrive within about a minute, even when ThrillTrack is closed. Your ThrillTrack alert server checks wait times every minute and sends the notification; it only stores this phone's watches and a push address. When it can't be reached, the app falls back to its own checks.")
+            Text("Lightning Lane watches, wait alerts (with DAS/AAP buttons) and \"back up\" alerts arrive within about a minute, even when ThrillTrack is closed. Your ThrillTrack alert server checks wait times every minute and sends the notification; it only stores this phone's watches and a push address. When it can't be reached, the app falls back to its own checks.\n\nAlerts are Time Sensitive, so they get through Focus modes like Sleep or Driving — turn that off in iOS Settings → Notifications → ThrillTrack.")
         }
     }
 }
