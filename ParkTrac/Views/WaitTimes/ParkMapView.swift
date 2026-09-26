@@ -124,24 +124,31 @@ struct StyledMapUIView: UIViewRepresentable {
         map.showsUserLocation = true
         map.showsCompass = false
         map.register(RideAnnotationView.self, forAnnotationViewWithReuseIdentifier: RideAnnotationView.reuseID)
-        context.coordinator.addTiles(to: map)
+        map.preferredConfiguration = Self.configuration(satellite: isSatellite)
+        context.coordinator.isSatellite = isSatellite
         return map
+    }
+
+    /// Apple Maps base layer (no API key). Muted standard keeps the colored wait pins
+    /// prominent; Apple's own attraction labels are filtered out so they don't clash
+    /// with the ride pins, but restrooms and food stay visible.
+    static func configuration(satellite: Bool) -> MKMapConfiguration {
+        let poiFilter = MKPointOfInterestFilter(including: [.restroom, .restaurant, .cafe, .parking])
+        if satellite {
+            let config = MKHybridMapConfiguration(elevationStyle: .realistic)
+            config.pointOfInterestFilter = poiFilter
+            return config
+        }
+        let config = MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)
+        config.pointOfInterestFilter = poiFilter
+        return config
     }
 
     func updateUIView(_ map: MKMapView, context: Context) {
         // Satellite toggle
-        if isSatellite {
-            if !context.coordinator.isSatellite {
-                context.coordinator.isSatellite = true
-                map.mapType = .hybridFlyover
-                map.removeOverlays(map.overlays)
-            }
-        } else {
-            if context.coordinator.isSatellite {
-                context.coordinator.isSatellite = false
-                map.mapType = .mutedStandard
-                context.coordinator.addTiles(to: map)
-            }
+        if isSatellite != context.coordinator.isSatellite {
+            context.coordinator.isSatellite = isSatellite
+            map.preferredConfiguration = Self.configuration(satellite: isSatellite)
         }
 
         // Region (only if significantly different to avoid fighting user pans)
@@ -180,22 +187,6 @@ struct StyledMapUIView: UIViewRepresentable {
 
         init(_ parent: StyledMapUIView) { self.parent = parent }
 
-        func addTiles(to map: MKMapView) {
-            map.removeOverlays(map.overlays.filter { $0 is MKTileOverlay })
-            // CartoDB Voyager — clean, nature-tinted, no API key required
-            let tile = MKTileOverlay(urlTemplate:
-                "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png")
-            tile.canReplaceMapContent = true
-            map.addOverlay(tile, level: .aboveLabels)
-        }
-
-        func mapView(_ map: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            if let tile = overlay as? MKTileOverlay {
-                return MKTileOverlayRenderer(tileOverlay: tile)
-            }
-            return MKOverlayRenderer(overlay: overlay)
-        }
-
         func mapView(_ map: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             guard let ra = annotation as? RidePointAnnotation else { return nil }
             let view = map.dequeueReusableAnnotationView(withIdentifier: RideAnnotationView.reuseID, for: annotation) as! RideAnnotationView
@@ -223,7 +214,20 @@ struct StyledMapUIView: UIViewRepresentable {
 // MARK: - Main Park Map View
 
 // MARK: - Show Tab enum
-private enum BottomTab { case rides, shows }
+private enum BottomTab: String { case rides, shows }
+
+/// Sheets opened from a ride card's long-press menu.
+private enum RideMenuAction: Identifiable {
+    case addToPlan(DisplayRide)
+    case alert(DisplayRide)
+
+    var id: String {
+        switch self {
+        case .addToPlan(let ride): return "plan-\(ride.id)"
+        case .alert(let ride):     return "alert-\(ride.id)"
+        }
+    }
+}
 
 struct ParkMapView: View {
     @Environment(AppState.self) private var appState
@@ -236,8 +240,15 @@ struct ParkMapView: View {
     @State private var panelExpanded: Bool = false
     @State private var mapStyleIsHybrid: Bool = false
     @State private var lastAutoZoomedParkId: String? = nil
-    @State private var showTab: BottomTab = .rides
+    @AppStorage("waitTimesBottomTab") private var showTab: BottomTab = .rides
     @State private var showMustDoOnly: Bool = false
+    @AppStorage("rideSort") private var rideSort: RideSort = .longestWait
+    @AppStorage("hideClosedRides") private var hideClosed: Bool = false
+    /// 0 = no limit
+    @AppStorage("maxWaitFilter") private var maxWait: Int = 0
+    @State private var rideAction: RideMenuAction?
+    /// Bumped only by a user pull-to-refresh, so the success haptic doesn't fire on the 60s auto-refresh.
+    @State private var userRefreshCount = 0
     /// "<parkId>-<openingTime>" of the rope-drop activity we last started —
     /// prevents the 60s auto-refresh from restarting it every cycle.
     @State private var lastRopeDropKey: String? = nil
@@ -340,7 +351,10 @@ struct ParkMapView: View {
         }
         .task {
             mapStyleIsHybrid = appState.defaultMapIsSatellite
-            viewModel.sortAlphabetical = appState.sortRidesAlphabetically
+            if appState.sortRidesAlphabetically != (rideSort == .name) {
+                rideSort = appState.sortRidesAlphabetically ? .name : .longestWait
+            }
+            viewModel.rideSort = rideSort
             viewModel.selectedGroup = appState.selectedResort
             region = appState.selectedResort.defaultRegion
             await viewModel.loadAllParks()
@@ -364,7 +378,16 @@ struct ParkMapView: View {
         .onChange(of: viewModel.selectedGroup) { _, group in
             withAnimation { region = group.defaultRegion }
         }
-        .onChange(of: appState.sortRidesAlphabetically) { _, val in viewModel.sortAlphabetical = val }
+        // Settings' A–Z toggle and the list's sort menu mirror each other
+        .onChange(of: appState.sortRidesAlphabetically) { _, val in
+            if val != (rideSort == .name) { rideSort = val ? .name : .longestWait }
+        }
+        .onChange(of: rideSort) { _, sort in
+            viewModel.rideSort = sort
+            if appState.sortRidesAlphabetically != (sort == .name) {
+                appState.sortRidesAlphabetically = (sort == .name)
+            }
+        }
         .onChange(of: appState.defaultMapIsSatellite)   { _, val in mapStyleIsHybrid = val }
         .onChange(of: locationService.userCoordinate?.latitude) { _, _ in autoZoomIfInsidePark() }
         .onChange(of: viewModel.currentParks) { _, _ in autoZoomIfInsidePark() }
@@ -375,6 +398,19 @@ struct ParkMapView: View {
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
             syncRopeDropActivity()
         }
+        .sheet(item: $rideAction) { action in
+            switch action {
+            case .addToPlan(let ride):
+                AddPlanItemView(resort: viewModel.selectedGroup.rawValue, prefillRide: ride,
+                                prefillPark: parkName(for: ride))
+            case .alert(let ride):
+                SetAlertSheet(ride: ride)
+            }
+        }
+        .sensoryFeedback(.selection, trigger: viewModel.filterPark?.id)
+        .sensoryFeedback(.selection, trigger: showMustDoOnly)
+        .sensoryFeedback(.selection, trigger: showTab)
+        .sensoryFeedback(.success, trigger: userRefreshCount)
         .sheet(item: $selectedRide) { ride in
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
             RideDetailSheet(ride: ride, theme: theme, parkGroup: viewModel.selectedGroup, parkName: parkName)
@@ -463,8 +499,20 @@ struct ParkMapView: View {
                     ParkComparisonView(parkName: parkName, parkId: parkId, currentAvgWait: avg)
                 }
                 if let refreshed = viewModel.lastRefreshed {
-                    Text("Updated \(refreshed, style: .relative) ago")
-                        .font(.caption2).foregroundStyle(.secondary)
+                    TimelineView(.periodic(from: .now, by: 30)) { ctx in
+                        let minutesOld = Int(ctx.date.timeIntervalSince(refreshed) / 60)
+                        if minutesOld >= 5 {
+                            Label("Wait times from \(minutesOld) min ago — pull to refresh",
+                                  systemImage: "exclamationmark.triangle.fill")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8).padding(.vertical, 3)
+                                .background(Color.orange, in: Capsule())
+                        } else {
+                            Text("Updated \(refreshed, style: .relative) ago")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
                 }
             }
             Spacer()
@@ -474,25 +522,99 @@ struct ParkMapView: View {
     }
 
     private var searchBar: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass").foregroundStyle(.secondary).font(.system(size: 14))
-            TextField("Search rides", text: Bindable(viewModel).searchText)
-                .font(.subheadline).autocorrectionDisabled()
-            if !viewModel.searchText.isEmpty {
-                Button { viewModel.searchText = "" } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary).font(.system(size: 14))
+                TextField("Search rides", text: Bindable(viewModel).searchText)
+                    .font(.subheadline).autocorrectionDisabled()
+                if !viewModel.searchText.isEmpty {
+                    Button { viewModel.searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear search")
                 }
-                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .background(Color(.systemFill), in: RoundedRectangle(cornerRadius: 10))
+
+            filterMenu
         }
-        .padding(.horizontal, 10).padding(.vertical, 7)
-        .background(Color(.systemFill), in: RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal).padding(.top, 4).padding(.bottom, 6)
     }
 
+    /// List-only filters. Kept out of `viewModel.filteredRides` so crowd level / average wait
+    /// still reflect the whole park.
     private var displayedRides: [DisplayRide] {
         viewModel.filteredRides.filter { ride in
-            !showMustDoOnly || appState.wishList.contains(ride.id)
+            if showMustDoOnly && !appState.wishList.contains(ride.id) { return false }
+            if hideClosed && !ride.isOperating { return false }
+            if maxWait > 0 {
+                guard ride.isOperating else { return false }
+                if let m = ride.waitMinutes, m > maxWait { return false }
+            }
+            return true
+        }
+    }
+
+    private var listFiltersActive: Bool { hideClosed || maxWait > 0 }
+
+    private func parkName(for ride: DisplayRide) -> String {
+        viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
+    }
+
+    private var filterMenu: some View {
+        Menu {
+            Picker("Sort", selection: $rideSort) {
+                ForEach(RideSort.allCases) { Text($0.label).tag($0) }
+            }
+            Section {
+                Toggle("Hide Closed Rides", isOn: $hideClosed)
+                Picker("Max Wait", selection: $maxWait) {
+                    Text("Any Wait").tag(0)
+                    ForEach([15, 30, 45, 60], id: \.self) { Text("≤ \($0) min").tag($0) }
+                }
+            }
+            if listFiltersActive {
+                Button("Clear Filters", role: .destructive) { clearListFilters() }
+            }
+        } label: {
+            Image(systemName: listFiltersActive
+                  ? "line.3.horizontal.decrease.circle.fill"
+                  : "line.3.horizontal.decrease.circle")
+                .font(.system(size: 20))
+        }
+        .accessibilityLabel("Sort and filter rides")
+    }
+
+    private func clearListFilters() {
+        hideClosed = false
+        maxWait = 0
+    }
+
+    @ViewBuilder
+    private func rideContextMenu(for ride: DisplayRide) -> some View {
+        let isMustDo = appState.wishList.contains(ride.id)
+        Button {
+            appState.toggleWish(ride.id)
+        } label: {
+            Label(isMustDo ? "Remove from Must-Do" : "Add to Must-Do",
+                  systemImage: isMustDo ? "star.slash" : "star")
+        }
+        Button {
+            rideAction = .addToPlan(ride)
+        } label: {
+            Label("Add to My Day", systemImage: "calendar.badge.plus")
+        }
+        Button {
+            rideAction = .alert(ride)
+        } label: {
+            Label("Set Wait Alert", systemImage: "bell.badge")
+        }
+        Button {
+            selectedRide = ride
+        } label: {
+            Label("Details & Rode It", systemImage: "info.circle")
         }
     }
 
@@ -546,6 +668,15 @@ struct ParkMapView: View {
                     Button("Try Again") { Task { await viewModel.retry() } }.buttonStyle(.borderedProminent)
                 }
                 .padding().frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if displayedRides.isEmpty && listFiltersActive && !viewModel.filteredRides.isEmpty {
+                ContentUnavailableView {
+                    Label("No Rides Match Your Filters", systemImage: "line.3.horizontal.decrease.circle")
+                } description: {
+                    Text("Try a longer max wait or show closed rides.")
+                } actions: {
+                    Button("Clear Filters") { clearListFilters() }
+                        .buttonStyle(.borderedProminent)
+                }
             } else if displayedRides.isEmpty {
                 ContentUnavailableView(
                     showMustDoOnly ? "No Must-Do Rides" : "No Rides",
@@ -559,12 +690,17 @@ struct ParkMapView: View {
                     LazyVStack(spacing: 8) {
                         ForEach(displayedRides) { ride in
                             RideCardView(ride: ride, theme: theme)
+                                .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 .onTapGesture { selectedRide = ride }
+                                .contextMenu { rideContextMenu(for: ride) }
                         }
                     }
                     .padding(.horizontal).padding(.vertical, 8)
                 }
-                .refreshable { await viewModel.refresh() }
+                .refreshable {
+                    await viewModel.refresh()
+                    userRefreshCount += 1
+                }
             }
         }
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

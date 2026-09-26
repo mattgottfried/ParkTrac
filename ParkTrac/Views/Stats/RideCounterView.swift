@@ -9,7 +9,7 @@ struct RideCounterView: View {
     @State private var sortByCount = true
 
     private var resortLogs: [RideLog] {
-        allLogs.filter { $0.resort == appState.selectedResort.rawValue }
+        allLogs.filter { $0.resort == appState.selectedResort.rawValue && !UndoDeleteCenter.shared.isHidden($0) }
     }
 
     private var totalThisYear: Int {
@@ -101,10 +101,8 @@ struct RideCounterView: View {
     }
 
     private func deleteAllLogs(named rideName: String) {
-        for log in resortLogs where log.rideName == rideName {
-            context.delete(log)
-        }
-        try? context.save()
+        let doomed = resortLogs.filter { $0.rideName == rideName }
+        UndoDeleteCenter.shared.delete(doomed, message: "Deleted \(doomed.count) \(rideName) ride\(doomed.count == 1 ? "" : "s")", in: context)
     }
 
     private func statChip(value: String, label: String, color: Color) -> some View {

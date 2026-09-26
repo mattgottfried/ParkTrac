@@ -124,8 +124,8 @@ final class WaitTimesViewModel {
     /// Schedule keyed by park ID
     var schedulesByPark: [String: [ParkScheduleDay]] = [:]
 
-    /// Sort preference — set from AppState/Settings
-    var sortAlphabetical: Bool = false
+    /// Sort preference — set from ParkMapView (@AppStorage "rideSort", mirrored with Settings' A–Z toggle)
+    var rideSort: RideSort = .longestWait
 
     /// Flat merge of rides for the **current group only** (prevents cross-resort bleed).
     /// Stored (not computed) so map annotations, list, and crowd stats don't re-join
@@ -188,13 +188,16 @@ final class WaitTimesViewModel {
             .filter { filterPark == nil || $0.parkId == filterPark?.id }
             .filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
             .sorted { lhs, rhs in
-                if sortAlphabetical {
+                if rideSort == .name {
                     return lhs.name.localizedCompare(rhs.name) == .orderedAscending
                 }
-                // Default: operating (by wait desc) → temporarily down → closed (A–Z)
+                // Operating (by wait) → temporarily down → closed (A–Z)
                 let lRank = statusRank(lhs), rRank = statusRank(rhs)
                 if lRank != rRank { return lRank < rRank }
-                if lRank == 0 { return (lhs.waitMinutes ?? -1) > (rhs.waitMinutes ?? -1) }
+                if lRank == 0 {
+                    let l = lhs.waitMinutes ?? -1, r = rhs.waitMinutes ?? -1
+                    if l != r { return rideSort == .shortestWait ? l < r : l > r }
+                }
                 return lhs.name.localizedCompare(rhs.name) == .orderedAscending
             }
     }
@@ -261,7 +264,9 @@ final class WaitTimesViewModel {
             errorMessage = "Couldn't refresh wait times. Check your connection."
         }
         rebuildAllRides()
-        lastRefreshed = .now
+        // Only advance on real data — a stale timestamp drives the "out of date" warning
+        // and keeps the recorder from re-recording cached waits as new snapshots.
+        if successCount > 0 { lastRefreshed = .now }
         isLoading = false
     }
 
@@ -361,4 +366,18 @@ final class WaitTimesViewModel {
     }
 
     deinit { stopAutoRefresh() }
+}
+
+// MARK: - Ride Sort
+
+enum RideSort: String, CaseIterable, Identifiable {
+    case longestWait, shortestWait, name
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .longestWait:  return "Longest Wait"
+        case .shortestWait: return "Shortest Wait"
+        case .name:         return "Name (A–Z)"
+        }
+    }
 }

@@ -1,7 +1,10 @@
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.modelContext) private var context
+    @State private var showResetDiningConfirm = false
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -47,6 +50,34 @@ struct SettingsView: View {
                     Text("Rides")
                 } footer: {
                     Text("When off, rides are sorted by wait time with operating attractions first.")
+                }
+
+                // MARK: Ratings
+                Section {
+                    LabeledContent("First Reviewer") {
+                        TextField(AppState.defaultRaterOneName, text: $state.raterOneName)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    LabeledContent("Second Reviewer") {
+                        TextField(AppState.defaultRaterTwoName, text: $state.raterTwoName)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    Button(role: .destructive) {
+                        showResetDiningConfirm = true
+                    } label: {
+                        Label("Reset Dining History…", systemImage: "arrow.counterclockwise")
+                    }
+                } header: {
+                    Text("Dining & Hotel Ratings")
+                } footer: {
+                    Text("Names shown on the two rating columns. Reset clears every restaurant's visited status and ratings; notes, photos and reservations are kept.")
+                }
+                .confirmationDialog("Reset Dining History?", isPresented: $showResetDiningConfirm, titleVisibility: .visible) {
+                    Button("Reset All Restaurants", role: .destructive) { resetDiningHistory() }
+                } message: {
+                    Text(PersistenceController.storageMode == .cloud
+                         ? "Marks every restaurant as not visited and clears both ratings on all devices signed in to this Apple ID. This can't be undone."
+                         : "Marks every restaurant as not visited and clears both ratings. This can't be undone.")
                 }
 
                 // MARK: Resort
@@ -121,5 +152,16 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .toolbarBackground(.visible, for: .navigationBar)
         }
+    }
+
+    private func resetDiningHistory() {
+        let restaurants = (try? context.fetch(FetchDescriptor<BucketRestaurant>())) ?? []
+        for r in restaurants {
+            r.isVisited = false
+            r.visitDate = nil
+            r.mattRating = 0
+            r.wifeRating = 0
+        }
+        try? context.save()
     }
 }

@@ -98,4 +98,5 @@ Displayed in `RidePredictionView` (Swift Charts) inside `RideDetailSheet`.
 
 - `allSeedRestaurants` / `allSeedHotels` — global arrays in `SeedData.swift` (prefixed `all` to avoid shadowing `BucketListService` method names `seedRestaurants` / `seedHotels`)
 - Parks are runtime-fetched `ParkEntity` values, not static — there is no `ParkGroup.parks`.
-- Wife's name is **Heather** (used in labels throughout the UI).
+- Wife's name is **Heather**. The two rating-column labels come from `AppState.raterOneLabel` / `raterTwoLabel` (editable in Settings, iCloud KVS-synced, default "Matt" / "Heather"); the stored fields stay `mattRating` / `wifeRating`. Don't hardcode the names in new UI.
+- `SeedData.swift` still contains Matt & Heather's personal `isVisited` / ratings for reference, but `BucketListService` deliberately imports only the catalog fields — never seed personal history into new installs.

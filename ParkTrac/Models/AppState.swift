@@ -46,6 +46,25 @@ final class AppState {
         didSet { icloud.set(sortRidesAlphabetically, forKey: "sortRidesAlphabetically") }
     }
 
+    /// Names shown on the two dining/hotel rating columns (stored as `mattRating` / `wifeRating`).
+    var raterOneName: String {
+        didSet { icloud.set(raterOneName, forKey: "raterOneName") }
+    }
+    var raterTwoName: String {
+        didSet { icloud.set(raterTwoName, forKey: "raterTwoName") }
+    }
+    static let defaultRaterOneName = "Matt"
+    static let defaultRaterTwoName = "Heather"
+    /// Display labels — fall back to the defaults if a name is cleared.
+    var raterOneLabel: String {
+        let t = raterOneName.trimmingCharacters(in: .whitespaces)
+        return t.isEmpty ? Self.defaultRaterOneName : t
+    }
+    var raterTwoLabel: String {
+        let t = raterTwoName.trimmingCharacters(in: .whitespaces)
+        return t.isEmpty ? Self.defaultRaterTwoName : t
+    }
+
     var wishList: Set<String> {
         didSet { icloud.set(Array(wishList), forKey: "wishList") }
     }
@@ -177,6 +196,9 @@ final class AppState {
             ? kv.bool(forKey: "sortRidesAlphabetically")
             : ud.bool(forKey: "sortRidesAlphabetically")
 
+        self.raterOneName = kv.string(forKey: "raterOneName") ?? AppState.defaultRaterOneName
+        self.raterTwoName = kv.string(forKey: "raterTwoName") ?? AppState.defaultRaterTwoName
+
         let wishArr = (kv.array(forKey: "wishList") as? [String]) ?? ud.stringArray(forKey: "wishList") ?? []
         self.wishList = Set(wishArr)
 
@@ -243,6 +265,8 @@ final class AppState {
         if let raw = kv.string(forKey: "selectedResortRaw"), let r = ParkGroup(rawValue: raw) { selectedResort = r }
         if kv.object(forKey: "defaultMapIsSatellite") != nil { defaultMapIsSatellite = kv.bool(forKey: "defaultMapIsSatellite") }
         if kv.object(forKey: "sortRidesAlphabetically") != nil { sortRidesAlphabetically = kv.bool(forKey: "sortRidesAlphabetically") }
+        if let name = kv.string(forKey: "raterOneName") { raterOneName = name }
+        if let name = kv.string(forKey: "raterTwoName") { raterTwoName = name }
         if let arr = kv.array(forKey: "wishList") as? [String] { wishList = Set(arr) }
         if let raw = kv.string(forKey: "disneyPassTier"), let t = DisneyPassTier(rawValue: raw) { disneyPassTier = t }
         if let raw = kv.string(forKey: "universalPassTier"), let t = UniversalPassTier(rawValue: raw) { universalPassTier = t }
