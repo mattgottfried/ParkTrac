@@ -1,3 +1,24 @@
+# ThrillTrack usability plan — status
+
+| Phase / item | Status | PR |
+|---|---|---|
+| 1. Nested nav stacks, undo for deletes, LL swipe, Rides/Shows memory | Done | #21 |
+| 2. Haptics, ride long-press menu, sort/filter, stale-data pill | Done | #21 |
+| Seed-data fix, editable reviewer names, reset dining | Done | #21 |
+| Apple Maps base layer (CARTO needed a key) | Done | #21 |
+| Export-compliance key | Done | #21 |
+| 3. Deep links (Live Activities, notifications, banners) | Done | #22 |
+| 4. VoiceOver + Dynamic Type; event names in park hours | Done | #22 |
+| Lightning Lane watcher | Done | #23 |
+| AAP/DAS assist ("I Booked It", return reminders) | Done | #24, #27 |
+| Open booking apps via Shortcut | Done | #25, #26 |
+| LL "I Booked It" | Done | #26 |
+| Tests, pin long-press menu, Must-Do down haptic, day summary share, CSV export, Settings cleanup, walking time | Done | this PR |
+
+What's next lives in `ideas.md`. The original plan follows for reference.
+
+---
+
 # ThrillTrack: usability and quality-of-life plan
 
 ## Context

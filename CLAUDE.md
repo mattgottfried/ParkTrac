@@ -16,7 +16,12 @@ xcodebuild -project ParkTrac.xcodeproj -scheme ParkTrac -destination 'platform=i
 xcodebuild -project ParkTrac.xcodeproj -scheme ParkTrac -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath /tmp/ParkTracBuild build
 ```
 
-There are no automated tests. Verification is done by building in Xcode and running in the simulator.
+```bash
+# Unit tests (ParkTracTests target — pure logic only; UI is still verified in the simulator)
+xcodebuild test -project ParkTrac.xcodeproj -scheme ParkTrac -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+`ParkTracTests/` is a folder-synced group (like `TrillTrackWidget/`): new test files there are picked up automatically, no pbxproj edits. Tests cover the AAP/DAS return rules, themeparks.wiki Lightning Lane + schedule decoding, `LightningLaneWatchService.alertStart`, deep-link parsing, CSV/day-summary export and `WalkEstimate`. Keep new business logic in pure/static functions so it can be tested here. Resort `rawValue`s are persisted in SwiftData (`PlanItem.resort`, `RideLog.resort`, …) — never rename existing `ParkGroup` cases/raw values.
 
 **When adding new Swift source files**, the file MUST be registered in `ParkTrac.xcodeproj/project.pbxproj` in four places: `PBXBuildFile`, `PBXFileReference`, the owning `PBXGroup`'s `children`, and `PBXSourcesBuildPhase`. Missing this step causes "No such module" or linker errors at build time. When deleting files, remove all four entries. The project uses synthetic sequential IDs (`AA00…`) — take the next unused pair.
 
