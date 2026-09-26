@@ -33,12 +33,6 @@ struct BookReturnTimeSheet: View {
         case expressNow  = "Express Now"
         case aap         = "AAP"
         var id: Self { self }
-        var planKind: String {
-            switch self {
-            case .ll, .expressNow: return "ll"
-            case .das, .aap:       return "aap"
-            }
-        }
         var icon: String {
             switch self {
             case .ll, .expressNow: return "bolt.fill"
@@ -129,8 +123,10 @@ struct BookReturnTimeSheet: View {
             }
             .onAppear {
                 passKind = availableKinds.first ?? .ll
+                applyDefaultReturn()
                 nextBookingAt = returnStart.addingTimeInterval(Self.nextBookingInterval)
             }
+            .onChange(of: passKind) { _, _ in applyDefaultReturn() }
             .onChange(of: returnStart) { _, newValue in
                 // Keep the estimate in step with the return time until the
                 // user opts in — once enabled, their edits are preserved.
@@ -141,38 +137,32 @@ struct BookReturnTimeSheet: View {
         }
     }
 
+    /// DAS/AAP return times come from the current standby wait, so start there;
+    /// timed passes default to now. The user can still edit either.
+    private func applyDefaultReturn() {
+        returnStart = isOpenEnded
+            ? AccessPass.estimatedReturn(postedWait: ride.waitMinutes)
+            : Date()
+    }
+
     private func save() {
-        let item = PlanItem(
-            title: ride.name,
-            kind: passKind.planKind,
-            rideId: ride.id,
-            parkName: parkName,
-            resort: parkGroup.rawValue
-        )
-        item.llReturnStart = returnStart
-        item.llReturnEnd = returnEnd
-        context.insert(item)
-        try? context.save()
-        LiveActivityManager.startReturnTime(
+        // PlanItem + Live Activity + reminder (return-open for DAS/AAP, closing-soon for timed)
+        ReturnTimeLogger.log(
             passLabel: passKind.rawValue,
+            isOpenEnded: isOpenEnded,
+            rideId: ride.id,
             rideName: ride.name,
             parkName: parkName,
-            returnEnd: isOpenEnded ? nil : returnEnd
+            resort: parkGroup.rawValue,
+            returnStart: returnStart,
+            returnEnd: returnEnd,
+            context: context
         )
         // Optional concurrent "next booking eligibility" countdown (LL / Express
         // Now only). Runs alongside the return-time activity — ActivityKit
         // supports multiple concurrent activities from one app.
         if trackNextBooking && !isOpenEnded && nextBookingAt > .now {
             LiveActivityManager.startNextBooking(rideName: ride.name, eligibleAt: nextBookingAt)
-        }
-        let passId = "\(ride.id)-\(Int(returnStart.timeIntervalSince1970))"
-        Task {
-            await NotificationService.shared.requestAuthorization()
-            NotificationService.shared.scheduleLLReminder(
-                passId: passId,
-                rideName: ride.name,
-                returnEnd: returnEnd
-            )
         }
     }
 }

@@ -439,7 +439,10 @@ struct ParkMapView: View {
         }
         .onChange(of: viewModel.lastRefreshed) { _, _ in
             openPendingRide()
-            NotificationService.shared.checkAlerts(rides: viewModel.allRides, context: modelContext)
+            NotificationService.shared.checkAlerts(
+                rides: viewModel.allRides, context: modelContext, resort: viewModel.selectedGroup,
+                parkNames: Dictionary(viewModel.currentParks.map { ($0.id, $0.name) },
+                                      uniquingKeysWith: { first, _ in first }))
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
             syncRopeDropActivity()
         }

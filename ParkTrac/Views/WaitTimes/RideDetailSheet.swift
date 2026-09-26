@@ -14,6 +14,7 @@ struct RideDetailSheet: View {
     @Environment(AppState.self) private var appState
     @Query private var allRideLogs: [RideLog]
     @Query private var allAlerts: [RideAlert]
+    @Query(filter: #Predicate<PlanItem> { $0.kind == "aap" && !$0.isDone }) private var openAccessReturns: [PlanItem]
 
     @State private var showLogSheet = false
     @State private var showAlertSheet = false
@@ -24,6 +25,62 @@ struct RideDetailSheet: View {
 
     private var rideCount: Int {
         allRideLogs.filter { $0.rideId == ride.id }.count
+    }
+
+    /// Today's logged-but-unused DAS/AAP return for this ride, if any
+    private var loggedAccessReturn: PlanItem? {
+        openAccessReturns.first {
+            $0.rideId == ride.id && Calendar.current.isDateInToday($0.date)
+        }
+    }
+
+    private func accessPassSection(_ pass: AccessPass) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(pass.label, systemImage: "figure.roll")
+                .font(.headline)
+                .foregroundStyle(.teal)
+
+            if let logged = loggedAccessReturn, let start = logged.llReturnStart {
+                Label("Return logged for \(start.formatted(date: .omitted, time: .shortened))",
+                      systemImage: "checkmark.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.green)
+                Text("You'll get a reminder when it opens. Mark it done in My Day after you ride.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                let back = AccessPass.estimatedReturn(postedWait: ride.waitMinutes)
+                Text("Book now to return around **\(back.formatted(date: .omitted, time: .shortened))** (posted wait \(ride.waitMinutes ?? 0) min).")
+                    .font(.subheadline)
+                HStack(spacing: 10) {
+                    Link(destination: pass.bookingURL) {
+                        Label("Book in \(pass.bookingAppName)", systemImage: "arrow.up.forward.app")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    Button {
+                        let start = ReturnTimeLogger.logAccessPassNow(
+                            pass, rideId: ride.id, rideName: ride.name, parkName: parkName,
+                            resort: parkGroup, postedWait: ride.waitMinutes, context: context)
+                        toastMessage = "\(pass.label) logged — return \(start.formatted(date: .omitted, time: .shortened))"
+                        withAnimation { showToast = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            withAnimation { showToast = false }
+                        }
+                    } label: {
+                        Label("I Booked It", systemImage: "checkmark.circle.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.teal)
+                }
+                Text("Got a different time from the \(pass.bookingAppName)? Use Log Return Time below to enter it exactly.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     private var badgeColor: Color {
@@ -157,6 +214,12 @@ struct RideDetailSheet: View {
                 .padding(.horizontal)
 
                 Divider()
+
+                // DAS / AAP: book in the resort's app, then log the return here in one tap
+                if let pass = AccessPass.held(at: parkGroup), ride.isOperating {
+                    accessPassSection(pass)
+                        .padding(.horizontal)
+                }
 
                 // Log Return Time section
                 Button {
