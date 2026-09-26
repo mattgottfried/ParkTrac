@@ -92,6 +92,32 @@ final class DeepLinkRouter {
     }
 }
 
+// MARK: - Home Screen quick actions
+
+/// Long-press the app icon. Each item's type (Info.plist `UIApplicationShortcutItems`) is a
+/// deep-link host, so quick actions go through the same router as URLs.
+enum QuickActions {
+    static func link(for type: String) -> DeepLink? {
+        URL(string: "\(DeepLink.scheme)://\(type)").flatMap(DeepLink.init(url:))
+    }
+
+    @discardableResult
+    static func handle(_ item: UIApplicationShortcutItem) -> Bool {
+        guard let link = link(for: item.type) else { return false }
+        DeepLinkRouter.shared.open(link)
+        return true
+    }
+}
+
+/// Only here to receive quick actions while the app is running (cold launches arrive in
+/// `AppDelegate.application(_:configurationForConnecting:options:)`). SwiftUI still owns the window.
+final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
+    func windowScene(_ windowScene: UIWindowScene, performActionFor shortcutItem: UIApplicationShortcutItem,
+                     completionHandler: @escaping (Bool) -> Void) {
+        completionHandler(QuickActions.handle(shortcutItem))
+    }
+}
+
 // MARK: - Notification Delegate
 
 /// Routes notification taps into the router and lets alerts show while the app is open

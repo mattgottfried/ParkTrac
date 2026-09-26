@@ -104,6 +104,7 @@ struct ContentView: View {
         .sheet(isPresented: Binding(get: { router.showParking }, set: { router.showParking = $0 })) {
             ParkingSheet(resort: appState.selectedResort)
                 .environment(appState)
+                .environment(waitTimesVM)
         }
         .sheet(isPresented: $appState.showResortPicker) {
             ResortPickerSheet(appState: appState)

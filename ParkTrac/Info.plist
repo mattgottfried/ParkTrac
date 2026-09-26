@@ -28,6 +28,35 @@
 	<string>ThrillTrack uses your location to center the map on the park you're visiting and to save where you parked.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>parking</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Find My Car</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Or save where you parked</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>car.fill</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>plan</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>My Day</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>list.bullet.clipboard</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>waittimes</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Wait Times</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>clock.fill</string>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

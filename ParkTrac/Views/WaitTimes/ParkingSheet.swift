@@ -8,6 +8,8 @@ struct ParkingSheet: View {
     let resort: ParkGroup
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(WaitTimesViewModel.self) private var viewModel
+    @AppStorage(ParkingReminder.enabledKey) private var remindBeforeClose = true
     @State private var parking = ParkingService.shared
     @State private var locationService = LocationService()
 
@@ -67,6 +69,7 @@ struct ParkingSheet: View {
             .confirmationDialog("Clear parking spot?", isPresented: $showClearConfirm, titleVisibility: .visible) {
                 Button("Clear Spot", role: .destructive) {
                     parking.clear(resort: resort)
+                    ParkingReminder.cancel(resort: resort)
                     note = ""
                     pendingPhoto = nil
                 }
@@ -155,6 +158,15 @@ struct ParkingSheet: View {
             }
             Button("Clear Spot", role: .destructive) { showClearConfirm = true }
         }
+
+        Section {
+            Toggle(isOn: $remindBeforeClose) {
+                Label("Remind Me Before Parks Close", systemImage: "bell.badge")
+            }
+            .onChange(of: remindBeforeClose) { _, _ in refreshReminder() }
+        } footer: {
+            Text("A notification 30 minutes before the last park closes, with your car's spot.")
+        }
     }
 
     // MARK: Note + photo
@@ -220,6 +232,7 @@ struct ParkingSheet: View {
                 parking.setPhoto(pendingPhoto, resort: resort)
                 self.pendingPhoto = nil
             }
+            refreshReminder()
         } catch PreciseLocator.Failure.denied {
             locateError = "Location is off for ThrillTrack. Turn it on in Settings, or save a note and photo instead."
             saveWithoutLocationIfNeeded()
@@ -237,11 +250,20 @@ struct ParkingSheet: View {
             parking.setPhoto(pendingPhoto, resort: resort)
             self.pendingPhoto = nil
         }
+        refreshReminder()
     }
 
     private func commitNote() {
         guard spot != nil, note != spot?.note else { return }
         parking.updateNote(note, resort: resort)
+        refreshReminder()   // the reminder quotes the note
+    }
+
+    private func refreshReminder() {
+        if remindBeforeClose {
+            Task { await NotificationService.shared.requestAuthorization() }
+        }
+        ParkingReminder.refresh(resort: resort, schedule: viewModel.todaySchedule(forResort: resort))
     }
 
     private func applyPhoto(_ image: UIImage) {

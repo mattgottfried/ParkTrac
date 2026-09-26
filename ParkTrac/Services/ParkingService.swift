@@ -2,6 +2,7 @@ import Foundation
 import CoreLocation
 import MapKit
 import UIKit
+import UserNotifications
 
 // MARK: - Parking spot
 
@@ -260,5 +261,55 @@ final class PreciseLocator: NSObject, CLLocationManagerDelegate {
         Task { @MainActor in
             if status == .denied || status == .restricted { self.finish(error: Failure.denied) }
         }
+    }
+}
+
+// MARK: - Park-close reminder
+
+/// "Parks close at 9:00 PM — your car is at Zurg 112." Fires a little before the last park
+/// at the resort closes, while a spot is saved. Rescheduled whenever schedules load.
+enum ParkingReminder {
+    static let lead: TimeInterval = 30 * 60
+    static let enabledKey = "parkingCloseReminder"
+
+    static var isEnabled: Bool {
+        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+    }
+
+    static func identifier(for resort: ParkGroup) -> String {
+        "parking-close-\(RideMetadata.normalize(resort.rawValue))"
+    }
+
+    /// Latest regular closing today minus `lead`; nil once that's passed. Ticketed events
+    /// (after-hours parties) don't count — most guests leave at the regular close. Pure.
+    static func fireDate(schedule: [ParkScheduleDay], now: Date = .now) -> (fire: Date, closing: Date)? {
+        let closings = schedule.filter { !$0.isTicketedEvent }.compactMap(\.closingDate)
+        guard let closing = closings.max() else { return nil }
+        let fire = closing.addingTimeInterval(-lead)
+        return fire > now ? (fire, closing) : nil
+    }
+
+    /// Schedules (or replaces) the reminder for today's spot, or removes it if there's nothing to remind.
+    static func refresh(resort: ParkGroup, schedule: [ParkScheduleDay]) {
+        let center = UNUserNotificationCenter.current()
+        let id = identifier(for: resort)
+        guard isEnabled, let spot = ParkingService.shared.spot(for: resort),
+              let when = fireDate(schedule: schedule) else {
+            center.removePendingNotificationRequests(withIdentifiers: [id])
+            return
+        }
+        let content = UNMutableNotificationContent()
+        content.title = "🚗 Parks close at \(when.closing.formatted(date: .omitted, time: .shortened))"
+        content.body = spot.trimmedNote.isEmpty
+            ? "Tap for walking directions back to your car."
+            : "Your car: \(spot.trimmedNote). Tap for walking directions."
+        content.sound = .default
+        content.userInfo = [DeepLink.userInfoKey: DeepLink.parking.url.absoluteString]
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, when.fire.timeIntervalSinceNow), repeats: false)
+        center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
+    static func cancel(resort: ParkGroup) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier(for: resort)])
     }
 }
