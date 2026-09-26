@@ -12,6 +12,8 @@ struct LightningLaneWatch: Codable, Identifiable, Equatable {
     var rideId: String
     var rideName: String
     var parkId: String
+    /// Optional so watches saved before this field existed still decode
+    var parkName: String?
     /// Start of the day this watch applies to
     var day: Date
     /// Earliest acceptable return time (on `day`)
@@ -100,7 +102,7 @@ final class LightningLaneWatchService {
             if let last = watch.lastNotifiedStart, start >= last { continue }
 
             NotificationService.shared.fireLightningLaneOpening(
-                watch: watch, returnStart: start, previous: watch.lastNotifiedStart)
+                watch: watch, returnStart: start, returnEnd: ll.returnEnd, previous: watch.lastNotifiedStart)
             watches[index].lastNotifiedStart = start
         }
         if before != watches { persist() }

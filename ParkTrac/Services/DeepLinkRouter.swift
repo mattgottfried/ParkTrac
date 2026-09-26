@@ -111,6 +111,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                                    actions: [openUniversal, logged], intentIdentifiers: []),
             UNNotificationCategory(identifier: NotificationKeys.dasWaitCategory,
                                    actions: [openDisney, logged], intentIdentifiers: []),
+            UNNotificationCategory(identifier: NotificationKeys.llWatchCategory,
+                                   actions: [openDisney, UNNotificationAction(
+                                       identifier: NotificationKeys.loggedLightningLaneAction,
+                                       title: "I Booked It — Log Return", options: [])],
+                                   intentIdentifiers: []),
         ])
     }
 
@@ -143,6 +148,23 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                     context: PersistenceController.container.mainContext)
                 NotificationService.shared.confirmAccessPassLogged(
                     passLabel: pass.label, rideName: rideName, returnStart: returnStart)
+            }
+
+        case NotificationKeys.loggedLightningLaneAction:
+            guard let rideId = info[NotificationKeys.rideId] as? String,
+                  let rideName = info[NotificationKeys.rideName] as? String,
+                  let startTS = info[NotificationKeys.returnStart] as? Double else { return }
+            let parkName = info[NotificationKeys.parkName] as? String ?? ""
+            let returnStart = Date(timeIntervalSince1970: startTS)
+            let returnEnd = (info[NotificationKeys.returnEnd] as? Double).map(Date.init(timeIntervalSince1970:))
+            await MainActor.run {
+                ReturnTimeLogger.logLightningLaneNow(
+                    rideId: rideId, rideName: rideName, parkName: parkName,
+                    returnStart: returnStart, returnEnd: returnEnd,
+                    context: PersistenceController.container.mainContext)
+                NotificationService.shared.confirmAccessPassLogged(
+                    passLabel: "Lightning Lane", rideName: rideName, returnStart: returnStart,
+                    isOpenEnded: false)
             }
 
         default:

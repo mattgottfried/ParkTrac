@@ -183,7 +183,7 @@ struct RideDetailSheet: View {
 
                 // Lightning Lane: next returns + notify-only watch (Disney rides with LL)
                 if ride.multiPass != nil || ride.singlePass != nil {
-                    LightningLaneSection(ride: ride)
+                    LightningLaneSection(ride: ride, parkName: parkName)
                         .padding(.horizontal)
                     Divider()
                 }
