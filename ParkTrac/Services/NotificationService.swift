@@ -52,7 +52,7 @@ final class NotificationService {
 
     /// Lightning Lane watch hit: a Multi Pass return opened inside the user's window
     /// (or an earlier one than we last reported). Notify-only — booking happens in Disney's app.
-    func fireLightningLaneOpening(watch: LightningLaneWatch, returnStart: Date, previous: Date?) {
+    func fireLightningLaneOpening(watch: LightningLaneWatch, returnStart: Date, returnEnd: Date?, previous: Date?) {
         let time = returnStart.formatted(date: .omitted, time: .shortened)
         let content = UNMutableNotificationContent()
         if let previous {
@@ -64,7 +64,18 @@ final class NotificationService {
         }
         content.sound = .default
         content.threadIdentifier = "ll-watch-\(watch.rideId)"
-        content.userInfo = [DeepLink.userInfoKey: DeepLink.ride(id: watch.rideId).url.absoluteString]
+        // "Book in Disney App" + "I Booked It" buttons; the log uses this exact window
+        content.categoryIdentifier = NotificationKeys.llWatchCategory
+        var info: [String: Any] = [
+            DeepLink.userInfoKey: DeepLink.ride(id: watch.rideId).url.absoluteString,
+            NotificationKeys.rideId: watch.rideId,
+            NotificationKeys.rideName: watch.rideName,
+            NotificationKeys.parkName: watch.parkName ?? "",
+            NotificationKeys.resort: ParkGroup.disney.rawValue,
+            NotificationKeys.returnStart: returnStart.timeIntervalSince1970,
+        ]
+        if let returnEnd { info[NotificationKeys.returnEnd] = returnEnd.timeIntervalSince1970 }
+        content.userInfo = info
         let request = UNNotificationRequest(
             identifier: "llwatch-\(watch.rideId)-\(Int(returnStart.timeIntervalSince1970))",
             content: content, trigger: nil)
@@ -85,10 +96,13 @@ final class NotificationService {
     }
 
     /// Confirmation after "I Booked It" from a notification (the app may not be open).
-    func confirmAccessPassLogged(passLabel: String, rideName: String, returnStart: Date) {
+    func confirmAccessPassLogged(passLabel: String, rideName: String, returnStart: Date, isOpenEnded: Bool = true) {
         let content = UNMutableNotificationContent()
         content.title = "\(passLabel) logged: \(rideName)"
-        content.body = "Return around \(returnStart.formatted(date: .omitted, time: .shortened)). It's in My Day, and we'll remind you when it opens. Adjust the time in the app if Universal/Disney gave a different one."
+        let time = returnStart.formatted(date: .omitted, time: .shortened)
+        content.body = isOpenEnded
+            ? "Return around \(time). It's in My Day, and we'll remind you when it opens. Adjust the time in the app if Universal/Disney gave a different one."
+            : "Return at \(time). It's in My Day, and we'll remind you 10 minutes before the window closes. Adjust it in the app if you booked a different time."
         content.userInfo = [DeepLink.userInfoKey: DeepLink.plan.url.absoluteString]
         UNUserNotificationCenter.current().add(
             UNNotificationRequest(identifier: "logged-\(UUID().uuidString)", content: content, trigger: nil))
@@ -137,9 +151,13 @@ enum NotificationKeys {
     static let parkName = "parkName"
     static let resort = "resort"
     static let postedWait = "postedWait"
+    static let returnStart = "returnStart"
+    static let returnEnd = "returnEnd"
 
     static let aapWaitCategory = "WAIT_DROP_AAP"
     static let dasWaitCategory = "WAIT_DROP_DAS"
+    static let llWatchCategory = "LL_WATCH_OPENING"
+    static let loggedLightningLaneAction = "LOGGED_LIGHTNING_LANE"
     static let openBookingAppAction = "OPEN_BOOKING_APP"
     static let loggedReturnAction = "LOGGED_RETURN"
 }

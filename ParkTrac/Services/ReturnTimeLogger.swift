@@ -6,12 +6,10 @@ import UIKit
 
 /// Opens My Disney Experience / the Universal Orlando app for booking.
 ///
-/// Neither app documents a URL scheme, and their websites don't hand off to the apps,
-/// so we try, in order:
-/// 1. The user's own Shortcut ("Open Disney App" / "Open Universal App") if they turned it
-///    on in Settings — an "Open App" shortcut always works.
-/// 2. Candidate URL schemes (unverified guesses; `open` just reports false if unclaimed).
-/// 3. The website, as a last resort.
+/// Neither app documents a URL scheme (guessed ones didn't work on device) and their
+/// websites don't hand off to the apps, so we run the user's own Shortcut
+/// ("Open Disney App" / "Open Universal App") when enabled in Settings → Booking Apps —
+/// an "Open App" shortcut always works — and otherwise open the website.
 enum BookingApp: String {
     case disney, universal
 
@@ -19,13 +17,6 @@ enum BookingApp: String {
     var shortcutName: String { self == .disney ? "Open Disney App" : "Open Universal App" }
     /// UserDefaults key for "use my Shortcut" (Settings → Booking Apps)
     var useShortcutKey: String { "bookingShortcut_\(rawValue)" }
-
-    private var candidateSchemes: [String] {
-        switch self {
-        case .disney:    return ["mdx://", "mydisneyexperience://", "wdw://"]
-        case .universal: return ["uor://", "universalorlando://"]
-        }
-    }
 
     var websiteURL: URL {
         switch self {
@@ -43,19 +34,8 @@ enum BookingApp: String {
     func open() {
         if UserDefaults.standard.bool(forKey: useShortcutKey), let url = shortcutURL {
             UIApplication.shared.open(url)
-            return
-        }
-        Self.tryOpen(candidateSchemes.compactMap(URL.init(string:)), fallback: websiteURL)
-    }
-
-    @MainActor
-    private static func tryOpen(_ urls: [URL], fallback: URL) {
-        guard let first = urls.first else {
-            UIApplication.shared.open(fallback)
-            return
-        }
-        UIApplication.shared.open(first, options: [:]) { opened in
-            if !opened { Task { @MainActor in tryOpen(Array(urls.dropFirst()), fallback: fallback) } }
+        } else {
+            UIApplication.shared.open(websiteURL)
         }
     }
 }
@@ -139,6 +119,16 @@ enum ReturnTimeLogger {
                     passId: passId, rideName: rideName, returnEnd: returnEnd)
             }
         }
+    }
+
+    /// Lightning Lane Multi Pass booked at the return window ThrillTrack saw (ride card /
+    /// notification action). Also stops that ride's watch — the user has their booking.
+    static func logLightningLaneNow(rideId: String, rideName: String, parkName: String,
+                                    returnStart: Date, returnEnd: Date?, context: ModelContext) {
+        log(passLabel: "Lightning Lane", isOpenEnded: false, rideId: rideId, rideName: rideName,
+            parkName: parkName, resort: ParkGroup.disney.rawValue, returnStart: returnStart,
+            returnEnd: returnEnd ?? returnStart.addingTimeInterval(3600), context: context)
+        LightningLaneWatchService.shared.remove(rideId: rideId)
     }
 
     /// DAS/AAP booked right now at the posted wait (ride sheet button / notification action).

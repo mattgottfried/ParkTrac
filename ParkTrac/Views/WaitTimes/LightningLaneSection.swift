@@ -1,8 +1,13 @@
 import SwiftUI
+import SwiftData
 
 /// Ride detail: next Lightning Lane returns + a notify-only watch for a return window.
 struct LightningLaneSection: View {
     let ride: DisplayRide
+    var parkName: String = ""
+
+    @Environment(\.modelContext) private var context
+    @Query(filter: #Predicate<PlanItem> { $0.kind == "ll" && !$0.isDone }) private var openLLReturns: [PlanItem]
 
     private var service: LightningLaneWatchService { .shared }
     private var existing: LightningLaneWatch? { service.watch(for: ride.id) }
@@ -24,24 +29,75 @@ struct LightningLaneSection: View {
                 row(title: single.price.map { "Single Pass · \($0)" } ?? "Single Pass", info: single)
             }
 
-            if ride.multiPass != nil {
+            // Already booked → no need to keep watching
+            if ride.multiPass != nil && loggedReturn == nil {
                 watchControls
             }
 
-            Button {
-                BookingApp.disney.open()
-            } label: {
-                Label("Book in the Disney App", systemImage: "arrow.up.forward.app")
+            if let logged = loggedReturn, let start = logged.llReturnStart {
+                Label("Return logged: \(windowText(start: start, end: logged.llReturnEnd))",
+                      systemImage: "checkmark.circle.fill")
                     .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
+                    .foregroundStyle(.green)
+                Text("You'll get a reminder 10 minutes before it closes. Mark it done in My Day after you ride.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                HStack(spacing: 10) {
+                    Button {
+                        BookingApp.disney.open()
+                    } label: {
+                        Label("Book in Disney App", systemImage: "arrow.up.forward.app")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
 
-            Text("ThrillTrack only alerts you — booking happens in Disney's app.")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                    Button {
+                        logBooked()
+                    } label: {
+                        Label("I Booked It", systemImage: "checkmark.circle.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    .disabled(!(ride.multiPass?.isAvailable ?? false))
+                }
+
+                Text(bookedHint)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
         .onAppear { loadExisting() }
+    }
+
+    // MARK: Booked
+
+    /// Today's logged Lightning Lane for this ride that hasn't been used yet
+    private var loggedReturn: PlanItem? {
+        openLLReturns.first { $0.rideId == ride.id && Calendar.current.isDateInToday($0.date) }
+    }
+
+    private var bookedHint: String {
+        if let start = ride.multiPass?.returnStart, ride.multiPass?.isAvailable == true {
+            return "\"I Booked It\" logs the \(start.formatted(date: .omitted, time: .shortened)) return shown above. Booked a different time? Use Log Return Time below."
+        }
+        return "Booking happens in Disney's app. Use Log Return Time below to record what you booked."
+    }
+
+    private func windowText(start: Date, end: Date?) -> String {
+        let s = start.formatted(date: .omitted, time: .shortened)
+        guard let end, end != .distantFuture else { return s }
+        return "\(s)–\(end.formatted(date: .omitted, time: .shortened))"
+    }
+
+    private func logBooked() {
+        guard let multi = ride.multiPass, multi.isAvailable, let start = multi.returnStart else { return }
+        ReturnTimeLogger.logLightningLaneNow(
+            rideId: ride.id, rideName: ride.name, parkName: parkName,
+            returnStart: start, returnEnd: multi.returnEnd, context: context)
     }
 
     // MARK: Rows
@@ -121,7 +177,7 @@ struct LightningLaneSection: View {
         let start = Self.today(at: windowStart)
         let end = max(start, Self.today(at: windowEnd))
         var watch = existing ?? LightningLaneWatch(
-            rideId: ride.id, rideName: ride.name, parkId: ride.parkId,
+            rideId: ride.id, rideName: ride.name, parkId: ride.parkId, parkName: parkName,
             day: Calendar.current.startOfDay(for: .now),
             windowStart: start, windowEnd: end)
         watch.windowStart = start
