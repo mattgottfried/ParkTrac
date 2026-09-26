@@ -40,9 +40,7 @@ final class NotificationService {
         if let pass = AccessPass.held(at: resort) {
             content.categoryIdentifier = pass == .aap
                 ? NotificationKeys.aapWaitCategory : NotificationKeys.dasWaitCategory
-            let back = AccessPass.estimatedReturn(postedWait: currentWait)
-                .formatted(date: .omitted, time: .shortened)
-            content.body += " Book your \(pass.label) now to return around \(back)."
+            content.body += " Book your \(pass.label) now to return \(pass.returnPhrase(postedWait: currentWait))."
         }
         let request = UNNotificationRequest(
             identifier: "alert-\(alert.rideId)-\(Date().timeIntervalSince1970)",
@@ -100,8 +98,11 @@ final class NotificationService {
         let content = UNMutableNotificationContent()
         content.title = "\(passLabel) logged: \(rideName)"
         let time = returnStart.formatted(date: .omitted, time: .shortened)
+        let openNow = returnStart <= .now.addingTimeInterval(60)
         content.body = isOpenEnded
-            ? "Return around \(time). It's in My Day, and we'll remind you when it opens. Adjust the time in the app if Universal/Disney gave a different one."
+            ? (openNow
+               ? "Your return is open now — ride any time before park close. It's in My Day."
+               : "Return around \(time). It's in My Day, and we'll remind you when it opens. Adjust the time in the app if Universal/Disney gave a different one.")
             : "Return at \(time). It's in My Day, and we'll remind you 10 minutes before the window closes. Adjust it in the app if you booked a different time."
         content.userInfo = [DeepLink.userInfoKey: DeepLink.plan.url.absoluteString]
         UNUserNotificationCenter.current().add(

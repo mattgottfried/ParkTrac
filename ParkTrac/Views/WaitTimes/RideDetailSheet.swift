@@ -49,8 +49,7 @@ struct RideDetailSheet: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                let back = AccessPass.estimatedReturn(postedWait: ride.waitMinutes)
-                Text("Book now to return around **\(back.formatted(date: .omitted, time: .shortened))** (posted wait \(ride.waitMinutes ?? 0) min).")
+                Text("Book now to return **\(pass.returnPhrase(postedWait: ride.waitMinutes))** (posted wait \(ride.waitMinutes ?? 0) min).")
                     .font(.subheadline)
                 HStack(spacing: 10) {
                     Button {

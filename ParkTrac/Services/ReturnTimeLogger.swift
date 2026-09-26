@@ -44,7 +44,8 @@ enum BookingApp: String {
 // MARK: - Access passes (Disney DAS / Universal AAP)
 
 /// The disability access pass a guest holds at a resort. Both programs set the return
-/// time from the ride's current standby wait, and both are booked only in the resort's
+/// time from the ride's current standby wait (rules in `returnDelayMinutes`), and both are
+/// booked only in the resort's
 /// own app — ThrillTrack opens that app and logs the result, it never books itself.
 enum AccessPass {
     case das   // Disney Disability Access Service
@@ -63,9 +64,30 @@ enum AccessPass {
         }
     }
 
-    /// Return time if booked now: current time + posted standby wait.
-    static func estimatedReturn(postedWait: Int?, from now: Date = .now) -> Date {
-        now.addingTimeInterval(TimeInterval(max(0, postedWait ?? 0) * 60))
+    /// Minutes from booking until you may return, from the posted standby wait.
+    func returnDelayMinutes(postedWait: Int?) -> Int {
+        let wait = max(0, postedWait ?? 0)
+        switch self {
+        case .aap:
+            // Universal AAP: under 30 min posted → return immediately;
+            // 30+ → posted wait minus 15 min
+            return wait < 30 ? 0 : wait - 15
+        case .das:
+            // Disney DAS: posted standby wait (adjust here if the rule differs)
+            return wait
+        }
+    }
+
+    /// Return time if booked now.
+    func estimatedReturn(postedWait: Int?, from now: Date = .now) -> Date {
+        now.addingTimeInterval(TimeInterval(returnDelayMinutes(postedWait: postedWait) * 60))
+    }
+
+    /// "right away" or "around 2:35 PM" — for alert and ride-card copy.
+    func returnPhrase(postedWait: Int?) -> String {
+        returnDelayMinutes(postedWait: postedWait) == 0
+            ? "right away"
+            : "around \(estimatedReturn(postedWait: postedWait).formatted(date: .omitted, time: .shortened))"
     }
 }
 
@@ -134,7 +156,7 @@ enum ReturnTimeLogger {
     /// DAS/AAP booked right now at the posted wait (ride sheet button / notification action).
     static func logAccessPassNow(_ pass: AccessPass, rideId: String, rideName: String, parkName: String,
                                  resort: ParkGroup, postedWait: Int?, context: ModelContext) -> Date {
-        let returnStart = AccessPass.estimatedReturn(postedWait: postedWait)
+        let returnStart = pass.estimatedReturn(postedWait: postedWait)
         log(passLabel: pass.label, isOpenEnded: true, rideId: rideId, rideName: rideName,
             parkName: parkName, resort: resort.rawValue, returnStart: returnStart,
             returnEnd: .distantFuture, context: context)
