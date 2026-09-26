@@ -92,6 +92,8 @@ struct GuestPickerSheet: View {
                     .foregroundStyle(selected ? Color.accentColor : Color.secondary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(guest.name)
+            .accessibilityAddTraits(selected ? .isSelected : [])
             Text(guest.name).font(.subheadline)
             if !guest.hasDisneyPass && !guest.hasUniversalPass {
                 Text("~$109").font(.caption).foregroundStyle(.orange)

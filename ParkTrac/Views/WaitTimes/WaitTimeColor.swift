@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Shared wait-time badge color used by both RideCardView and WaitTimeAnnotation.
-/// Centralising the thresholds ensures both surfaces stay in sync.
+/// Shared wait-time badge color used by RideCardView.
+/// Keep thresholds in sync with `RideAnnotationView.configure` (map pins, UIKit colors).
 func waitTimeColor(minutes: Int?, isOperating: Bool, status: String?) -> Color {
     if status == "DOWN" { return Color(red: 1, green: 0.55, blue: 0) }
     guard isOperating else { return .gray }

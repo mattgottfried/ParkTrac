@@ -49,5 +49,16 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ThrillTrack Deep Links</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>thrilltrack</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

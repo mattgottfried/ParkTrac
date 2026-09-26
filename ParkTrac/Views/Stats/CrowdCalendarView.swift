@@ -83,6 +83,7 @@ struct CrowdCalendarView: View {
                     } label: {
                         Image(systemName: "chevron.left")
                     }
+                    .accessibilityLabel("Previous month")
                     Spacer()
                     Text(monthTitle)
                         .font(.headline)
@@ -92,6 +93,7 @@ struct CrowdCalendarView: View {
                     } label: {
                         Image(systemName: "chevron.right")
                     }
+                    .accessibilityLabel("Next month")
                 }
                 .padding(.horizontal)
 
@@ -232,6 +234,13 @@ struct DayCell: View {
     private var level: CrowdLevel { CrowdCalendarService.crowdLevel(for: date, resort: resort) }
     private var isToday: Bool { Calendar.current.isDateInToday(date) }
     private var isPast: Bool { date < Calendar.current.startOfDay(for: .now) }
+    private var isBlockedOut: Bool {
+        resort == .disney && BlockOutService.isBlockedOut(date, disney: disneyTier) ||
+        resort == .universal && BlockOutService.isBlockedOut(date, universal: universalTier)
+    }
+    @ScaledMetric(relativeTo: .caption2) private var dayFontSize: CGFloat = 11
+    @ScaledMetric(relativeTo: .caption2) private var badgeFontSize: CGFloat = 10
+    @ScaledMetric(relativeTo: .caption2) private var cellHeight: CGFloat = 30
 
     var body: some View {
         ZStack {
@@ -249,19 +258,22 @@ struct DayCell: View {
             }
 
             Text("\(Calendar.current.component(.day, from: date))")
-                .font(.system(size: 11, weight: isToday ? .bold : .regular))
+                .font(.system(size: dayFontSize, weight: isToday ? .bold : .regular))
                 .foregroundStyle(isPast ? Color.secondary : Color.white)
         }
         .overlay(alignment: .topTrailing) {
-            if resort == .disney && BlockOutService.isBlockedOut(date, disney: disneyTier) ||
-               resort == .universal && BlockOutService.isBlockedOut(date, universal: universalTier) {
+            if isBlockedOut {
                 Image(systemName: "nosign")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: badgeFontSize, weight: .semibold))
                     .foregroundStyle(.white)
                     .background(Color.red.opacity(0.8), in: Circle())
             }
         }
-        .frame(height: 30)
+        .frame(height: cellHeight)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(date.formatted(.dateTime.weekday(.wide).month(.wide).day()))
+        .accessibilityValue(isBlockedOut ? "\(level.rawValue) crowds, blocked out" : "\(level.rawValue) crowds")
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 

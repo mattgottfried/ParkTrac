@@ -191,7 +191,7 @@ Commit, push, and tell the user to rebuild on the Mac.
    Store the choices in `AppState` / `@AppStorage`, and keep `sortRidesAlphabetically` as the default.
 4. **Stale data indicator.** When `lastRefreshed` is more than 5 minutes old (offline), show an orange "Showing data from 12 min ago" pill in `panelHeader` instead of the gray caption. Today, a partial failure is silent (`WaitTimesViewModel.swift:258`).
 
-## Phase 3: Navigation and deep links
+## Phase 3: Navigation and deep links: DONE (tab re-tap scrolls/recenters Wait Times only)
 1. **Programmatic tab selection.** Add `AppState.selectedTab` (an enum) and bind it with `TabView(selection:)` in `ContentView.swift`.
 2. **Deep links.** Add a `thrilltrack://` URL scheme in Info.plist and handle it with `.onOpenURL`, covering `ride/<id>`, `plan`, and `dining/<id>`. Wire the targets up:
    - Live Activity `widgetURL` in `TrillTrackWidget/TrillTrackWidgetLiveActivity.swift`

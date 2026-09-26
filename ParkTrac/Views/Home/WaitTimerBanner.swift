@@ -23,7 +23,8 @@ struct WaitTimerBanner: View {
         HStack(spacing: 10) {
             Image(systemName: "timer")
                 .foregroundStyle(.orange)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.body.weight(.semibold))
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(appState.timerRideName)
@@ -39,6 +40,12 @@ struct WaitTimerBanner: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Timing \(appState.timerRideName)")
+            .accessibilityValue("Posted \(appState.timerPostedMinutes) minutes, waited \(Int(elapsed) / 60) minutes \(Int(elapsed) % 60) seconds")
+            .accessibilityHint("Opens ride details")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { DeepLinkRouter.shared.open(.activeTimer) }
 
             Spacer()
 
@@ -55,10 +62,13 @@ struct WaitTimerBanner: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Cancel timer")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color(.secondarySystemBackground))
+        .contentShape(Rectangle())
+        .onTapGesture { DeepLinkRouter.shared.open(.activeTimer) }
         .onReceive(ticker) { now = $0 }
     }
 

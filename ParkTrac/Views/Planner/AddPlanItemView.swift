@@ -275,7 +275,7 @@ struct AddPlanItemView: View {
             Button(action: onTap) {
                 VStack(spacing: 6) {
                     Image(systemName: config.icon)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.title3.weight(.semibold))
                     Text(config.label).font(.caption2.weight(.semibold))
                 }
                 .frame(maxWidth: .infinity)

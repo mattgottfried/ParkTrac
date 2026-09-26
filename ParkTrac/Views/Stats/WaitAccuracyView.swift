@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct WaitAccuracyView: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var heroIconSize: CGFloat = 40
     @Environment(AppState.self) private var appState
     @Query(sort: \WaitTimerLog.startedAt, order: .reverse) private var allLogs: [WaitTimerLog]
 
@@ -46,7 +47,7 @@ struct WaitAccuracyView: View {
                 Section {
                     VStack(spacing: 10) {
                         Image(systemName: "timer")
-                            .font(.system(size: 40))
+                            .font(.system(size: heroIconSize))
                             .foregroundStyle(.secondary)
                         Text("No wait times recorded yet.")
                             .font(.subheadline)

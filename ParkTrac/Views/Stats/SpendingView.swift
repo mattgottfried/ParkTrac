@@ -85,6 +85,7 @@ struct SpendingView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { showAddSheet = true } label: { Image(systemName: "plus") }
+                        .accessibilityLabel("Add purchase")
                 }
             }
             .sheet(isPresented: $showAddSheet) { AddPurchaseView(resort: resort) }

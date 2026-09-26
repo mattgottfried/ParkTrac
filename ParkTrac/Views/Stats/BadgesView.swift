@@ -67,6 +67,7 @@ struct BadgesView: View {
 // MARK: - Badge Card
 
 private struct BadgeCardView: View {
+    @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 26
     let badge: BadgeDefinition
     let isEarned: Bool
 
@@ -77,7 +78,7 @@ private struct BadgeCardView: View {
                     .fill(isEarned ? badge.color.opacity(0.15) : Color(.systemFill))
                     .frame(width: 60, height: 60)
                 Image(systemName: badge.systemImage)
-                    .font(.system(size: 26))
+                    .font(.system(size: iconSize))
                     .foregroundStyle(isEarned ? badge.color : .secondary.opacity(0.4))
 
                 if isEarned {
@@ -86,7 +87,7 @@ private struct BadgeCardView: View {
                         .frame(width: 60, height: 60)
                     // checkmark badge
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 16))
+                        .font(.body)
                         .foregroundStyle(.white)
                         .background(badge.color, in: Circle())
                         .offset(x: 20, y: -20)
@@ -120,6 +121,7 @@ private struct BadgeCardView: View {
 // MARK: - Badge Detail Sheet
 
 private struct BadgeDetailView: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 44
     let badge: BadgeDefinition
     let isEarned: Bool
     @Environment(\.dismiss) private var dismiss
@@ -136,7 +138,7 @@ private struct BadgeDetailView: View {
                     .fill(isEarned ? badge.color.opacity(0.15) : Color(.systemFill))
                     .frame(width: 100, height: 100)
                 Image(systemName: badge.systemImage)
-                    .font(.system(size: 44))
+                    .font(.system(size: iconSize))
                     .foregroundStyle(isEarned ? badge.color : .secondary.opacity(0.4))
             }
             .saturation(isEarned ? 1.0 : 0.2)

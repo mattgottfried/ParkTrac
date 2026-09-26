@@ -28,7 +28,8 @@ struct ReturnTimeBanner: View {
                 HStack(spacing: 10) {
                     Image(systemName: "bolt.fill")
                         .foregroundStyle(.yellow)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
+                        .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text(pass.title)
@@ -38,6 +39,10 @@ struct ReturnTimeBanner: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityHint("Opens My Day")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction { DeepLinkRouter.shared.open(.plan) }
 
                     Spacer()
 
@@ -56,6 +61,8 @@ struct ReturnTimeBanner: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(minsLeft <= 5 ? Color.red.opacity(0.12) : Color.orange.opacity(0.1))
+                .contentShape(Rectangle())
+                .onTapGesture { DeepLinkRouter.shared.open(.plan) }
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }

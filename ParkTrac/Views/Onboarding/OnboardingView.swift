@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct OnboardingView: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var heroIconSize: CGFloat = 52
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
 
@@ -17,7 +18,7 @@ struct OnboardingView: View {
                     // Header
                     VStack(spacing: 12) {
                         Image(systemName: "person.3.fill")
-                            .font(.system(size: 52))
+                            .font(.system(size: heroIconSize))
                             .foregroundStyle(appState.selectedResort.theme.primaryColor)
 
                         Text("Who's in your party?")
@@ -52,6 +53,7 @@ struct OnboardingView: View {
                                             .foregroundStyle(.secondary)
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityLabel("Remove")
                                 }
                             }
                             .padding(.horizontal, 16)
@@ -133,6 +135,7 @@ struct EditPartyView: View {
                                         .foregroundStyle(.red)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("Remove")
                             }
                         }
                     }

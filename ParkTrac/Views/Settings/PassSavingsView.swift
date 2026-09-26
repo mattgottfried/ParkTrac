@@ -223,6 +223,7 @@ struct PassSavingsView: View {
                         Image(systemName: "plus.circle.fill").foregroundStyle(.green)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Log a visit")
                 }
             } footer: {
                 Text("Log the gate ticket price and parking you would have paid for each visit. Discounts on food and merchandise are calculated automatically from your Spending log.")

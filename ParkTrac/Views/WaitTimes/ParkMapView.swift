@@ -24,10 +24,15 @@ final class RideAnnotationView: MKAnnotationView {
     private let pointer = UIView()
 
     var onTap: (() -> Void)?
+    /// Last configuration, so a Dynamic Type change can re-lay out the pin.
+    private var current: (ride: DisplayRide, theme: ParkTheme)?
 
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         setup()
+        registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (view: RideAnnotationView, _: UITraitCollection) in
+            if let current = view.current { view.configure(ride: current.ride, theme: current.theme) }
+        }
     }
     required init?(coder: NSCoder) { fatalError() }
 
@@ -53,9 +58,15 @@ final class RideAnnotationView: MKAnnotationView {
         addSubview(pointer)
 
         addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapped)))
+
+        // VoiceOver: the pin is one button; label/value are set in configure()
+        isAccessibilityElement = true
+        accessibilityTraits = .button
+        accessibilityHint = "Shows wait predictions and details"
     }
 
     func configure(ride: DisplayRide, theme: ParkTheme) {
+        current = (ride, theme)
         let bg: UIColor
         let text: UIColor
         let labelText: String
@@ -88,13 +99,20 @@ final class RideAnnotationView: MKAnnotationView {
         label.textColor = text
         label.text = labelText
 
-        // Size
-        let bubbleW: CGFloat = labelText.count <= 2 ? 40 : 48
-        let bubbleH: CGFloat = 28
+        // Size — the number follows Dynamic Type (capped so pins don't swallow the map)
+        let font = UIFontMetrics(forTextStyle: .caption1)
+            .scaledFont(for: .systemFont(ofSize: 13, weight: .bold), maximumPointSize: 22)
+        label.font = font
+        let textWidth = ceil((labelText as NSString).size(withAttributes: [.font: font]).width)
+        let bubbleW = max(40, textWidth + 16)
+        let bubbleH = max(28, ceil(font.lineHeight) + 10)
         bubble.frame = CGRect(x: 0, y: 0, width: bubbleW, height: bubbleH)
         label.frame   = bubble.bounds.insetBy(dx: 4, dy: 2)
+        centerOffset = CGPoint(x: 0, y: -(bubbleH + 5) / 2 - 5)
 
-        // Pointer triangle (drawn as a rotated square)
+        // Pointer triangle (drawn as a rotated square). Reset the transform before
+        // setting the frame — frame is undefined while a rotation is applied.
+        pointer.transform = .identity
         pointer.frame = CGRect(x: bubbleW/2 - 5, y: bubbleH - 3, width: 10, height: 10)
         pointer.transform = CGAffineTransform(rotationAngle: .pi / 4)
         pointer.backgroundColor = bg
@@ -102,9 +120,17 @@ final class RideAnnotationView: MKAnnotationView {
 
         frame = CGRect(x: 0, y: 0, width: bubbleW, height: bubbleH + 5)
         alpha = ride.isOperating ? 1.0 : 0.6
+
+        accessibilityLabel = ride.name
+        accessibilityValue = ride.spokenStatus
     }
 
     @objc private func tapped() { onTap?() }
+
+    override func accessibilityActivate() -> Bool {
+        onTap?()
+        return true
+    }
 }
 
 // MARK: - Styled Map (UIViewRepresentable)
@@ -273,10 +299,11 @@ struct ParkMapView: View {
                         mapStyleIsHybrid.toggle()
                     } label: {
                         Image(systemName: mapStyleIsHybrid ? "map" : "globe.americas.fill")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.body.weight(.medium))
                             .padding(8)
                             .background(.regularMaterial, in: Circle())
                     }
+                    .accessibilityLabel(mapStyleIsHybrid ? "Show standard map" : "Show satellite map")
                     Spacer()
                 }
                 .padding(.horizontal)
@@ -334,6 +361,8 @@ struct ParkMapView: View {
                         }
                         .padding(.horizontal)
                     }
+                    // Chips still grow, but not so far that they cover the map
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 }
             }
             .padding(.top, 8)
@@ -393,7 +422,20 @@ struct ParkMapView: View {
         .onChange(of: viewModel.currentParks) { _, _ in autoZoomIfInsidePark() }
         .onChange(of: region.center.latitude) { _, _ in autoSelectParkFromRegion() }
         .onChange(of: region.center.longitude) { _, _ in autoSelectParkFromRegion() }
+        .onChange(of: DeepLinkRouter.shared.pendingRideId, initial: true) { _, _ in openPendingRide() }
+        .onChange(of: DeepLinkRouter.shared.waitTimesReselectCount) { _, _ in
+            // Tab tapped again: back to the whole resort (or the selected park)
+            if let coord = viewModel.filterPark?.coordinate {
+                withAnimation {
+                    region = MKCoordinateRegion(center: coord,
+                        span: MKCoordinateSpan(latitudeDelta: 0.015, longitudeDelta: 0.015))
+                }
+            } else {
+                withAnimation { region = viewModel.selectedGroup.defaultRegion }
+            }
+        }
         .onChange(of: viewModel.lastRefreshed) { _, _ in
+            openPendingRide()
             NotificationService.shared.checkAlerts(rides: viewModel.allRides, context: modelContext)
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
             syncRopeDropActivity()
@@ -414,6 +456,21 @@ struct ParkMapView: View {
         .sheet(item: $selectedRide) { ride in
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
             RideDetailSheet(ride: ride, theme: theme, parkGroup: viewModel.selectedGroup, parkName: parkName)
+        }
+    }
+
+    // MARK: - Deep Link
+
+    /// Opens the ride sheet requested by a deep link / notification once the ride is loaded.
+    private func openPendingRide() {
+        let router = DeepLinkRouter.shared
+        guard let id = router.pendingRideId else { return }
+        if let ride = viewModel.allRides.first(where: { $0.id == id }) {
+            router.pendingRideId = nil
+            selectedRide = ride
+        } else if viewModel.lastRefreshed != nil && !viewModel.isLoading {
+            // Loaded and still not found (e.g. other resort) — drop it rather than pop up later
+            router.pendingRideId = nil
         }
     }
 
@@ -524,7 +581,8 @@ struct ParkMapView: View {
     private var searchBar: some View {
         HStack(spacing: 10) {
             HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass").foregroundStyle(.secondary).font(.system(size: 14))
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary).font(.subheadline)
+                    .accessibilityHidden(true)
                 TextField("Search rides", text: Bindable(viewModel).searchText)
                     .font(.subheadline).autocorrectionDisabled()
                 if !viewModel.searchText.isEmpty {
@@ -582,7 +640,7 @@ struct ParkMapView: View {
             Image(systemName: listFiltersActive
                   ? "line.3.horizontal.decrease.circle.fill"
                   : "line.3.horizontal.decrease.circle")
-                .font(.system(size: 20))
+                .font(.title3)
         }
         .accessibilityLabel("Sort and filter rides")
     }
@@ -663,7 +721,7 @@ struct ParkMapView: View {
                 ProgressView("Loading…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let errorMsg = viewModel.errorMessage {
                 VStack(spacing: 16) {
-                    Image(systemName: "wifi.exclamationmark").font(.system(size: 40)).foregroundStyle(.secondary)
+                    Image(systemName: "wifi.exclamationmark").font(.largeTitle).foregroundStyle(.secondary)
                     Text(errorMsg).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     Button("Try Again") { Task { await viewModel.retry() } }.buttonStyle(.borderedProminent)
                 }
@@ -686,20 +744,35 @@ struct ParkMapView: View {
                         : (viewModel.searchText.isEmpty ? "Loading wait times…" : "No rides match \"\(viewModel.searchText)\"."))
                 )
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(displayedRides) { ride in
-                            RideCardView(ride: ride, theme: theme)
-                                .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .onTapGesture { selectedRide = ride }
-                                .contextMenu { rideContextMenu(for: ride) }
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(displayedRides) { ride in
+                                RideCardView(ride: ride, theme: theme)
+                                    .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .onTapGesture { selectedRide = ride }
+                                    .contextMenu { rideContextMenu(for: ride) }
+                                    // Same shortcuts as the long-press menu, for VoiceOver's Actions rotor
+                                    .accessibilityAction { selectedRide = ride }
+                                    .accessibilityAction(named: appState.wishList.contains(ride.id)
+                                                         ? "Remove from Must-Do" : "Add to Must-Do") {
+                                        appState.toggleWish(ride.id)
+                                    }
+                                    .accessibilityAction(named: "Add to My Day") { rideAction = .addToPlan(ride) }
+                                    .accessibilityAction(named: "Set Wait Alert") { rideAction = .alert(ride) }
+                            }
+                        }
+                        .padding(.horizontal).padding(.vertical, 8)
+                    }
+                    .refreshable {
+                        await viewModel.refresh()
+                        userRefreshCount += 1
+                    }
+                    .onChange(of: DeepLinkRouter.shared.waitTimesReselectCount) { _, _ in
+                        if let first = displayedRides.first {
+                            withAnimation { proxy.scrollTo(first.id, anchor: .top) }
                         }
                     }
-                    .padding(.horizontal).padding(.vertical, 8)
-                }
-                .refreshable {
-                    await viewModel.refresh()
-                    userRefreshCount += 1
                 }
             }
         }
