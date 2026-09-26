@@ -78,7 +78,7 @@ enum ParkGroup: String, CaseIterable, Identifiable {
         case .disney:         return ["walt disney world"]
         case .universal:      return ["universal orlando"]
         case .tokyoDisney:    return ["tokyo disney"]
-        case .universalJapan: return ["universal studios japan"]
+        case .universalJapan: return ["universal studios japan", "universal japan", "usj"]
         }
     }
 
