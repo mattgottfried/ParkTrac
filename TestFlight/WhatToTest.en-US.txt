@@ -1,4 +1,6 @@
-NEW: Time Sensitive alerts
+NEW since the last build (car locator roll-up):
+
+Time Sensitive alerts
 
 Ride alerts now get through Focus modes (Sleep, Work, Driving, Do Not Disturb) and stay on the Lock Screen for an hour:
 • Wait-time drop alerts (including DAS/AAP), Lightning Lane / Priority Pass openings, "back up" alerts
