@@ -11,10 +11,6 @@ Tokyo Disney Resort (Tokyo Disneyland, Tokyo DisneySea) and Universal Studios Ja
 5. Hide Orlando-only features at Japan resorts (ticket prices, AP blockouts, US-holiday crowd calendar, Orlando shop/restaurant lists); yen where prices show.
 6. Nice to have: heights in cm, Japanese ride names.
 
-## Open questions
-- Disney DAS return rule — currently "posted wait" (`AccessPass.returnDelayMinutes`); confirm whether Disney subtracts anything.
-- Unmerged branch `claude/app-optimization-usability-vkx9bi` (Jul 19): household sharing + per-guest ratings (CloudKit), wait-time Home Screen widget, weather-aware indoor filter, data-race + LL notification fixes. Predates everything since PR #19 — would need re-applying piece by piece rather than merging.
-
 ## Later
 - Faster background Lightning Lane alerts need a small server (iOS background refresh is ≈hourly).
 - Empty states with a call to action (Ride Counter, Dining).

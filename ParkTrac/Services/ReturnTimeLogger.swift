@@ -73,7 +73,7 @@ enum AccessPass {
             // 30+ → posted wait minus 15 min
             return wait < 30 ? 0 : wait - 15
         case .das:
-            // Disney DAS: posted standby wait (adjust here if the rule differs)
+            // Disney DAS: return time = posted standby wait (confirmed)
             return wait
         }
     }
