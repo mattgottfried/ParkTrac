@@ -120,6 +120,28 @@ enum AccessPass {
     }
 }
 
+// MARK: - Area timed entry (USJ)
+
+/// Super Nintendo World (and, on busy days, other areas) at Universal Studios Japan need an
+/// Area Timed Entry ticket from the USJ app. ThrillTrack logs the window like a return pass:
+/// My Day item, Live Activity, a reminder when it opens and 10 minutes before it closes.
+enum AreaEntry {
+    static let passLabel = "Timed Entry"
+    static let presets = ["Super Nintendo World", "The Wizarding World of Harry Potter"]
+    static let defaultWindowMinutes = 60
+
+    static func isOffered(at resort: ParkGroup) -> Bool { resort == .universalJapan }
+
+    /// Stable id for the plan item / notifications ("area-supernintendoworld").
+    static func planId(for area: String) -> String { "area-" + RideMetadata.normalize(area) }
+
+    /// Entry window; clamps silly lengths to 15 min … 4 h.
+    static func window(start: Date, minutes: Int) -> (start: Date, end: Date) {
+        let m = min(max(minutes, 15), 240)
+        return (start, start.addingTimeInterval(TimeInterval(m * 60)))
+    }
+}
+
 // MARK: - Logger
 
 /// Single place that records a booked return time: My Day item, Live Activity, reminder.
@@ -182,6 +204,23 @@ enum ReturnTimeLogger {
             parkName: parkName, resort: resort.rawValue, returnStart: returnStart,
             returnEnd: returnEnd ?? returnStart.addingTimeInterval(3600), context: context)
         LightningLaneWatchService.shared.remove(rideId: rideId)
+    }
+
+    /// Area Timed Entry window (USJ Super Nintendo World).
+    static func logAreaEntry(area: String, start: Date, windowMinutes: Int,
+                             resort: ParkGroup, context: ModelContext) {
+        let name = area.trimmingCharacters(in: .whitespacesAndNewlines)
+        let window = AreaEntry.window(start: start, minutes: windowMinutes)
+        let id = AreaEntry.planId(for: name)
+        log(passLabel: AreaEntry.passLabel, isOpenEnded: false, rideId: id, rideName: name,
+            parkName: name, resort: resort.rawValue, returnStart: window.start,
+            returnEnd: window.end, context: context)
+        Task {
+            await NotificationService.shared.requestAuthorization()
+            NotificationService.shared.scheduleAreaEntryOpen(
+                passId: "\(id)-\(Int(window.start.timeIntervalSince1970))",
+                areaName: name, start: window.start, end: window.end)
+        }
     }
 
     /// DAS/AAP booked right now at the posted wait (ride sheet button / notification action).

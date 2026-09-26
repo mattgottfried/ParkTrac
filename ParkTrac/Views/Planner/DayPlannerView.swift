@@ -12,6 +12,7 @@ struct DayPlannerView: View {
     @State private var showAddSheet = false
     @State private var showGuestPicker = false
     @State private var showSmartPlanner = false
+    @State private var showAreaEntry = false
 
     /// True when pushed onto another NavigationStack (e.g. from Stats) — skips wrapping in our own.
     private let embedded: Bool
@@ -64,8 +65,19 @@ struct DayPlannerView: View {
                             }
                     }
                 } header: {
-                    Label("Lightning Lane / Express Pass", systemImage: "bolt.fill")
+                    Label(passSectionTitle, systemImage: "bolt.fill")
                         .foregroundStyle(.yellow)
+                }
+            }
+
+            // USJ: Super Nintendo World needs an Area Timed Entry ticket from the USJ app
+            if AreaEntry.isOffered(at: appState.selectedResort) {
+                Section {
+                    Button { showAreaEntry = true } label: {
+                        Label("Log Area Timed Entry", systemImage: "ticket.fill")
+                    }
+                } footer: {
+                    Text("Booked a Super Nintendo World entry time in the USJ app? Log it here for a reminder when it opens.")
                 }
             }
 
@@ -180,6 +192,17 @@ struct DayPlannerView: View {
         }
         .sheet(isPresented: $showSmartPlanner) {
             SmartPlannerView()
+        }
+        .sheet(isPresented: $showAreaEntry) {
+            AreaEntrySheet(resort: appState.selectedResort)
+        }
+    }
+
+    private var passSectionTitle: String {
+        switch appState.selectedResort {
+        case .disney, .universal: return "Lightning Lane / Express Pass"
+        case .tokyoDisney:        return appState.selectedResort.returnPassNames.section
+        case .universalJapan:     return "Express Pass & Timed Entry"
         }
     }
 

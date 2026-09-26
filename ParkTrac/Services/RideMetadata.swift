@@ -54,10 +54,120 @@ enum RideType: String {
 }
 
 struct RideInfo {
-    let heightInches: Int?     // nil = no requirement
+    let heightInches: Int?     // nil = no requirement (Orlando rides are published in inches)
+    let heightCm: Int?         // Japan rides are published in centimetres
+    let maxHeightCm: Int?      // a few Japan coasters also have a maximum
     let thrill: ThrillLevel
     let type: RideType
-    let lightningLane: Bool    // true = Lightning Lane / Express Pass
+    let lightningLane: Bool    // true = Lightning Lane / Express Pass / Priority Pass
+
+    init(heightInches: Int?, thrill: ThrillLevel, type: RideType, lightningLane: Bool) {
+        self.heightInches = heightInches
+        self.heightCm = nil
+        self.maxHeightCm = nil
+        self.thrill = thrill
+        self.type = type
+        self.lightningLane = lightningLane
+    }
+
+    init(heightCm: Int?, maxCm: Int? = nil, thrill: ThrillLevel, type: RideType) {
+        self.heightInches = nil
+        self.heightCm = heightCm
+        self.maxHeightCm = maxCm
+        self.thrill = thrill
+        self.type = type
+        self.lightningLane = false   // Japan's return passes come from live data, not this table
+    }
+
+    /// Minimum height in centimetres, whichever unit it was published in.
+    var minimumCm: Double? {
+        if let heightCm { return Double(heightCm) }
+        return heightInches.map { Double($0) * 2.54 }
+    }
+
+    var hasHeightRequirement: Bool { minimumCm != nil }
+
+    /// Can a guest of this height ride? (Ignores the maximum — the checker is for kids.)
+    func allows(heightCm guest: Double) -> Bool {
+        guard let min = minimumCm else { return true }
+        return guest + 0.01 >= min
+    }
+}
+
+// MARK: - Height formatting
+
+/// Shows each ride's height in the unit the user wants, converting from the unit it was published in.
+/// Published values are shown as-is (102 cm stays 102 cm); conversions are rounded.
+enum HeightFormat {
+    static func inches(_ info: RideInfo) -> Int? {
+        if let h = info.heightInches { return h }
+        return info.heightCm.map { Int((Double($0) / 2.54).rounded()) }
+    }
+
+    static func centimetres(_ info: RideInfo) -> Int? {
+        if let cm = info.heightCm { return cm }
+        return info.heightInches.map { Int((Double($0) * 2.54).rounded()) }
+    }
+
+    /// "102 cm" / "40\"", nil when there's no requirement.
+    static func short(_ info: RideInfo, metric: Bool) -> String? {
+        metric ? centimetres(info).map { "\($0) cm" } : inches(info).map { "\($0)\"" }
+    }
+
+    /// For VoiceOver: "102 centimeters" / "40 inches".
+    static func spoken(_ info: RideInfo, metric: Bool) -> String? {
+        metric ? centimetres(info).map { "\($0) centimeters" } : inches(info).map { "\($0) inches" }
+    }
+
+    /// A guest's own height: "122 cm" / "4' 0\"".
+    static func guest(cm: Double, metric: Bool) -> String {
+        if metric { return "\(Int(cm.rounded())) cm" }
+        let total = Int((cm / 2.54).rounded())
+        return "\(total / 12)' \(total % 12)\""
+    }
+}
+
+// MARK: - Lookup
+
+enum RideMetadata {
+    /// The metadata table for a resort. Orlando shares one table (both resorts' names are unique).
+    static func catalog(for resort: ParkGroup) -> [String: RideInfo] {
+        switch resort {
+        case .disney, .universal: return rideMetadata
+        case .tokyoDisney:        return tokyoDisneyRideMetadata
+        case .universalJapan:     return universalJapanRideMetadata
+        }
+    }
+
+    /// Japan resorts publish heights in cm; Orlando in inches.
+    static func prefersMetric(_ resort: ParkGroup) -> Bool { !resort.isOrlando }
+
+    /// Lowercased letters and digits only, so "Indiana Jones® Adventure: Temple…" and
+    /// "Indiana Jones Adventure - Temple…" compare equal.
+    static func normalize(_ name: String) -> String {
+        String(name.lowercased().unicodeScalars
+            .filter { CharacterSet.alphanumerics.contains($0) && $0.isASCII }
+            .map(Character.init))
+    }
+
+    /// Finds a ride's metadata by its themeparks.wiki name: exact, then punctuation-insensitive,
+    /// then (for longer names) an API name that contains a known name, e.g. "Hollywood Dream – The Ride ~Backdrop~".
+    static func info(for name: String, resort: ParkGroup) -> RideInfo? {
+        let table = catalog(for: resort)
+        if let exact = table[name] { return exact }
+        let key = normalize(name)
+        guard !key.isEmpty else { return nil }
+        var containsMatch: (length: Int, info: RideInfo)?
+        for (candidate, info) in table {
+            let c = normalize(candidate)
+            if c == key { return info }
+            // Longest contained name wins; short names are too ambiguous to match inside others
+            if c.count >= 10, key.contains(c), c.count > (containsMatch?.length ?? 0) {
+                containsMatch = (c.count, info)
+            }
+        }
+        return containsMatch?.info
+    }
 }
 
 // MARK: - Ride Metadata Dictionary
@@ -160,4 +270,53 @@ let rideMetadata: [String: RideInfo] = [
     "Space Race":              RideInfo(heightInches: 40, thrill: .thrilling,  type: .coaster,   lightningLane: false),
     "Constellation Carousel":  RideInfo(heightInches: nil, thrill: .family,   type: .family,    lightningLane: false),
     "Curse of the Werewolf":   RideInfo(heightInches: 48, thrill: .extreme,    type: .coaster,   lightningLane: false),
+]
+
+// MARK: - Tokyo Disney Resort
+// Heights in cm from the resort's published requirements (compiled Sept 2026 — confirm in the park).
+// Keyed by English name; matching is punctuation-insensitive (RideMetadata.info).
+
+let tokyoDisneyRideMetadata: [String: RideInfo] = [
+
+    // Tokyo Disneyland
+    "Big Thunder Mountain":    RideInfo(heightCm: 102, thrill: .moderate,  type: .coaster),
+    "Splash Mountain":         RideInfo(heightCm: 90,  thrill: .moderate,  type: .water),
+    "Space Mountain":          RideInfo(heightCm: 102, thrill: .moderate,  type: .coaster),
+    "Star Tours: The Adventures Continue": RideInfo(heightCm: 102, thrill: .moderate, type: .simulator),
+    "Gadget's Go Coaster":     RideInfo(heightCm: 90,  thrill: .family,    type: .coaster),
+    "Enchanted Tale of Beauty and the Beast": RideInfo(heightCm: nil, thrill: .family, type: .darkRide),
+    "Haunted Mansion":         RideInfo(heightCm: nil, thrill: .family,    type: .darkRide),
+    "Pirates of the Caribbean": RideInfo(heightCm: nil, thrill: .family,   type: .darkRide),
+    "Pooh's Hunny Hunt":       RideInfo(heightCm: nil, thrill: .family,    type: .darkRide),
+    "Monsters, Inc. Ride & Go Seek!": RideInfo(heightCm: nil, thrill: .family, type: .darkRide),
+    "Buzz Lightyear's Astro Blasters": RideInfo(heightCm: nil, thrill: .family, type: .darkRide),
+    "\"it's a small world\"":  RideInfo(heightCm: nil, thrill: .family,    type: .darkRide),
+
+    // Tokyo DisneySea
+    "Soaring: Fantastic Flight": RideInfo(heightCm: 102, thrill: .family,  type: .aerial),
+    "Tower of Terror":         RideInfo(heightCm: 102, thrill: .thrilling, type: .darkRide),
+    "Toy Story Mania!":        RideInfo(heightCm: nil, thrill: .family,    type: .simulator),
+    "Nemo & Friends SeaRider": RideInfo(heightCm: 90,  thrill: .family,    type: .simulator),
+    "Peter Pan's Never Land Adventure": RideInfo(heightCm: 102, thrill: .moderate, type: .darkRide),
+    "Frozen Journey":          RideInfo(heightCm: nil, thrill: .family,    type: .darkRide),
+    "Rapunzel's Lantern Festival": RideInfo(heightCm: nil, thrill: .family, type: .darkRide),
+    "Indiana Jones Adventure: Temple of the Crystal Skull": RideInfo(heightCm: 117, thrill: .thrilling, type: .darkRide),
+    "Journey to the Center of the Earth": RideInfo(heightCm: 117, thrill: .thrilling, type: .darkRide),
+    "Raging Spirits":          RideInfo(heightCm: 117, maxCm: 195, thrill: .extreme, type: .coaster),
+    "20,000 Leagues Under the Sea": RideInfo(heightCm: nil, thrill: .family, type: .darkRide),
+]
+
+// MARK: - Universal Studios Japan
+
+let universalJapanRideMetadata: [String: RideInfo] = [
+    "The Flying Dinosaur":     RideInfo(heightCm: 132, maxCm: 198, thrill: .extreme, type: .coaster),
+    "Hollywood Dream - The Ride": RideInfo(heightCm: 132, thrill: .extreme, type: .coaster),
+    "Harry Potter and the Forbidden Journey": RideInfo(heightCm: 122, thrill: .thrilling, type: .simulator),
+    "Flight of the Hippogriff": RideInfo(heightCm: 92,  thrill: .moderate, type: .coaster),
+    "Mario Kart: Koopa's Challenge": RideInfo(heightCm: 102, thrill: .moderate, type: .darkRide),
+    "Yoshi's Adventure":       RideInfo(heightCm: 86,  thrill: .family,    type: .family),
+    "Mine-Cart Madness":       RideInfo(heightCm: 107, thrill: .moderate,  type: .coaster),
+    "Jurassic Park - The Ride": RideInfo(heightCm: 107, thrill: .moderate, type: .water),
+    "Despicable Me Minion Mayhem": RideInfo(heightCm: 102, thrill: .moderate, type: .simulator),
+    "Jaws":                    RideInfo(heightCm: nil, thrill: .family,    type: .water),
 ]

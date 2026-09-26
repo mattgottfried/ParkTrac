@@ -179,3 +179,63 @@ struct BookReturnTimeSheet: View {
         }
     }
 }
+
+// MARK: - Area Timed Entry (USJ)
+
+/// Logs a Super Nintendo World (or other area) timed entry window booked in the USJ app.
+struct AreaEntrySheet: View {
+    let resort: ParkGroup
+
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var area = AreaEntry.presets[0]
+    @State private var start = Date()
+    @State private var windowMinutes = AreaEntry.defaultWindowMinutes
+
+    private var end: Date { AreaEntry.window(start: start, minutes: windowMinutes).end }
+    private var canSave: Bool { !area.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Area") {
+                    Picker("Area", selection: $area) {
+                        ForEach(AreaEntry.presets, id: \.self) { Text($0).tag($0) }
+                        if !AreaEntry.presets.contains(area) { Text(area).tag(area) }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                    TextField("Other area", text: $area)
+                }
+
+                Section {
+                    DatePicker("Entry from", selection: $start, displayedComponents: .hourAndMinute)
+                    Stepper("Window: \(windowMinutes) min", value: $windowMinutes, in: 15...240, step: 15)
+                    HStack {
+                        Text("Enter by")
+                        Spacer()
+                        Text(end, style: .time).foregroundStyle(.secondary)
+                    }
+                } footer: {
+                    Text("Use the times on your Area Timed Entry ticket in the USJ app. You'll get a notification when the window opens and 10 minutes before it closes.")
+                }
+            }
+            .navigationTitle("Log Timed Entry")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        ReturnTimeLogger.logAreaEntry(area: area, start: start, windowMinutes: windowMinutes,
+                                                      resort: resort, context: context)
+                        dismiss()
+                    }
+                    .disabled(!canSave)
+                }
+            }
+        }
+    }
+}

@@ -131,7 +131,7 @@ struct RideDetailSheet: View {
                 Divider()
 
                 // Ride info (height, thrill, type)
-                if let info = rideMetadata[ride.name] {
+                if let info = RideMetadata.info(for: ride.name, resort: parkGroup) {
                     rideInfoSection(info)
                         .padding(.horizontal)
                     Divider()
@@ -339,9 +339,9 @@ struct RideDetailSheet: View {
 
             HStack(spacing: 10) {
                 infoChip(
-                    label: info.heightInches.map { "\($0)\" min height" } ?? "No height requirement",
+                    label: heightLabel(info),
                     systemImage: "ruler",
-                    color: info.heightInches != nil ? .blue : .secondary
+                    color: info.hasHeightRequirement ? .blue : .secondary
                 )
                 infoChip(
                     label: info.thrill.rawValue,
@@ -356,13 +356,26 @@ struct RideDetailSheet: View {
                     systemImage: info.type.systemImage,
                     color: .indigo
                 )
-                infoChip(
-                    label: info.lightningLane ? "Lightning Lane" : "Standby Only",
-                    systemImage: info.lightningLane ? "bolt.fill" : "person.2.fill",
-                    color: info.lightningLane ? .yellow : .secondary
-                )
+                // Japan's return passes come from live data (shown above), not this table
+                if parkGroup.isOrlando {
+                    infoChip(
+                        label: info.lightningLane ? "Lightning Lane" : "Standby Only",
+                        systemImage: info.lightningLane ? "bolt.fill" : "person.2.fill",
+                        color: info.lightningLane ? .yellow : .secondary
+                    )
+                }
             }
         }
+    }
+
+    /// "102 cm min height" in Japan, "40\" min height" in Orlando, plus any maximum.
+    private func heightLabel(_ info: RideInfo) -> String {
+        let metric = RideMetadata.prefersMetric(parkGroup)
+        guard let min = HeightFormat.short(info, metric: metric) else { return "No height requirement" }
+        if metric, let max = info.maxHeightCm, let low = HeightFormat.centimetres(info) {
+            return "\(low)–\(max) cm"
+        }
+        return "\(min) min height"
     }
 
     private func infoChip(label: String, systemImage: String, color: Color) -> some View {

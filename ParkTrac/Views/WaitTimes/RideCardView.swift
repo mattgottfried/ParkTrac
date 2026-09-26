@@ -8,6 +8,8 @@ struct RideCardView: View {
     /// Return-pass naming for this resort ("LL" / "Lightning Lane", "PP" / "Priority Pass")
     var returnPassShort: String = "LL"
     var returnPassName: String = "Lightning Lane"
+    /// Picks the resort's metadata table and height unit (cm in Japan)
+    var resort: ParkGroup = .disney
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Big wait number keeps its rounded look but grows with Dynamic Type.
@@ -17,7 +19,8 @@ struct RideCardView: View {
         waitTimeColor(minutes: ride.waitMinutes, isOperating: ride.isOperating, status: ride.status)
     }
 
-    private var meta: RideInfo? { rideMetadata[ride.name] }
+    private var meta: RideInfo? { RideMetadata.info(for: ride.name, resort: resort) }
+    private var metric: Bool { RideMetadata.prefersMetric(resort) }
 
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
@@ -61,8 +64,8 @@ struct RideCardView: View {
                             Circle()
                                 .fill(info.thrill.color)
                                 .frame(width: 6, height: 6)
-                            if let h = info.heightInches {
-                                Text("\(h)\"")
+                            if let h = HeightFormat.short(info, metric: metric) {
+                                Text(h)
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
@@ -121,7 +124,7 @@ struct RideCardView: View {
             parts.append("watching for \(returnPassName) openings")
         }
         if let walk = walkMinutes { parts.append("about \(walk) minute walk") }
-        if let h = meta?.heightInches { parts.append("height requirement \(h) inches") }
+        if let meta, let h = HeightFormat.spoken(meta, metric: metric) { parts.append("height requirement \(h)") }
         return parts.joined(separator: ", ")
     }
 

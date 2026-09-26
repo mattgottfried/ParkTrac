@@ -818,7 +818,8 @@ struct ParkMapView: View {
                             ForEach(displayedRides) { ride in
                                 RideCardView(ride: ride, theme: theme, walkMinutes: walkMinutes(to: ride),
                                              returnPassShort: viewModel.selectedGroup.returnPassNames.short,
-                                             returnPassName: viewModel.selectedGroup.returnPassNames.free)
+                                             returnPassName: viewModel.selectedGroup.returnPassNames.free,
+                                             resort: viewModel.selectedGroup)
                                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     .onTapGesture { selectedRide = ride }
                                     .contextMenu { rideContextMenu(for: ride) }
