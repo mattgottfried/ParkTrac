@@ -14,6 +14,9 @@ final class RidePointAnnotation: MKPointAnnotation {
     }
 }
 
+/// Where you parked (ParkingService). Tapping it opens the parking sheet.
+final class ParkingPointAnnotation: MKPointAnnotation {}
+
 // MARK: - Custom UIKit Annotation View
 
 final class RideAnnotationView: MKAnnotationView, UIContextMenuInteractionDelegate {
@@ -153,6 +156,9 @@ struct StyledMapUIView: UIViewRepresentable {
     var isSatellite: Bool
     var onSelectRide: (DisplayRide) -> Void
     var makeMenu: (DisplayRide) -> UIMenu? = { _ in nil }
+    /// Today's car spot at this resort, shown as a car pin
+    var parkingSpot: ParkingSpot? = nil
+    var onSelectParking: () -> Void = {}
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -208,6 +214,23 @@ struct StyledMapUIView: UIViewRepresentable {
         map.addAnnotations(rides.filter { $0.coordinate != nil && !existingIds.contains($0.id) }
             .map { RidePointAnnotation(ride: $0) })
 
+        // Car pin: replace when the spot moves or is cleared
+        let oldCar = map.annotations.compactMap { $0 as? ParkingPointAnnotation }
+        let newCoord = parkingSpot?.coordinate
+        let carUnchanged = oldCar.count == 1 && newCoord.map {
+            oldCar[0].coordinate.latitude == $0.latitude && oldCar[0].coordinate.longitude == $0.longitude
+                && oldCar[0].title == parkingSpot?.title
+        } == true
+        if !carUnchanged {
+            map.removeAnnotations(oldCar)
+            if let newCoord, let spot = parkingSpot {
+                let car = ParkingPointAnnotation()
+                car.coordinate = newCoord
+                car.title = spot.title
+                map.addAnnotation(car)
+            }
+        }
+
         // Refresh visible annotations for wait-time updates
         for ann in map.annotations {
             guard let ra = ann as? RidePointAnnotation,
@@ -226,12 +249,30 @@ struct StyledMapUIView: UIViewRepresentable {
         init(_ parent: StyledMapUIView) { self.parent = parent }
 
         func mapView(_ map: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            if annotation is ParkingPointAnnotation {
+                let id = "ParkingPin"
+                let view = map.dequeueReusableAnnotationView(withIdentifier: id) as? MKMarkerAnnotationView
+                    ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: id)
+                view.annotation = annotation
+                view.glyphImage = UIImage(systemName: "car.fill")
+                view.markerTintColor = .systemBlue
+                view.displayPriority = .required
+                view.titleVisibility = .visible
+                view.accessibilityLabel = "Your car"
+                return view
+            }
             guard let ra = annotation as? RidePointAnnotation else { return nil }
             let view = map.dequeueReusableAnnotationView(withIdentifier: RideAnnotationView.reuseID, for: annotation) as! RideAnnotationView
             view.configure(ride: ra.ride, theme: parent.theme)
             view.onTap = { [weak self] in self?.parent.onSelectRide(ra.ride) }
             view.menuProvider = { [weak self] in self?.parent.makeMenu(ra.ride) }
             return view
+        }
+
+        func mapView(_ map: MKMapView, didSelect annotation: MKAnnotation) {
+            guard annotation is ParkingPointAnnotation else { return }
+            map.deselectAnnotation(annotation, animated: false)
+            parent.onSelectParking()
         }
 
         // Track user pan/zoom so we don't override it
@@ -306,7 +347,9 @@ struct ParkMapView: View {
                 theme: theme,
                 isSatellite: mapStyleIsHybrid,
                 onSelectRide: { selectedRide = $0 },
-                makeMenu: { pinMenu(for: $0) }
+                makeMenu: { pinMenu(for: $0) },
+                parkingSpot: ParkingService.shared.spot(for: appState.selectedResort),
+                onSelectParking: { DeepLinkRouter.shared.open(.parking) }
             )
             .ignoresSafeArea()
 
@@ -323,6 +366,18 @@ struct ParkMapView: View {
                     }
                     .accessibilityLabel(mapStyleIsHybrid ? "Show standard map" : "Show satellite map")
                     Spacer()
+                    // Car locator
+                    let parked = ParkingService.shared.spot(for: appState.selectedResort) != nil
+                    Button {
+                        DeepLinkRouter.shared.open(.parking)
+                    } label: {
+                        Image(systemName: parked ? "car.fill" : "car")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(parked ? Color.blue : Color.primary)
+                            .padding(8)
+                            .background(.regularMaterial, in: Circle())
+                    }
+                    .accessibilityLabel(parked ? "Find my car" : "Save parking spot")
                 }
                 .padding(.horizontal)
 

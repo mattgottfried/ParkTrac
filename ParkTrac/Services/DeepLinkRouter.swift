@@ -8,7 +8,8 @@ import UserNotifications
 /// notification taps, and the in-app banners.
 ///
 /// URL forms: `thrilltrack://waittimes`, `thrilltrack://ride/<rideId>`,
-/// `thrilltrack://timer`, `thrilltrack://plan`, `thrilltrack://dining`, `thrilltrack://settings`
+/// `thrilltrack://timer`, `thrilltrack://plan`, `thrilltrack://dining`, `thrilltrack://settings`,
+/// `thrilltrack://bucketlist`, `thrilltrack://parking`
 enum DeepLink: Equatable {
     case waitTimes
     case ride(id: String)
@@ -18,6 +19,8 @@ enum DeepLink: Equatable {
     case dining
     case settings
     case bucketList
+    /// Save / find the car (sheet over whatever tab is showing)
+    case parking
 
     static let scheme = "thrilltrack"
 
@@ -34,6 +37,7 @@ enum DeepLink: Equatable {
         case "dining":    self = .dining
         case "settings":  self = .settings
         case "bucketlist": self = .bucketList
+        case "parking":   self = .parking
         default:          return nil
         }
     }
@@ -49,6 +53,7 @@ enum DeepLink: Equatable {
         case .dining:          return URL(string: "\(Self.scheme)://dining")!
         case .settings:        return URL(string: "\(Self.scheme)://settings")!
         case .bucketList:      return URL(string: "\(Self.scheme)://bucketlist")!
+        case .parking:         return URL(string: "\(Self.scheme)://parking")!
         }
     }
 
@@ -70,6 +75,8 @@ final class DeepLinkRouter {
     var pendingRideId: String?
     /// StatsView pushes MyDiningView while true.
     var showDining = false
+    /// ContentView presents the parking sheet while true
+    var showParking = false
     /// Bumped when the Wait Times tab is tapped while already selected.
     var waitTimesReselectCount = 0
 

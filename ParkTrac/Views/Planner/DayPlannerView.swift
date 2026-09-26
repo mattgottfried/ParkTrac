@@ -158,6 +158,27 @@ struct DayPlannerView: View {
                 Text("Who's Coming?")
             }
 
+            // Car locator (sheet lives in ContentView)
+            Section {
+                if let spot = ParkingService.shared.spot(for: appState.selectedResort) {
+                    Button { DeepLinkRouter.shared.open(.parking) } label: {
+                        HStack {
+                            Label(spot.title, systemImage: "car.fill")
+                            Spacer()
+                            Text("Saved \(spot.savedAt.formatted(date: .omitted, time: .shortened))")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityHint("Shows your car on a map with walking directions")
+                } else {
+                    Button { DeepLinkRouter.shared.open(.parking) } label: {
+                        Label("Save Parking Spot", systemImage: "car")
+                    }
+                }
+            } header: {
+                Text("Parking")
+            }
+
             if planItems.isEmpty && llPasses.isEmpty {
                 ContentUnavailableView {
                     Label("No Plans Yet", systemImage: "calendar.badge.plus")

@@ -4,22 +4,9 @@ Shipped work is tracked in `docs/usability-plan.md` and the merged PRs. This fil
 
 ## Ideas
 
-### Car locator
-Remember where you parked and walk back to it at the end of the day.
-- **Save spot:** a "Save Parking Spot" button (Wait Times map, My Day, or a Home Screen quick action) saves:
-  - the current GPS location (`LocationService`)
-  - an optional photo of the row sign
-  - a note, e.g. "Zurg 112" / "Level 4, Hollywood row"
-- **Find car:**
-  - a car pin on the Wait Times map (`StyledMapUIView`, which already shows parking POIs)
-  - distance and walking time (`WalkEstimate`)
-  - a "Walk There" button that opens Apple Maps walking directions (`MKMapItem.openInMaps`)
-- **Share with the party:** sync the spot through iCloud KVS (like the reviewer names) so Heather's phone sees it too. Keep one active spot per resort, cleared the next day (or kept with a history).
-- **Nice-to-haves:**
-  - a "Parked at…" line in My Day and the day summary
-  - a reminder near park close
-  - lot and row suggestions for Orlando garages and lots (TTC, Epcot, Universal garages)
-  - Japan works the same way (GPS + note)
+### Car locator — shipped
+Verify at the park: GPS accuracy in garages (top levels are fine, lower levels may need the note and photo), iCloud sync to Heather's phone, and Walk There.
+Follow-ups: a reminder near park close; lot and row suggestions for the Orlando lots and garages; a Home Screen quick action.
 
 ## Japan — shipped, verify on the trip (November)
 Built without live data (the API can't be reached from the cloud environment). On first use, confirm:

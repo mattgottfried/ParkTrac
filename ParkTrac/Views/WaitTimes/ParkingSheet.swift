@@ -1,0 +1,288 @@
+import SwiftUI
+import MapKit
+import PhotosUI
+
+/// Save where you parked, then find your way back. Opened from the map's car button,
+/// My Day, the car pin, or `thrilltrack://parking`.
+struct ParkingSheet: View {
+    let resort: ParkGroup
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var parking = ParkingService.shared
+    @State private var locationService = LocationService()
+
+    @State private var note = ""
+    @State private var isLocating = false
+    @State private var locateError: String?
+    @State private var showCamera = false
+    @State private var photoItem: PhotosPickerItem?
+    @State private var pendingPhoto: UIImage?
+    @State private var showClearConfirm = false
+    @State private var showFullPhoto = false
+    @FocusState private var noteFocused: Bool
+
+    private var spot: ParkingSpot? { parking.spot(for: resort) }
+    private var photo: UIImage? { pendingPhoto ?? parking.photo(for: resort) }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let spot {
+                    savedSections(spot)
+                } else {
+                    saveSections
+                }
+            }
+            .navigationTitle(spot == nil ? "Save Parking Spot" : "My Car")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { commitNote(); dismiss() }
+                }
+            }
+            .onAppear {
+                note = spot?.note ?? ""
+                locationService.requestAndStart()
+            }
+            .onDisappear { locationService.stop() }
+            .onChange(of: photoItem) { _, item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                        applyPhoto(image)
+                    }
+                    photoItem = nil
+                }
+            }
+            .fullScreenCover(isPresented: $showCamera) {
+                CameraPicker { image in applyPhoto(image) }
+                    .ignoresSafeArea()
+            }
+            .sheet(isPresented: $showFullPhoto) {
+                if let photo {
+                    Image(uiImage: photo).resizable().scaledToFit()
+                        .presentationDragIndicator(.visible)
+                }
+            }
+            .confirmationDialog("Clear parking spot?", isPresented: $showClearConfirm, titleVisibility: .visible) {
+                Button("Clear Spot", role: .destructive) {
+                    parking.clear(resort: resort)
+                    note = ""
+                    pendingPhoto = nil
+                }
+            } message: {
+                Text("Removes it from your other devices too.")
+            }
+        }
+    }
+
+    // MARK: Not saved yet
+
+    @ViewBuilder
+    private var saveSections: some View {
+        Section {
+            Button {
+                Task { await saveHere() }
+            } label: {
+                HStack {
+                    Label(isLocating ? "Finding your exact spot…" : "Save Spot Here", systemImage: "car.fill")
+                        .font(.headline)
+                    Spacer()
+                    if isLocating { ProgressView() }
+                }
+            }
+            .disabled(isLocating)
+            if let locateError {
+                Text(locateError).font(.caption).foregroundStyle(.orange)
+            }
+        } footer: {
+            Text("Save it while you're standing by the car — ThrillTrack uses your phone's GPS. It syncs to your other devices signed in to the same iCloud account.")
+        }
+
+        noteAndPhotoSections
+    }
+
+    // MARK: Saved
+
+    @ViewBuilder
+    private func savedSections(_ spot: ParkingSpot) -> some View {
+        Section {
+            if let coordinate = spot.coordinate {
+                Map(initialPosition: .region(MKCoordinateRegion(
+                    center: coordinate, latitudinalMeters: 400, longitudinalMeters: 400))) {
+                    Marker(spot.title, systemImage: "car.fill", coordinate: coordinate)
+                        .tint(.blue)
+                    UserAnnotation()
+                }
+                .frame(height: 200)
+                .listRowInsets(EdgeInsets())
+                .accessibilityLabel("Map showing your car")
+
+                if let me = locationService.userCoordinate {
+                    Label(ParkingDistance.describe(meters: ParkingDistance.meters(from: me, to: coordinate)),
+                          systemImage: "figure.walk")
+                }
+                Button {
+                    commitNote()
+                    ParkingService.openWalkingDirections(to: spot)
+                } label: {
+                    Label("Walk There in Maps", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
+                        .font(.headline)
+                }
+            } else {
+                Label("No GPS location saved — use the note and photo.", systemImage: "location.slash")
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Saved \(spot.savedAt.formatted(date: .omitted, time: .shortened))")
+        }
+
+        noteAndPhotoSections
+
+        Section {
+            Button {
+                Task { await saveHere() }
+            } label: {
+                HStack {
+                    Label(isLocating ? "Finding your exact spot…" : "Move Spot to Here", systemImage: "location.fill")
+                    Spacer()
+                    if isLocating { ProgressView() }
+                }
+            }
+            .disabled(isLocating)
+            if let locateError {
+                Text(locateError).font(.caption).foregroundStyle(.orange)
+            }
+            Button("Clear Spot", role: .destructive) { showClearConfirm = true }
+        }
+    }
+
+    // MARK: Note + photo
+
+    @ViewBuilder
+    private var noteAndPhotoSections: some View {
+        Section("Lot / Row") {
+            TextField("e.g. Zurg 112, Level 4 Hollywood", text: $note)
+                .focused($noteFocused)
+                .submitLabel(.done)
+                .onSubmit(commitNote)
+                .onChange(of: noteFocused) { _, focused in if !focused { commitNote() } }
+        }
+
+        Section {
+            if let photo {
+                Button { showFullPhoto = true } label: {
+                    Image(uiImage: photo)
+                        .resizable().scaledToFill()
+                        .frame(maxWidth: .infinity).frame(height: 180)
+                        .clipped()
+                }
+                .listRowInsets(EdgeInsets())
+                .accessibilityLabel("Parking photo. Tap to enlarge.")
+            }
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button { showCamera = true } label: {
+                    Label(photo == nil ? "Take Photo of Row Sign" : "Retake Photo", systemImage: "camera.fill")
+                }
+            }
+            PhotosPicker(selection: $photoItem, matching: .images) {
+                Label("Choose from Library", systemImage: "photo")
+            }
+            if photo != nil {
+                Button("Remove Photo", role: .destructive) {
+                    pendingPhoto = nil
+                    parking.setPhoto(nil, resort: resort)
+                }
+            }
+        } header: {
+            Text("Photo")
+        } footer: {
+            Text("The photo stays on this phone.")
+        }
+    }
+
+    // MARK: Actions
+
+    @MainActor
+    private func saveHere() async {
+        locateError = nil
+        isLocating = true
+        defer { isLocating = false }
+        do {
+            let locator = PreciseLocator()
+            let location = try await locator.locate()
+            if spot == nil {
+                parking.save(coordinate: location.coordinate, note: note, resort: resort)
+            } else {
+                parking.updateLocation(location.coordinate, resort: resort)
+            }
+            if let pendingPhoto {
+                parking.setPhoto(pendingPhoto, resort: resort)
+                self.pendingPhoto = nil
+            }
+        } catch PreciseLocator.Failure.denied {
+            locateError = "Location is off for ThrillTrack. Turn it on in Settings, or save a note and photo instead."
+            saveWithoutLocationIfNeeded()
+        } catch {
+            locateError = "Couldn't get a GPS fix. Saved your note and photo — try again in the open."
+            saveWithoutLocationIfNeeded()
+        }
+    }
+
+    /// No GPS: still keep the note/photo so the spot isn't lost
+    private func saveWithoutLocationIfNeeded() {
+        guard spot == nil, !note.trimmingCharacters(in: .whitespaces).isEmpty || pendingPhoto != nil else { return }
+        parking.save(coordinate: nil, note: note, resort: resort)
+        if let pendingPhoto {
+            parking.setPhoto(pendingPhoto, resort: resort)
+            self.pendingPhoto = nil
+        }
+    }
+
+    private func commitNote() {
+        guard spot != nil, note != spot?.note else { return }
+        parking.updateNote(note, resort: resort)
+    }
+
+    private func applyPhoto(_ image: UIImage) {
+        if spot == nil {
+            pendingPhoto = image   // saved with the spot
+        } else {
+            parking.setPhoto(image, resort: resort)
+        }
+    }
+}
+
+// MARK: - Camera
+
+/// UIImagePickerController wrapper — PhotosPicker can't open the camera.
+private struct CameraPicker: UIViewControllerRepresentable {
+    var onPick: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ controller: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: CameraPicker
+        init(_ parent: CameraPicker) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage { parent.onPick(image) }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
+        }
+    }
+}

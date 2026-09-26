@@ -15,6 +15,7 @@ final class DeepLinkTests: XCTestCase {
         XCTAssertEqual(link("thrilltrack://dining"), .dining)
         XCTAssertEqual(link("thrilltrack://settings"), .settings)
         XCTAssertEqual(link("thrilltrack://bucketlist"), .bucketList)
+        XCTAssertEqual(link("thrilltrack://parking"), .parking)
     }
 
     func testRejectsUnknownOrForeign() {
@@ -27,7 +28,7 @@ final class DeepLinkTests: XCTestCase {
     }
 
     func testRoundTrip() {
-        let links: [DeepLink] = [.waitTimes, .ride(id: "slinky-dog"), .activeTimer, .plan, .dining, .settings, .bucketList]
+        let links: [DeepLink] = [.waitTimes, .ride(id: "slinky-dog"), .activeTimer, .plan, .dining, .settings, .bucketList, .parking]
         for l in links { XCTAssertEqual(DeepLink(url: l.url), l, "\(l)") }
     }
 
