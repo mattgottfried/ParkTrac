@@ -11,17 +11,44 @@ import UIKit
 /// ("Open Disney App" / "Open Universal App") when enabled in Settings → Booking Apps —
 /// an "Open App" shortcut always works — and otherwise open the website.
 enum BookingApp: String {
-    case disney, universal
+    case disney, universal, tokyoDisney, universalJapan
 
-    var appName: String { self == .disney ? "My Disney Experience" : "Universal Orlando" }
-    var shortcutName: String { self == .disney ? "Open Disney App" : "Open Universal App" }
+    static func `for`(_ resort: ParkGroup) -> BookingApp {
+        switch resort {
+        case .disney:         return .disney
+        case .universal:      return .universal
+        case .tokyoDisney:    return .tokyoDisney
+        case .universalJapan: return .universalJapan
+        }
+    }
+
+    var appName: String {
+        switch self {
+        case .disney:         return "My Disney Experience"
+        case .universal:      return "Universal Orlando"
+        case .tokyoDisney:    return "Tokyo Disney Resort App"
+        case .universalJapan: return "Universal Studios Japan App"
+        }
+    }
+    /// Button label, e.g. "Book in Disney App"
+    var shortLabel: String {
+        switch self {
+        case .disney:         return "Disney App"
+        case .universal:      return "Universal App"
+        case .tokyoDisney:    return "Tokyo Disney App"
+        case .universalJapan: return "USJ App"
+        }
+    }
+    var shortcutName: String { "Open \(shortLabel)" }
     /// UserDefaults key for "use my Shortcut" (Settings → Booking Apps)
     var useShortcutKey: String { "bookingShortcut_\(rawValue)" }
 
     var websiteURL: URL {
         switch self {
-        case .disney:    return URL(string: "https://disneyworld.disney.go.com/")!
-        case .universal: return URL(string: "https://www.universalorlando.com/")!
+        case .disney:         return URL(string: "https://disneyworld.disney.go.com/")!
+        case .universal:      return URL(string: "https://www.universalorlando.com/")!
+        case .tokyoDisney:    return URL(string: "https://www.tokyodisneyresort.jp/en/")!
+        case .universalJapan: return URL(string: "https://www.usj.co.jp/web/en/us")!
         }
     }
 
@@ -61,6 +88,8 @@ enum AccessPass {
         switch resort {
         case .disney:    return ud.bool(forKey: "hasDAS") ? .das : nil
         case .universal: return ud.bool(forKey: "hasAAP") ? .aap : nil
+        // Japan's access programs work differently (not modelled yet)
+        case .tokyoDisney, .universalJapan: return nil
         }
     }
 
@@ -146,9 +175,11 @@ enum ReturnTimeLogger {
     /// Lightning Lane Multi Pass booked at the return window ThrillTrack saw (ride card /
     /// notification action). Also stops that ride's watch — the user has their booking.
     static func logLightningLaneNow(rideId: String, rideName: String, parkName: String,
-                                    returnStart: Date, returnEnd: Date?, context: ModelContext) {
-        log(passLabel: "Lightning Lane", isOpenEnded: false, rideId: rideId, rideName: rideName,
-            parkName: parkName, resort: ParkGroup.disney.rawValue, returnStart: returnStart,
+                                    returnStart: Date, returnEnd: Date?,
+                                    resort: ParkGroup = .disney, passLabel: String = "Lightning Lane",
+                                    context: ModelContext) {
+        log(passLabel: passLabel, isOpenEnded: false, rideId: rideId, rideName: rideName,
+            parkName: parkName, resort: resort.rawValue, returnStart: returnStart,
             returnEnd: returnEnd ?? returnStart.addingTimeInterval(3600), context: context)
         LightningLaneWatchService.shared.remove(rideId: rideId)
     }

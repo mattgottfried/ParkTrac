@@ -29,6 +29,14 @@ xcodebuild test -project ParkTrac.xcodeproj -scheme ParkTrac -destination 'platf
 
 **Target**: iOS 17+, SwiftUI, `@Observable` macro (not `ObservableObject`), SwiftData for persistence.
 
+### Resorts (`ParkDestination.swift`)
+
+`ParkGroup` has four cases: `.disney` (Walt Disney World), `.universal` (Universal Orlando), `.tokyoDisney`, `.universalJapan`. Use `brand` (Disney vs Universal — icons, hotel tiers) or `isOrlando` (ticket prices, annual passes/blockouts, crowd calendar, seeded restaurants/hotels, DAS/AAP) rather than comparing to `.disney` / `.universal`. Each resort has `timeZone` (park-local hours — `ParkTime.formatter`, `WaitTimesViewModel.dayString`), `currencyCode`, and `returnPassNames` (Lightning Lane Multi/Single Pass in Orlando, Priority Pass / Premier Access at Tokyo). Orlando destination UUIDs are hardcoded; Japan's are resolved from `GET /destinations` by `apiSlug` and cached (`ParkAPIService.fetchParks(for:)` — always use it, not `fetchDestinationChildren` directly).
+
+### TestFlight notes
+
+Xcode Cloud reads `TestFlight/WhatToTest.en-US.txt` as the build's "What to Test". **Rewrite it with every push** that changes the app: what's new and what to check, in plain language (max 4,000 characters).
+
 ### Five-Tab Structure (`ContentView.swift`)
 1. **Wait Times** — `ParkMapView` — full-screen MapKit map with live ride wait time pins + a bottom panel listing rides/shows
 2. **My Day** — `DayPlannerView` — today's plan (rides, dining, Lightning Lane windows, guests)

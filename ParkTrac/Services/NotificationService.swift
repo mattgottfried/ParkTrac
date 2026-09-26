@@ -53,12 +53,14 @@ final class NotificationService {
     func fireLightningLaneOpening(watch: LightningLaneWatch, returnStart: Date, returnEnd: Date?, previous: Date?) {
         let time = returnStart.formatted(date: .omitted, time: .shortened)
         let content = UNMutableNotificationContent()
+        let pass = watch.passName ?? "Lightning Lane"
+        let app = BookingApp.for(watch.resort).appName
         if let previous {
-            content.title = "⚡ Earlier Lightning Lane: \(watch.rideName)"
-            content.body = "Return at \(time) is open now (earlier than \(previous.formatted(date: .omitted, time: .shortened))). Book it in the Disney app."
+            content.title = "⚡ Earlier \(pass): \(watch.rideName)"
+            content.body = "Return at \(time) is open now (earlier than \(previous.formatted(date: .omitted, time: .shortened))). Book it in the \(app)."
         } else {
-            content.title = "⚡ Lightning Lane open: \(watch.rideName)"
-            content.body = "Return at \(time) is open now, inside your \(watch.windowText) window. Book it in the Disney app."
+            content.title = "⚡ \(pass) open: \(watch.rideName)"
+            content.body = "Return at \(time) is open now, inside your \(watch.windowText) window. Book it in the \(app)."
         }
         content.sound = .default
         content.threadIdentifier = "ll-watch-\(watch.rideId)"
@@ -69,7 +71,8 @@ final class NotificationService {
             NotificationKeys.rideId: watch.rideId,
             NotificationKeys.rideName: watch.rideName,
             NotificationKeys.parkName: watch.parkName ?? "",
-            NotificationKeys.resort: ParkGroup.disney.rawValue,
+            NotificationKeys.resort: watch.resort.rawValue,
+            NotificationKeys.passLabel: pass,
             NotificationKeys.returnStart: returnStart.timeIntervalSince1970,
         ]
         if let returnEnd { info[NotificationKeys.returnEnd] = returnEnd.timeIntervalSince1970 }
@@ -153,6 +156,7 @@ enum NotificationKeys {
     static let resort = "resort"
     static let postedWait = "postedWait"
     static let returnStart = "returnStart"
+    static let passLabel = "passLabel"
     static let returnEnd = "returnEnd"
 
     static let aapWaitCategory = "WAIT_DROP_AAP"

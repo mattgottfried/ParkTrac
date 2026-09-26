@@ -44,7 +44,7 @@ struct SpendingView: View {
                                     Circle().fill(categoryColors[cat] ?? .gray).frame(width: 10, height: 10)
                                     Text(cat)
                                     Spacer()
-                                    Text(total, format: .currency(code: "USD")).foregroundStyle(.secondary)
+                                    Text(total, format: .currency(code: appState.selectedResort.currencyCode)).foregroundStyle(.secondary)
                                 }
                             }
                         }
@@ -64,7 +64,7 @@ struct SpendingView: View {
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Text(p.amount, format: .currency(code: "USD"))
+                                Text(p.amount, format: .currency(code: appState.selectedResort.currencyCode))
                                     .font(.subheadline.weight(.semibold))
                             }
                         }
@@ -94,7 +94,7 @@ struct SpendingView: View {
 
     private func spendStat(label: String, value: Double, color: Color) -> some View {
         VStack(spacing: 4) {
-            Text(value, format: .currency(code: "USD"))
+            Text(value, format: .currency(code: appState.selectedResort.currencyCode))
                 .font(.title3.weight(.bold)).foregroundStyle(color)
             Text(label).font(.caption).foregroundStyle(.secondary)
         }

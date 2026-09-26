@@ -12,8 +12,14 @@ struct LightningLaneWatch: Codable, Identifiable, Equatable {
     var rideId: String
     var rideName: String
     var parkId: String
-    /// Optional so watches saved before this field existed still decode
+    /// Optional so watches saved before these fields existed still decode
     var parkName: String?
+    /// "Multi Pass" / "Priority Pass" … (nil = Lightning Lane Multi Pass)
+    var passName: String?
+    /// ParkGroup raw value (nil = Walt Disney World)
+    var resortRaw: String?
+
+    var resort: ParkGroup { resortRaw.flatMap(ParkGroup.init(rawValue:)) ?? .disney }
     /// Start of the day this watch applies to
     var day: Date
     /// Earliest acceptable return time (on `day`)

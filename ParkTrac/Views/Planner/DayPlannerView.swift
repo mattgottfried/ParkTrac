@@ -183,7 +183,8 @@ struct DayPlannerView: View {
             .map(\.amount).reduce(0, +)
         return DaySummary.text(date: .now, resort: resort, rides: rides,
                                planDone: todayItems.filter(\.isDone).count,
-                               planTotal: todayItems.count, spent: spent)
+                               planTotal: todayItems.count, spent: spent,
+                               currencyCode: appState.selectedResort.currencyCode)
     }
 
     private func movePlanItems(_ items: [PlanItem], from: IndexSet, to: Int) {

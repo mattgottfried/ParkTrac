@@ -5,6 +5,9 @@ struct RideCardView: View {
     let theme: ParkTheme
     /// Estimated walk from the user's location (nil when location is off or they're not in the park)
     var walkMinutes: Int? = nil
+    /// Return-pass naming for this resort ("LL" / "Lightning Lane", "PP" / "Priority Pass")
+    var returnPassShort: String = "LL"
+    var returnPassName: String = "Lightning Lane"
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Big wait number keeps its rounded look but grows with Dynamic Type.
@@ -39,7 +42,7 @@ struct RideCardView: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         if ride.isOperating, let ll = ride.multiPass {
-                            Text(ll.shortText)
+                            Text(ll.shortText(prefix: returnPassShort))
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(ll.isAvailable ? Color.orange : Color.secondary)
                         }
@@ -109,13 +112,13 @@ struct RideCardView: View {
         var parts = [ride.spokenStatus]
         if ride.isOperating, let ll = ride.multiPass {
             if ll.isAvailable, let start = ll.returnStart {
-                parts.append("Lightning Lane return \(start.formatted(date: .omitted, time: .shortened))")
+                parts.append("\(returnPassName) return \(start.formatted(date: .omitted, time: .shortened))")
             } else {
-                parts.append(ll.shortText.replacingOccurrences(of: "LL", with: "Lightning Lane"))
+                parts.append(ll.shortText(prefix: returnPassName))
             }
         }
         if LightningLaneWatchService.shared.watch(for: ride.id) != nil {
-            parts.append("watching for Lightning Lane openings")
+            parts.append("watching for \(returnPassName) openings")
         }
         if let walk = walkMinutes { parts.append("about \(walk) minute walk") }
         if let h = meta?.heightInches { parts.append("height requirement \(h) inches") }

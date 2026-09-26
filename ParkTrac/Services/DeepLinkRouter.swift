@@ -124,13 +124,14 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         let info = response.notification.request.content.userInfo
         switch response.actionIdentifier {
         case NotificationKeys.openBookingAppAction:
-            guard let pass = Self.accessPass(from: info) else { return }
+            guard let raw = info[NotificationKeys.resort] as? String,
+                  let resort = ParkGroup(rawValue: raw) else { return }
             await MainActor.run {
                 // Land on the ride when they come back, then hand off to the resort's app
                 if let raw = info[DeepLink.userInfoKey] as? String, let url = URL(string: raw) {
                     _ = DeepLinkRouter.shared.open(url: url)
                 }
-                pass.bookingApp.open()
+                BookingApp.for(resort).open()
             }
 
         case NotificationKeys.loggedReturnAction:
@@ -157,13 +158,16 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             let parkName = info[NotificationKeys.parkName] as? String ?? ""
             let returnStart = Date(timeIntervalSince1970: startTS)
             let returnEnd = (info[NotificationKeys.returnEnd] as? Double).map(Date.init(timeIntervalSince1970:))
+            let resort = (info[NotificationKeys.resort] as? String).flatMap(ParkGroup.init(rawValue:)) ?? .disney
+            let passLabel = info[NotificationKeys.passLabel] as? String ?? "Lightning Lane"
             await MainActor.run {
                 ReturnTimeLogger.logLightningLaneNow(
                     rideId: rideId, rideName: rideName, parkName: parkName,
                     returnStart: returnStart, returnEnd: returnEnd,
+                    resort: resort, passLabel: passLabel,
                     context: PersistenceController.container.mainContext)
                 NotificationService.shared.confirmAccessPassLogged(
-                    passLabel: "Lightning Lane", rideName: rideName, returnStart: returnStart,
+                    passLabel: passLabel, rideName: rideName, returnStart: returnStart,
                     isOpenEnded: false)
             }
 
@@ -177,6 +181,6 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     private static func accessPass(from info: [AnyHashable: Any]) -> AccessPass? {
         guard let raw = info[NotificationKeys.resort] as? String,
               let resort = ParkGroup(rawValue: raw) else { return nil }
-        return AccessPass.held(at: resort) ?? (resort == .universal ? .aap : .das)
+        return AccessPass.held(at: resort) ?? (resort.brand == .universal ? .aap : .das)
     }
 }

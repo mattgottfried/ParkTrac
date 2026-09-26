@@ -438,6 +438,7 @@ struct AddVisitSavingSheet: View {
         case (.disney, .valet):        return 75
         case (.universal, .standard):  return 35
         case (.universal, .valet):     return 85
+        default:                       return 0   // annual passes are Orlando-only
         }
     }
 
@@ -447,6 +448,8 @@ struct AddVisitSavingSheet: View {
         switch selectedResort {
         case .disney:
             return TicketPriceService.disneyPrice(for: date, park: disneyPark)
+        case .tokyoDisney, .universalJapan:
+            return nil
         case .universal:
             if let p = TicketPriceService.universalPrice(for: date, park: universalPark) {
                 return p  // exact from table
@@ -459,6 +462,8 @@ struct AddVisitSavingSheet: View {
 
     private var priceFooter: String {
         switch selectedResort {
+        case .tokyoDisney, .universalJapan:
+            return "Enter the ticket value manually."
         case .disney:
             if lookupPrice != nil {
                 return "Official gate price. Edit if needed."
@@ -489,7 +494,7 @@ struct AddVisitSavingSheet: View {
             Form {
                 Section("Resort") {
                     Picker("Resort", selection: $selectedResort) {
-                        ForEach(ParkGroup.allCases) { group in
+                        ForEach(ParkGroup.orlando) { group in
                             Text(group.rawValue).tag(group)
                         }
                     }

@@ -151,8 +151,20 @@ final class WaitTimesViewModel {
     /// Today's schedule for the currently selected park (operating hours only)
     func todaySchedule(for park: ParkEntity) -> [ParkScheduleDay] {
         guard let days = schedulesByPark[park.id] else { return [] }
-        let todayStr = ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: .now)).prefix(10)
+        // "Today" in the park's time zone — ISO8601DateFormatter defaults to UTC, which
+        // picked yesterday's schedule for parks east of UTC (Japan) before 9 AM local.
+        let group = parksByGroup.first { $0.value.contains { $0.id == park.id } }?.key ?? selectedGroup
+        let todayStr = Self.dayString(.now, in: group.timeZone)
         return days.filter { $0.date.hasPrefix(todayStr) }
+    }
+
+    static func dayString(_ date: Date, in timeZone: TimeZone) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.timeZone = timeZone
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: date)
     }
 
     var isLoading = false
@@ -236,7 +248,7 @@ final class WaitTimesViewModel {
         guard parksByGroup[group] == nil else { return }
         isLoadingParks = true
         do {
-            let parks = try await ParkAPIService.shared.fetchDestinationChildren(destinationId: group.destinationId)
+            let parks = try await ParkAPIService.shared.fetchParks(for: group)
             parksByGroup[group] = parks
         } catch {
             errorMessage = "Could not load parks: \(error.localizedDescription)"

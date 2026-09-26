@@ -87,10 +87,19 @@ struct LocationPickerView: View {
     @State private var searchText = ""
 
     private var isDisney: Bool { resort == ParkGroup.disney.rawValue }
+    /// Japan resorts get a plain park list — the curated shop/restaurant lists are Orlando's
+    private var japanParks: [String]? {
+        switch ParkGroup(rawValue: resort) {
+        case .tokyoDisney:    return ["Tokyo Disneyland", "Tokyo DisneySea", "Ikspiari", "Resort Hotels"]
+        case .universalJapan: return ["Universal Studios Japan", "Universal CityWalk Osaka", "Resort Hotels"]
+        default:              return nil
+        }
+    }
 
     // MARK: Parks
 
     private var parks: [String] {
+        if let japanParks { return japanParks }
         if category == "Food" {
             let restaurants = allSeedRestaurants.filter { $0.resort == resort }
             return Array(Set(restaurants.map(\.park))).sorted()
@@ -110,6 +119,7 @@ struct LocationPickerView: View {
     // MARK: Locations for a park
 
     private func locations(for park: String) -> [String] {
+        if japanParks != nil { return [] }
         if category == "Food" {
             let base = allSeedRestaurants
                 .filter { $0.resort == resort && $0.park == park }

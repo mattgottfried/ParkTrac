@@ -30,9 +30,10 @@ struct BackgroundRefreshService {
         }
 
         let workTask = Task {
-            // Fetch both resorts for 24/7 data coverage regardless of which is active
-            await fetchAndRecord(resort: .disney, container: container)
-            await fetchAndRecord(resort: .universal, container: container)
+            // Fetch every resort for 24/7 data coverage regardless of which is active
+            for resort in ParkGroup.allCases {
+                await fetchAndRecord(resort: resort, container: container)
+            }
             task.setTaskCompleted(success: true)
         }
 
@@ -46,7 +47,7 @@ struct BackgroundRefreshService {
 
     @MainActor
     private static func fetchAndRecord(resort: ParkGroup, container: ModelContainer) async {
-        guard let parks = try? await ParkAPIService.shared.fetchDestinationChildren(destinationId: resort.destinationId) else { return }
+        guard let parks = try? await ParkAPIService.shared.fetchParks(for: resort) else { return }
 
         var allRides: [DisplayRide] = []
         await withTaskGroup(of: [DisplayRide].self) { group in

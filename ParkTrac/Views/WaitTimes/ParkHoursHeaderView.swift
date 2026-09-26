@@ -8,14 +8,15 @@ struct ParkHoursHeaderView: View {
     let park: ParkEntity
     let schedule: [ParkScheduleDay]
     let theme: ParkTheme
+    /// Hours are shown in the park's time zone (matters when planning Japan from home)
+    var timeZone: TimeZone = .current
 
     @State private var showSheet = false
 
-    private static let timeFmt: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "h:mm a"
-        return f
-    }()
+    private var timeFmt: DateFormatter { ParkTime.formatter("h:mm a", timeZone) }
+    private var isAwayTimeZone: Bool {
+        timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT()
+    }
 
     /// Today's operating hours (non-extra, non-ticketed)
     private var operating: ParkScheduleDay? {
@@ -28,8 +29,8 @@ struct ParkHoursHeaderView: View {
     }
 
     private func hoursText(_ day: ParkScheduleDay) -> String {
-        let open  = day.openingDate.map  { Self.timeFmt.string(from: $0) } ?? "?"
-        let close = day.closingDate.map  { Self.timeFmt.string(from: $0) } ?? "?"
+        let open  = day.openingDate.map  { timeFmt.string(from: $0) } ?? "?"
+        let close = day.closingDate.map  { timeFmt.string(from: $0) } ?? "?"
         return "\(open) – \(close)"
     }
 
@@ -44,6 +45,11 @@ struct ParkHoursHeaderView: View {
                     Text(hoursText(op))
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.primary)
+                    if isAwayTimeZone {
+                        Text("park time")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 } else {
                     Text("Hours unavailable")
                         .font(.caption)
@@ -73,7 +79,7 @@ struct ParkHoursHeaderView: View {
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showSheet) {
-            ParkHoursSheet(park: park, schedule: schedule, theme: theme)
+            ParkHoursSheet(park: park, schedule: schedule, theme: theme, timeZone: timeZone)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
@@ -86,20 +92,12 @@ struct ParkHoursSheet: View {
     let park: ParkEntity
     let schedule: [ParkScheduleDay]
     let theme: ParkTheme
+    var timeZone: TimeZone = .current
 
     @Environment(\.dismiss) private var dismiss
 
-    private static let dateFmt: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "EEE, MMM d"
-        return f
-    }()
-
-    private static let timeFmt: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "h:mm a"
-        return f
-    }()
+    private var dateFmt: DateFormatter { ParkTime.formatter("EEE, MMM d", timeZone) }
+    private var timeFmt: DateFormatter { ParkTime.formatter("h:mm a", timeZone) }
 
     /// Group schedule by date string, show only next 14 days
     private var groupedDays: [(date: String, days: [ParkScheduleDay])] {
@@ -158,12 +156,12 @@ struct ParkHoursSheet: View {
 
         if Calendar.current.isDateInToday(d) { return "Today" }
         if Calendar.current.isDateInTomorrow(d) { return "Tomorrow" }
-        return Self.dateFmt.string(from: d)
+        return dateFmt.string(from: d)
     }
 
     private func hoursText(_ day: ParkScheduleDay) -> String {
-        let open  = day.openingDate.map  { Self.timeFmt.string(from: $0) } ?? "–"
-        let close = day.closingDate.map  { Self.timeFmt.string(from: $0) } ?? "–"
+        let open  = day.openingDate.map  { timeFmt.string(from: $0) } ?? "–"
+        let close = day.closingDate.map  { timeFmt.string(from: $0) } ?? "–"
         return "\(open) – \(close)"
     }
 
@@ -188,5 +186,17 @@ struct ParkHoursSheet: View {
         case "EXTRA_HOURS", "TICKETED_EVENT": return theme.accentColor
         default: return .primary
         }
+    }
+}
+
+// MARK: - Park time
+
+enum ParkTime {
+    /// Formatter pinned to a park's time zone
+    static func formatter(_ format: String, _ timeZone: TimeZone) -> DateFormatter {
+        let f = DateFormatter()
+        f.dateFormat = format
+        f.timeZone = timeZone
+        return f
     }
 }

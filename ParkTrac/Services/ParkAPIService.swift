@@ -27,6 +27,35 @@ actor ParkAPIService {
         }
     }
 
+    /// Parks for a resort. Orlando uses its hardcoded destination UUID; Japan's UUIDs are
+    /// looked up once from `/destinations` (by slug, then name) and cached.
+    func fetchParks(for group: ParkGroup) async throws -> [ParkEntity] {
+        if let id = group.destinationId {
+            return try await fetchDestinationChildren(destinationId: id)
+        }
+        if let id = try? await resolveDestinationId(for: group) {
+            return try await fetchDestinationChildren(destinationId: id)
+        }
+        // Last resort: the API may accept the slug directly
+        return try await fetchDestinationChildren(destinationId: group.apiSlug)
+    }
+
+    private func resolveDestinationId(for group: ParkGroup) async throws -> String? {
+        let cacheKey = "destinationId_\(group.apiSlug)"
+        if let cached = UserDefaults.standard.string(forKey: cacheKey) { return cached }
+
+        let data = try await get(base.appendingPathComponent("destinations"))
+        let destinations = try decoder.decode(DestinationsResponse.self, from: data).destinations
+        let match = destinations.first { $0.slug == group.apiSlug }
+            ?? destinations.first { dest in
+                group.apiNameKeywords.contains { dest.name.lowercased().contains($0) }
+            }
+        if let id = match?.id {
+            UserDefaults.standard.set(id, forKey: cacheKey)
+        }
+        return match?.id
+    }
+
     func fetchDestinationChildren(destinationId: String) async throws -> [ParkEntity] {
         let url = base.appendingPathComponent("entity/\(destinationId)/children")
         let data = try await get(url)
@@ -67,4 +96,14 @@ actor ParkAPIService {
         }
         return data
     }
+}
+
+/// `GET /destinations` — every resort themeparks.wiki covers.
+struct DestinationsResponse: Codable {
+    struct Destination: Codable {
+        let id: String
+        let name: String
+        let slug: String?
+    }
+    let destinations: [Destination]
 }

@@ -101,7 +101,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $appState.showResortPicker) {
             ResortPickerSheet(appState: appState)
-                .presentationDetents([.medium])
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
     }
@@ -155,8 +155,7 @@ private struct ResortBannerView: View {
             appState.showResortPicker = true
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: appState.selectedResort == .disney
-                    ? "crown.fill" : "globe.americas.fill")
+                Image(systemName: appState.selectedResort.systemImage)
                     .font(.subheadline.weight(.semibold))
 
                 Text(appState.selectedResort.rawValue)
@@ -193,12 +192,21 @@ private struct ResortPickerSheet: View {
                 .font(.title2.weight(.bold))
                 .padding(.top, 8)
 
-            HStack(spacing: 16) {
-                ForEach(ParkGroup.allCases) { resort in
-                    resortCard(resort)
+            ForEach(["Orlando", "Japan"], id: \.self) { region in
+                let resorts = ParkGroup.allCases.filter { $0.isOrlando == (region == "Orlando") }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(region)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                    HStack(spacing: 16) {
+                        ForEach(resorts) { resort in
+                            resortCard(resort)
+                        }
+                    }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
 
             Spacer()
         }
@@ -212,7 +220,7 @@ private struct ResortPickerSheet: View {
             dismiss()
         } label: {
             VStack(spacing: 12) {
-                Image(systemName: resort == .disney ? "crown.fill" : "globe.americas.fill")
+                Image(systemName: resort.systemImage)
                     .font(.system(size: resortIconSize))
                     .foregroundStyle(isSelected ? Color.white : resort.theme.primaryColor)
 
@@ -232,7 +240,7 @@ private struct ResortPickerSheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
+            .padding(.vertical, 16)
             .background(
                 isSelected
                     ? resort.theme.primaryColor

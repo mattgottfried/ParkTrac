@@ -189,14 +189,17 @@ struct LightningLaneInfo: Equatable {
     }
 
     /// Short text for cards, e.g. "LL 1:35 PM", "LL full", "LL sold out".
-    var shortText: String {
+    var shortText: String { shortText(prefix: "LL") }
+
+    /// `prefix` is the resort's abbreviation ("LL" Orlando, "PP" Tokyo Priority Pass).
+    func shortText(prefix: String) -> String {
         switch state {
         case .available:
-            guard let start = returnStart else { return "LL available" }
-            return "LL \(start.formatted(date: .omitted, time: .shortened))"
-        case .temporarilyFull: return "LL full for now"
-        case .soldOut:         return "LL sold out"
-        case .unknown:         return "LL"
+            guard let start = returnStart else { return "\(prefix) available" }
+            return "\(prefix) \(start.formatted(date: .omitted, time: .shortened))"
+        case .temporarilyFull: return "\(prefix) full for now"
+        case .soldOut:         return "\(prefix) sold out"
+        case .unknown:         return prefix
         }
     }
 }

@@ -75,7 +75,8 @@ enum DaySummary {
     }
 
     static func text(date: Date, resort: String, rides: [Ride],
-                     planDone: Int, planTotal: Int, spent: Double) -> String {
+                     planDone: Int, planTotal: Int, spent: Double,
+                     currencyCode: String = "USD") -> String {
         var lines = ["🎢 ThrillTrack · \(date.formatted(date: .abbreviated, time: .omitted)) · \(resort)"]
 
         if rides.isEmpty {
@@ -112,7 +113,7 @@ enum DaySummary {
             lines.append("Plan: \(planDone) of \(planTotal) done")
         }
         if spent > 0 {
-            lines.append("Spent: \(spent.formatted(.currency(code: "USD")))")
+            lines.append("Spent: \(spent.formatted(.currency(code: currencyCode)))")
         }
         return lines.joined(separator: "\n")
     }

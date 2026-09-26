@@ -11,6 +11,8 @@ struct WeatherCardView: View {
         switch resort {
         case .disney:    return (28.3772, -81.5707)
         case .universal: return (28.4793, -81.4643)
+        case .tokyoDisney, .universalJapan:
+            return (resort.defaultCoordinate.latitude, resort.defaultCoordinate.longitude)
         }
     }
 

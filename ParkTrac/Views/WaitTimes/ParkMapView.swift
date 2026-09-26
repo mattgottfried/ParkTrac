@@ -762,7 +762,8 @@ struct ParkMapView: View {
                 ParkHoursHeaderView(
                     park: park,
                     schedule: viewModel.todaySchedule(for: park),
-                    theme: theme
+                    theme: theme,
+                    timeZone: viewModel.selectedGroup.timeZone
                 )
                 .padding(.horizontal)
             }
@@ -783,7 +784,7 @@ struct ParkMapView: View {
             Divider()
 
             if showTab == .shows {
-                ShowsListView(shows: viewModel.currentShows, theme: theme)
+                ShowsListView(shows: viewModel.currentShows, theme: theme, timeZone: viewModel.selectedGroup.timeZone)
             } else if viewModel.isLoadingParks || (viewModel.isLoading && viewModel.allRides.isEmpty) {
                 ProgressView("Loading…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let errorMsg = viewModel.errorMessage {
@@ -815,7 +816,9 @@ struct ParkMapView: View {
                     ScrollView {
                         LazyVStack(spacing: 8) {
                             ForEach(displayedRides) { ride in
-                                RideCardView(ride: ride, theme: theme, walkMinutes: walkMinutes(to: ride))
+                                RideCardView(ride: ride, theme: theme, walkMinutes: walkMinutes(to: ride),
+                                             returnPassShort: viewModel.selectedGroup.returnPassNames.short,
+                                             returnPassName: viewModel.selectedGroup.returnPassNames.free)
                                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     .onTapGesture { selectedRide = ride }
                                     .contextMenu { rideContextMenu(for: ride) }
