@@ -14,7 +14,34 @@ Goal: a set of small, low-risk updates in phases. Each phase can ship as its own
 
 ---
 
-## ▶ Current step: bug fix — personal dining history is seeded into every install
+## ▶ Current step: replace the CARTO tile overlay with Apple's own map
+
+**Problem.** The Wait Times map is already an `MKMapView` (`StyledMapUIView` in `Views/WaitTimes/ParkMapView.swift`). But `Coordinator.addTiles(to:)` (~line 183) covers it with an `MKTileOverlay` of CARTO Voyager tiles (`https://a.basemaps.cartocdn.com/rastertiles/voyager/...`, `canReplaceMapContent = true`). CARTO now wants an API key, so the base map fails. Apple's MapKit needs no key and no Info.plist or entitlement changes, and it's the only other tile source in the app.
+
+**Changes** (all in `ParkMapView.swift`, `StyledMapUIView`; no new files):
+1. Delete `Coordinator.addTiles(to:)` and its two call sites (`makeUIView` and the satellite-off branch of `updateUIView`). Drop the `MKTileOverlay` branch from `mapView(_:rendererFor:)`, keeping the default `MKOverlayRenderer` fallback, or remove the method since nothing else adds overlays.
+2. Add a `static func configuration(satellite: Bool) -> MKMapConfiguration` helper:
+   - **Standard:** `MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)`, which gives the soft, low-contrast look the CARTO tiles had so the colored wait pins stand out. Set `pointOfInterestFilter = MKPointOfInterestFilter(including: [.restroom, .restaurant, .cafe, .parking])`. Apple's own attraction labels would clash with the ride pins, so they're hidden; restrooms and food stay useful in a park.
+   - **Satellite:** `MKHybridMapConfiguration(elevationStyle: .realistic)` with the same POI filter. This replaces `mapType = .hybridFlyover`.
+3. `makeUIView`: set `map.preferredConfiguration = Self.configuration(satellite: isSatellite)` and seed `context.coordinator.isSatellite = isSatellite`. That fixes a small existing bug where "Default to Satellite View" briefly showed the standard map first.
+4. `updateUIView`: when `isSatellite` differs from `coordinator.isSatellite`, update the flag and set `map.preferredConfiguration` again. The `removeOverlays` / `mapType` juggling is no longer needed.
+5. Leave the annotation, region and pin code untouched. Fix the stale comment ("CartoDB Voyager — … no API key required") by deleting it along with the function.
+
+The satellite toggle button, `defaultMapIsSatellite`, and pins/annotations work as before. Light and dark mode now follow the system through MapKit.
+
+**Verification (on the Mac):**
+- Build, then open Wait Times.
+- The base map should be Apple's muted map with park paths visible, and no blank or grey tiles.
+- Pins sit on the right spots and are readable.
+- The satellite toggle switches to hybrid and back.
+- With "Default to Satellite View" on, launch opens straight into satellite.
+- Dark mode looks right.
+
+Pull/rebase before committing (the Mac session may have pushed), push to `claude/compassionate-brahmagupta-vrjn15`, and never force-push.
+
+---
+
+## DONE (90c3613): bug fix — personal dining history is seeded into every install
 
 **Problem.** `Services/SeedData.swift` gives 47 `SeedRestaurant`s `isVisited: true` with Matt and Heather's real `mattRating` / `wifeRating`. `BucketListService.seedRestaurants` copies those fields into every new store. So a fresh simulator, a different Apple ID, or any other user starts with Matt and Heather's visits, and the Stats tab averages them. The "Matt" / "Heather" labels are also hardcoded. Hotel seeds carry no personal data.
 

@@ -124,24 +124,31 @@ struct StyledMapUIView: UIViewRepresentable {
         map.showsUserLocation = true
         map.showsCompass = false
         map.register(RideAnnotationView.self, forAnnotationViewWithReuseIdentifier: RideAnnotationView.reuseID)
-        context.coordinator.addTiles(to: map)
+        map.preferredConfiguration = Self.configuration(satellite: isSatellite)
+        context.coordinator.isSatellite = isSatellite
         return map
+    }
+
+    /// Apple Maps base layer (no API key). Muted standard keeps the colored wait pins
+    /// prominent; Apple's own attraction labels are filtered out so they don't clash
+    /// with the ride pins, but restrooms and food stay visible.
+    static func configuration(satellite: Bool) -> MKMapConfiguration {
+        let poiFilter = MKPointOfInterestFilter(including: [.restroom, .restaurant, .cafe, .parking])
+        if satellite {
+            let config = MKHybridMapConfiguration(elevationStyle: .realistic)
+            config.pointOfInterestFilter = poiFilter
+            return config
+        }
+        let config = MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)
+        config.pointOfInterestFilter = poiFilter
+        return config
     }
 
     func updateUIView(_ map: MKMapView, context: Context) {
         // Satellite toggle
-        if isSatellite {
-            if !context.coordinator.isSatellite {
-                context.coordinator.isSatellite = true
-                map.mapType = .hybridFlyover
-                map.removeOverlays(map.overlays)
-            }
-        } else {
-            if context.coordinator.isSatellite {
-                context.coordinator.isSatellite = false
-                map.mapType = .mutedStandard
-                context.coordinator.addTiles(to: map)
-            }
+        if isSatellite != context.coordinator.isSatellite {
+            context.coordinator.isSatellite = isSatellite
+            map.preferredConfiguration = Self.configuration(satellite: isSatellite)
         }
 
         // Region (only if significantly different to avoid fighting user pans)
@@ -179,22 +186,6 @@ struct StyledMapUIView: UIViewRepresentable {
         var isUserInteracting = false
 
         init(_ parent: StyledMapUIView) { self.parent = parent }
-
-        func addTiles(to map: MKMapView) {
-            map.removeOverlays(map.overlays.filter { $0 is MKTileOverlay })
-            // CartoDB Voyager — clean, nature-tinted, no API key required
-            let tile = MKTileOverlay(urlTemplate:
-                "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png")
-            tile.canReplaceMapContent = true
-            map.addOverlay(tile, level: .aboveLabels)
-        }
-
-        func mapView(_ map: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            if let tile = overlay as? MKTileOverlay {
-                return MKTileOverlayRenderer(tileOverlay: tile)
-            }
-            return MKOverlayRenderer(overlay: overlay)
-        }
 
         func mapView(_ map: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             guard let ra = annotation as? RidePointAnnotation else { return nil }
