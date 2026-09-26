@@ -61,3 +61,22 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         // Silently ignore — the map works fine without location
     }
 }
+
+// MARK: - Walking estimate
+
+/// Rough walking time between two points inside a park.
+enum WalkEstimate {
+    /// Park paths wind — straight-line distance × this ≈ distance actually walked
+    static let pathFactor = 1.35
+    /// Comfortable crowd-weaving pace (~3 mph)
+    static let metersPerMinute = 80.0
+    /// Beyond this you're not in the same park; don't show a walk time
+    static let maxStraightLineMeters = 3000.0
+
+    static func minutes(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> Int? {
+        let meters = CLLocation(latitude: from.latitude, longitude: from.longitude)
+            .distance(from: CLLocation(latitude: to.latitude, longitude: to.longitude))
+        guard meters <= maxStraightLineMeters else { return nil }
+        return max(1, Int((meters * pathFactor / metersPerMinute).rounded()))
+    }
+}

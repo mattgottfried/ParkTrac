@@ -7,6 +7,8 @@ struct DayPlannerView: View {
     @Environment(WaitTimesViewModel.self) private var waitTimesVM
 
     @Query(sort: \PlanItem.sortOrder) private var allItems: [PlanItem]
+    @Query(sort: \RideLog.riddenAt) private var rideLogs: [RideLog]
+    @Query private var purchases: [PurchaseLog]
     @State private var showAddSheet = false
     @State private var showGuestPicker = false
     @State private var showSmartPlanner = false
@@ -149,6 +151,10 @@ struct DayPlannerView: View {
                         Image(systemName: "plus")
                     }
                     .accessibilityLabel("Add to plan")
+                    ShareLink(item: todaySummary) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel("Share today's summary")
                 }
             }
             ToolbarItem(placement: .navigationBarLeading) {
@@ -164,6 +170,20 @@ struct DayPlannerView: View {
         .sheet(isPresented: $showSmartPlanner) {
             SmartPlannerView()
         }
+    }
+
+    /// Text recap of today at this resort (rides, plan progress, spending)
+    private var todaySummary: String {
+        let cal = Calendar.current
+        let rides = rideLogs
+            .filter { $0.resort == resort && cal.isDateInToday($0.riddenAt) }
+            .map { DaySummary.Ride(name: $0.rideName, postedWait: $0.waitMinutes, actualWait: $0.actualWaitMinutes) }
+        let spent = purchases
+            .filter { $0.resort == resort && cal.isDateInToday($0.date) }
+            .map(\.amount).reduce(0, +)
+        return DaySummary.text(date: .now, resort: resort, rides: rides,
+                               planDone: todayItems.filter(\.isDone).count,
+                               planTotal: todayItems.count, spent: spent)
     }
 
     private func movePlanItems(_ items: [PlanItem], from: IndexSet, to: Int) {

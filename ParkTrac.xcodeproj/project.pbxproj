@@ -60,6 +60,7 @@
 		AA0000000000000000000190 /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000191 /* DeepLinkRouter.swift */; };
 		AA0000000000000000000192 /* LightningLaneWatchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000193 /* LightningLaneWatchService.swift */; };
 		AA0000000000000000000196 /* ReturnTimeLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000197 /* ReturnTimeLogger.swift */; };
+		AA0000000000000000000198 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000199 /* ExportService.swift */; };
 		AA0000000000000000000194 /* LightningLaneSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000195 /* LightningLaneSection.swift */; };
 		AA0000000000000000000127 /* CharacterData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000126 /* CharacterData.swift */; };
 		AA0000000000000000000129 /* ShowsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000128 /* ShowsListView.swift */; };
@@ -103,6 +104,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		BB0000000000000000000006 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000000000000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA000000000000000000000D;
+			remoteInfo = ParkTrac;
+		};
 		C972E4DB300AADB000E01CAC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = AA000000000000000000000A /* Project object */;
@@ -127,6 +135,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BB0000000000000000000001 /* ParkTracTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ParkTracTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000000000000000000020 /* ParkTracApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkTracApp.swift; sourceTree = "<group>"; };
 		AA0000000000000000000022 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000024 /* ParkDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkDestination.swift; sourceTree = "<group>"; };
@@ -181,6 +190,7 @@
 		AA0000000000000000000191 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
 		AA0000000000000000000193 /* LightningLaneWatchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningLaneWatchService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000197 /* ReturnTimeLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnTimeLogger.swift; sourceTree = "<group>"; };
+		AA0000000000000000000199 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000195 /* LightningLaneSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningLaneSection.swift; sourceTree = "<group>"; };
 		AA0000000000000000000126 /* CharacterData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterData.swift; sourceTree = "<group>"; };
 		AA0000000000000000000128 /* ShowsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowsListView.swift; sourceTree = "<group>"; };
@@ -234,10 +244,18 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		BB0000000000000000000002 /* ParkTracTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ParkTracTests; sourceTree = "<group>"; };
 		C972E4CD300AADAF00E01CAC /* TrillTrackWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (C972E4E1300AADB000E01CAC /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = TrillTrackWidget; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		BB0000000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA0000000000000000000016 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -278,6 +296,7 @@
 			children = (
 				AA0000000000000000000070 /* ParkTrac.app */,
 				C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */,
+				BB0000000000000000000001 /* ParkTracTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -287,6 +306,7 @@
 			children = (
 				AA000000000000000000000B /* ParkTrac */,
 				C972E4CD300AADAF00E01CAC /* TrillTrackWidget */,
+				BB0000000000000000000002 /* ParkTracTests */,
 				C972E4C8300AADAF00E01CAC /* Frameworks */,
 				AA000000000000000000000C /* Products */,
 			);
@@ -334,6 +354,7 @@
 				AA0000000000000000000191 /* DeepLinkRouter.swift */,
 				AA0000000000000000000193 /* LightningLaneWatchService.swift */,
 				AA0000000000000000000197 /* ReturnTimeLogger.swift */,
+				AA0000000000000000000199 /* ExportService.swift */,
 				AA0000000000000000000126 /* CharacterData.swift */,
 				AA000000000000000000017C /* TicketPriceService.swift */,
 				AA0000000000000000000181 /* PersistenceController.swift */,
@@ -481,6 +502,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		BB0000000000000000000008 /* ParkTracTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB0000000000000000000009 /* Build configuration list for PBXNativeTarget "ParkTracTests" */;
+			buildPhases = (
+				BB0000000000000000000003 /* Sources */,
+				BB0000000000000000000004 /* Frameworks */,
+				BB0000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BB0000000000000000000007 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				BB0000000000000000000002 /* ParkTracTests */,
+			);
+			name = ParkTracTests;
+			packageProductDependencies = (
+			);
+			productName = ParkTracTests;
+			productReference = BB0000000000000000000001 /* ParkTracTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		AA000000000000000000000D /* ParkTrac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA000000000000000000000F /* Build configuration list for PBXNativeTarget "ParkTrac" */;
@@ -538,6 +582,10 @@
 					C972E4C6300AADAF00E01CAC = {
 						CreatedOnToolsVersion = 26.6;
 					};
+					BB0000000000000000000008 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = AA000000000000000000000D;
+					};
 				};
 			};
 			buildConfigurationList = AA000000000000000000000E /* Build configuration list for PBXProject "ParkTrac" */;
@@ -557,11 +605,19 @@
 			targets = (
 				AA000000000000000000000D /* ParkTrac */,
 				C972E4C6300AADAF00E01CAC /* TrillTrackWidgetExtension */,
+				BB0000000000000000000008 /* ParkTracTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		BB0000000000000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA0000000000000000000015 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -581,6 +637,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		BB0000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA0000000000000000000014 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -639,6 +702,7 @@
 				AA0000000000000000000190 /* DeepLinkRouter.swift in Sources */,
 				AA0000000000000000000192 /* LightningLaneWatchService.swift in Sources */,
 				AA0000000000000000000196 /* ReturnTimeLogger.swift in Sources */,
+				AA0000000000000000000198 /* ExportService.swift in Sources */,
 				AA0000000000000000000194 /* LightningLaneSection.swift in Sources */,
 				AA0000000000000000000127 /* CharacterData.swift in Sources */,
 				AA0000000000000000000129 /* ShowsListView.swift in Sources */,
@@ -686,6 +750,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		BB0000000000000000000007 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA000000000000000000000D /* ParkTrac */;
+			targetProxy = BB0000000000000000000006 /* PBXContainerItemProxy */;
+		};
 		C972E4DC300AADB000E01CAC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = C972E4C6300AADAF00E01CAC /* TrillTrackWidgetExtension */;
@@ -694,6 +763,44 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		BB000000000000000000000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X796Z5UW4P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mattgottfried.parktrac.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ParkTrac.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ParkTrac";
+			};
+			name = Debug;
+		};
+		BB000000000000000000000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X796Z5UW4P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mattgottfried.parktrac.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ParkTrac.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ParkTrac";
+			};
+			name = Release;
+		};
 		AA0000000000000000000010 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -932,6 +1039,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		BB0000000000000000000009 /* Build configuration list for PBXNativeTarget "ParkTracTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB000000000000000000000A /* Debug */,
+				BB000000000000000000000B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		AA000000000000000000000E /* Build configuration list for PBXProject "ParkTrac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

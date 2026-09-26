@@ -96,16 +96,24 @@ final class LightningLaneWatchService {
         for index in watches.indices {
             let watch = watches[index]
             guard let ride = byId[watch.rideId],
-                  let ll = ride.multiPass, ll.isAvailable,
-                  let start = ll.returnStart,
-                  watch.accepts(start) else { continue }
-            if let last = watch.lastNotifiedStart, start >= last { continue }
+                  let start = Self.alertStart(for: watch, info: ride.multiPass) else { continue }
 
             NotificationService.shared.fireLightningLaneOpening(
-                watch: watch, returnStart: start, returnEnd: ll.returnEnd, previous: watch.lastNotifiedStart)
+                watch: watch, returnStart: start, returnEnd: ride.multiPass?.returnEnd,
+                previous: watch.lastNotifiedStart)
             watches[index].lastNotifiedStart = start
         }
         if before != watches { persist() }
+    }
+
+    /// The return to alert about for `watch`, or nil. Pure (no side effects) — unit tested.
+    /// Alerts when a Multi Pass return is available inside the window, and afterwards only
+    /// for a strictly earlier one than already reported.
+    static func alertStart(for watch: LightningLaneWatch, info: LightningLaneInfo?) -> Date? {
+        guard let info, info.isAvailable, let start = info.returnStart,
+              watch.accepts(start) else { return nil }
+        if let last = watch.lastNotifiedStart, start >= last { return nil }
+        return start
     }
 
     private func persist() {
