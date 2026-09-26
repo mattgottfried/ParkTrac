@@ -58,6 +58,8 @@
 		AA0000000000000000000123 /* PurchaseLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000122 /* PurchaseLog.swift */; };
 		AA0000000000000000000125 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000124 /* NotificationService.swift */; };
 		AA0000000000000000000190 /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000191 /* DeepLinkRouter.swift */; };
+		AA0000000000000000000192 /* LightningLaneWatchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000193 /* LightningLaneWatchService.swift */; };
+		AA0000000000000000000194 /* LightningLaneSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000195 /* LightningLaneSection.swift */; };
 		AA0000000000000000000127 /* CharacterData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000126 /* CharacterData.swift */; };
 		AA0000000000000000000129 /* ShowsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000128 /* ShowsListView.swift */; };
 		AA000000000000000000012B /* SetAlertSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000012A /* SetAlertSheet.swift */; };
@@ -176,6 +178,8 @@
 		AA0000000000000000000122 /* PurchaseLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseLog.swift; sourceTree = "<group>"; };
 		AA0000000000000000000124 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000191 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
+		AA0000000000000000000193 /* LightningLaneWatchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningLaneWatchService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000195 /* LightningLaneSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningLaneSection.swift; sourceTree = "<group>"; };
 		AA0000000000000000000126 /* CharacterData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterData.swift; sourceTree = "<group>"; };
 		AA0000000000000000000128 /* ShowsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowsListView.swift; sourceTree = "<group>"; };
 		AA000000000000000000012A /* SetAlertSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetAlertSheet.swift; sourceTree = "<group>"; };
@@ -326,6 +330,7 @@
 				AA0000000000000000000116 /* CrowdCalendarService.swift */,
 				AA0000000000000000000124 /* NotificationService.swift */,
 				AA0000000000000000000191 /* DeepLinkRouter.swift */,
+				AA0000000000000000000193 /* LightningLaneWatchService.swift */,
 				AA0000000000000000000126 /* CharacterData.swift */,
 				AA000000000000000000017C /* TicketPriceService.swift */,
 				AA0000000000000000000181 /* PersistenceController.swift */,
@@ -367,6 +372,7 @@
 				AA000000000000000000002E /* ParkMapView.swift */,
 				AA0000000000000000000032 /* RideCardView.swift */,
 				AA0000000000000000000034 /* RideDetailSheet.swift */,
+				AA0000000000000000000195 /* LightningLaneSection.swift */,
 				AA00000000000000000000F8 /* ParkComparisonView.swift */,
 				AA0000000000000000000036 /* RidePredictionView.swift */,
 				AA0000000000000000000100 /* WaitTimeColor.swift */,
@@ -628,6 +634,8 @@
 				AA0000000000000000000123 /* PurchaseLog.swift in Sources */,
 				AA0000000000000000000125 /* NotificationService.swift in Sources */,
 				AA0000000000000000000190 /* DeepLinkRouter.swift in Sources */,
+				AA0000000000000000000192 /* LightningLaneWatchService.swift in Sources */,
+				AA0000000000000000000194 /* LightningLaneSection.swift in Sources */,
 				AA0000000000000000000127 /* CharacterData.swift in Sources */,
 				AA0000000000000000000129 /* ShowsListView.swift in Sources */,
 				AA000000000000000000012B /* SetAlertSheet.swift in Sources */,

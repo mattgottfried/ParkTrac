@@ -118,10 +118,87 @@ struct LiveDataEntry: Codable, Identifiable {
 
 struct QueueData: Codable {
     let STANDBY: StandbyQueue?
+    /// Lightning Lane Multi Pass (Disney) — next available return window
+    let RETURN_TIME: ReturnTimeQueue?
+    /// Lightning Lane Single Pass (Disney) — next return window plus price
+    let PAID_RETURN_TIME: ReturnTimeQueue?
 }
 
 struct StandbyQueue: Codable {
     let waitTime: Int?
+}
+
+/// themeparks.wiki return-time queue. `state` is AVAILABLE, TEMP_FULL or FINISHED.
+struct ReturnTimeQueue: Codable {
+    let state: String?
+    let returnStart: String?
+    let returnEnd: String?
+    let price: ReturnTimePrice?
+}
+
+struct ReturnTimePrice: Codable {
+    let amount: Double?
+    let currency: String?
+    let formatted: String?
+}
+
+/// Parsed Lightning Lane availability for one queue type.
+struct LightningLaneInfo: Equatable {
+    enum State: Equatable { case available, temporarilyFull, soldOut, unknown }
+
+    let state: State
+    let returnStart: Date?
+    let returnEnd: Date?
+    /// Single Pass price, e.g. "$15.00" (nil for Multi Pass)
+    let price: String?
+
+    var isAvailable: Bool { state == .available && returnStart != nil }
+
+    private static let iso: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+    private static let isoFrac: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+    private static func date(_ s: String?) -> Date? {
+        guard let s else { return nil }
+        return iso.date(from: s) ?? isoFrac.date(from: s)
+    }
+
+    init?(_ queue: ReturnTimeQueue?) {
+        guard let queue else { return nil }
+        switch queue.state {
+        case "AVAILABLE": state = .available
+        case "TEMP_FULL": state = .temporarilyFull
+        case "FINISHED":  state = .soldOut
+        default:          state = .unknown
+        }
+        returnStart = Self.date(queue.returnStart)
+        returnEnd = Self.date(queue.returnEnd)
+        if let formatted = queue.price?.formatted, !formatted.isEmpty {
+            price = formatted
+        } else if let cents = queue.price?.amount {
+            price = (cents / 100).formatted(.currency(code: queue.price?.currency ?? "USD"))
+        } else {
+            price = nil
+        }
+    }
+
+    /// Short text for cards, e.g. "LL 1:35 PM", "LL full", "LL sold out".
+    var shortText: String {
+        switch state {
+        case .available:
+            guard let start = returnStart else { return "LL available" }
+            return "LL \(start.formatted(date: .omitted, time: .shortened))"
+        case .temporarilyFull: return "LL full for now"
+        case .soldOut:         return "LL sold out"
+        case .unknown:         return "LL"
+        }
+    }
 }
 
 // MARK: - Show / Entertainment
@@ -246,6 +323,10 @@ struct DisplayRide: Identifiable {
     let isOperating: Bool
     let coordinate: CLLocationCoordinate2D?
     let parkId: String
+    /// Lightning Lane Multi Pass next return (Disney only; nil if the ride has none)
+    let multiPass: LightningLaneInfo?
+    /// Lightning Lane Single Pass next return + price
+    let singlePass: LightningLaneInfo?
 
     var statusDisplay: String {
         switch status {
@@ -273,6 +354,8 @@ struct DisplayRide: Identifiable {
         self.isOperating = live.isOperating
         self.coordinate = location
         self.parkId = parkId
+        self.multiPass = LightningLaneInfo(live.queue?.RETURN_TIME)
+        self.singlePass = LightningLaneInfo(live.queue?.PAID_RETURN_TIME)
     }
 
     /// A ride known from the daily catalog but absent from live data
@@ -285,5 +368,7 @@ struct DisplayRide: Identifiable {
         self.isOperating = false
         self.coordinate = location
         self.parkId = parkId
+        self.multiPass = nil
+        self.singlePass = nil
     }
 }

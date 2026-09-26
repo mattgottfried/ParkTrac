@@ -122,6 +122,13 @@ struct RideDetailSheet: View {
 
                 Divider()
 
+                // Lightning Lane: next returns + notify-only watch (Disney rides with LL)
+                if ride.multiPass != nil || ride.singlePass != nil {
+                    LightningLaneSection(ride: ride)
+                        .padding(.horizontal)
+                    Divider()
+                }
+
                 // Wait Stopwatch section
                 WaitStopwatchSection(
                     ride: ride,

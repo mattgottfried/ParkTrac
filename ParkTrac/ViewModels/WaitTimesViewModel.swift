@@ -264,6 +264,9 @@ final class WaitTimesViewModel {
             errorMessage = "Couldn't refresh wait times. Check your connection."
         }
         rebuildAllRides()
+        if successCount > 0 {
+            LightningLaneWatchService.shared.check(rides: allRides)
+        }
         // Only advance on real data — a stale timestamp drives the "out of date" warning
         // and keeps the recorder from re-recording cached waits as new snapshots.
         if successCount > 0 { lastRefreshed = .now }
