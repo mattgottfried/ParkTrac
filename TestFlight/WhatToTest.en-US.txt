@@ -1,9 +1,11 @@
-NEW: Car Locator + Home Screen shortcuts
+NEW: Car Locator (with Disney-style lot menus) + Home Screen shortcuts
 
 Save where you parked
 • Tap the car button on the Wait Times map (top right), "Save Parking Spot" in My Day → Parking, or long-press the ThrillTrack icon → Find My Car.
 • Standing by the car, tap "Save Spot Here" — ThrillTrack takes a precise GPS fix (a few seconds).
-• Add the lot/row (e.g. "Zurg 112") and snap a photo of the row sign.
+• Pick where you parked from menus, like the Disney app: Lot (Magic Kingdom, EPCOT, Hollywood Studios, Animal Kingdom, Disney Springs, CityWalk Garages, Epic Universe) → Section (e.g. Heroes/Villains → Zurg) → Row. Disney Springs garages also have a Level.
+• Snap a photo of the row sign, and add a note if you like.
+• No GPS needed: "Save Section & Row Only" saves just what you picked.
 
 Find your car
 • A blue car pin shows on the Wait Times map; the car button turns blue.
@@ -13,13 +15,14 @@ Find your car
 • No GPS (location off, deep garage)? The note and photo still save.
 
 Reminder before parks close
-• With a spot saved, you get "Parks close at 9:00 PM — your car: Zurg 112" 30 minutes before the last park closes (after-hours parties don't count). Tap it for directions. Turn it off in the parking sheet.
+• With a spot saved, you get "Parks close at 9:00 PM — Your car: Magic Kingdom · Zurg · Row 112" 30 minutes before the last park closes (after-hours parties don't count). Tap it for directions. Turn it off in the parking sheet.
 
 Home Screen shortcuts
 • Long-press the ThrillTrack icon: Find My Car, My Day, Wait Times.
 
 Please check:
 • Save a spot outside, walk away, reopen — the distance and walk time look right, and Walk There opens Maps.
+• The lot and section menus match the signs at your lot (tell me any names that are wrong or missing).
 • The camera asks permission once, and the photo shows in the sheet (tap to enlarge).
 • The car pin appears on the map, and tapping it opens the sheet.
 • Each Home Screen shortcut opens the right place, both when the app is closed and when it's running.

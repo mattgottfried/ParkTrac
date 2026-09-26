@@ -15,6 +15,16 @@ struct ParkingSpot: Codable, Equatable {
     var note: String
     var resortRaw: String
     var savedAt: Date
+    // Picked from the lot menus (like the Disney app). Optional: older spots and Japan use the note.
+    var lot: String? = nil
+    var section: String? = nil
+    var level: Int? = nil
+    var row: String? = nil
+
+    var details: ParkingDetails {
+        get { ParkingDetails(lot: lot, section: section, level: level, row: row) }
+        set { lot = newValue.lot; section = newValue.section; level = newValue.level; row = newValue.row }
+    }
 
     var resort: ParkGroup { ParkGroup(rawValue: resortRaw) ?? .disney }
 
@@ -33,8 +43,120 @@ struct ParkingSpot: Codable, Equatable {
 
     var trimmedNote: String { note.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-    /// "Zurg 112" or "Parking spot"
-    var title: String { trimmedNote.isEmpty ? "Parking spot" : trimmedNote }
+    /// "Zurg · Row 112", else the note, else "Parking spot" (map pin, My Day row)
+    var title: String {
+        let location = details.locationText
+        if !location.isEmpty { return location }
+        return trimmedNote.isEmpty ? "Parking spot" : trimmedNote
+    }
+
+    /// Everything: "Magic Kingdom · Zurg · Row 112 · near the tram stop" (reminder, directions)
+    var summary: String {
+        [details.lot ?? "", details.locationText, trimmedNote].filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+}
+
+/// Lot → section → level → row, as picked from the menus.
+struct ParkingDetails: Equatable {
+    var lot: String?
+    var section: String?
+    var level: Int?
+    var row: String?
+
+    static let empty = ParkingDetails()
+
+    private static func clean(_ s: String?) -> String? {
+        guard let t = s?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { return nil }
+        return t
+    }
+
+    /// Blank strings become nil so "nothing picked" compares equal to `.empty`
+    var normalized: ParkingDetails {
+        ParkingDetails(lot: Self.clean(lot), section: Self.clean(section), level: level, row: Self.clean(row))
+    }
+
+    var isEmpty: Bool { normalized == .empty }
+
+    /// "Zurg · Row 112", "Lime Garage · Level 3", "King Kong · 410"
+    var locationText: String {
+        let d = normalized
+        var parts: [String] = []
+        if let section = d.section { parts.append(section) }
+        if let level = d.level { parts.append("Level \(level)") }
+        if let row = d.row {
+            let label = d.lot.flatMap(ParkingLots.lot(named:))?.rowLabel ?? "Row"
+            parts.append(label.isEmpty ? row : "\(label) \(row)")
+        }
+        return parts.joined(separator: " · ")
+    }
+}
+
+// MARK: - Lots (the Disney / Universal app menus)
+
+struct ParkingLot: Identifiable, Equatable {
+    struct Group: Equatable {
+        /// "Heroes", "Villains", "North Garage"… (nil = one plain list)
+        var name: String?
+        var sections: [String]
+    }
+
+    var name: String
+    var groups: [Group]
+    /// Garages with numbered levels (Disney Springs)
+    var levels: ClosedRange<Int>? = nil
+    /// "Row" on Disney lots; empty where the sign shows a bare number (Universal "King Kong 410")
+    var rowLabel: String = "Row"
+    var rowPrompt: String = "e.g. 112"
+
+    var id: String { name }
+    var allSections: [String] { groups.flatMap(\.sections) }
+}
+
+/// Section names from the parks' signage (compiled Sept 2026 — lots get renamed now and then;
+/// "Other" + the note covers anything missing).
+enum ParkingLots {
+    static let disney: [ParkingLot] = [
+        ParkingLot(name: "Magic Kingdom", groups: [
+            .init(name: "Heroes", sections: ["Aladdin", "Mulan", "Peter Pan", "Rapunzel", "Simba", "Woody"]),
+            .init(name: "Villains", sections: ["Cruella", "Hook", "Jafar", "Scar", "Ursula", "Zurg"]),
+        ]),
+        ParkingLot(name: "EPCOT", groups: [
+            .init(name: "Earth", sections: ["Crush", "Dory", "HeiHei", "Moana"]),
+            .init(name: "Space", sections: ["Eve", "Gamora", "Rocket", "WALL-E"]),
+        ]),
+        ParkingLot(name: "Hollywood Studios", groups: [
+            .init(name: nil, sections: ["BB-8", "Buzz", "Jessie", "Mickey", "Minnie", "Olaf", "Woody"]),
+        ]),
+        ParkingLot(name: "Animal Kingdom", groups: [
+            .init(name: nil, sections: ["Butterfly", "Dinosaur", "Giraffe", "Peacock", "Unicorn", "Yeti"]),
+        ]),
+        ParkingLot(name: "Disney Springs", groups: [
+            .init(name: nil, sections: ["Orange Garage", "Lime Garage", "Grapefruit Garage"]),
+        ], levels: 1...7, rowLabel: "Row", rowPrompt: "Optional"),
+    ]
+
+    static let universal: [ParkingLot] = [
+        ParkingLot(name: "CityWalk Garages", groups: [
+            .init(name: "North Garage", sections: ["Jurassic Park", "King Kong", "Jaws"]),
+            .init(name: "South Garage", sections: ["E.T.", "Spider-Man", "Cat in the Hat"]),
+        ], rowLabel: "", rowPrompt: "Number on the sign, e.g. 410"),
+        ParkingLot(name: "Epic Universe", groups: [
+            .init(name: nil, sections: ["Explorer", "Gamer", "Hero", "Monster", "Viking"]),
+        ]),
+    ]
+
+    /// Japan has no lot menus yet — the note covers it.
+    static func lots(for resort: ParkGroup) -> [ParkingLot] {
+        switch resort {
+        case .disney:    return disney
+        case .universal: return universal
+        case .tokyoDisney, .universalJapan: return []
+        }
+    }
+
+    static func lot(named name: String) -> ParkingLot? {
+        (disney + universal).first { $0.name == name }
+    }
 }
 
 // MARK: - Distance
@@ -98,9 +220,19 @@ final class ParkingService {
         return spot
     }
 
-    func save(coordinate: CLLocationCoordinate2D?, note: String, resort: ParkGroup) {
-        spots[resort.rawValue] = ParkingSpot(latitude: coordinate?.latitude, longitude: coordinate?.longitude,
-                                            note: note, resortRaw: resort.rawValue, savedAt: .now)
+    func save(coordinate: CLLocationCoordinate2D?, note: String, details: ParkingDetails = .empty,
+              resort: ParkGroup) {
+        var spot = ParkingSpot(latitude: coordinate?.latitude, longitude: coordinate?.longitude,
+                               note: note, resortRaw: resort.rawValue, savedAt: .now)
+        spot.details = details.normalized
+        spots[resort.rawValue] = spot
+        persist()
+    }
+
+    func updateDetails(_ details: ParkingDetails, resort: ParkGroup) {
+        guard var spot = spot(for: resort) else { return }
+        spot.details = details.normalized
+        spots[resort.rawValue] = spot
         persist()
     }
 
@@ -170,7 +302,7 @@ final class ParkingService {
     static func openWalkingDirections(to spot: ParkingSpot) {
         guard let coordinate = spot.coordinate else { return }
         let item = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
-        item.name = spot.trimmedNote.isEmpty ? "My Car" : "My Car — \(spot.trimmedNote)"
+        item.name = spot.summary.isEmpty ? "My Car" : "My Car — \(spot.summary)"
         item.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking])
     }
 
@@ -300,9 +432,9 @@ enum ParkingReminder {
         }
         let content = UNMutableNotificationContent()
         content.title = "🚗 Parks close at \(when.closing.formatted(date: .omitted, time: .shortened))"
-        content.body = spot.trimmedNote.isEmpty
+        content.body = spot.summary.isEmpty
             ? "Tap for walking directions back to your car."
-            : "Your car: \(spot.trimmedNote). Tap for walking directions."
+            : "Your car: \(spot.summary). Tap for walking directions."
         content.sound = .default
         content.userInfo = [DeepLink.userInfoKey: DeepLink.parking.url.absoluteString]
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, when.fire.timeIntervalSinceNow), repeats: false)

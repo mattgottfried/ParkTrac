@@ -14,6 +14,11 @@ struct ParkingSheet: View {
     @State private var locationService = LocationService()
 
     @State private var note = ""
+    // Lot menus (like the Disney app); "" = not picked
+    @State private var lotName = ""
+    @State private var sectionName = ""
+    @State private var level = 0
+    @State private var row = ""
     @State private var isLocating = false
     @State private var locateError: String?
     @State private var showCamera = false
@@ -21,9 +26,26 @@ struct ParkingSheet: View {
     @State private var pendingPhoto: UIImage?
     @State private var showClearConfirm = false
     @State private var showFullPhoto = false
-    @FocusState private var noteFocused: Bool
+    private enum Field { case note, row }
+    @FocusState private var focused: Field?
 
     private var spot: ParkingSpot? { parking.spot(for: resort) }
+    private var lots: [ParkingLot] { ParkingLots.lots(for: resort) }
+    private var selectedLot: ParkingLot? { lots.first { $0.name == lotName } }
+    private var lastLotKey: String { "lastParkingLot_\(RideMetadata.normalize(resort.rawValue))" }
+
+    /// What the menus currently say
+    private var details: ParkingDetails {
+        guard let lot = selectedLot else { return .empty }
+        return ParkingDetails(lot: lot.name,
+                              section: lot.allSections.contains(sectionName) ? sectionName : nil,
+                              level: lot.levels != nil && level > 0 ? level : nil,
+                              row: row).normalized
+    }
+
+    private var hasAnythingToSave: Bool {
+        !details.isEmpty || !note.trimmingCharacters(in: .whitespaces).isEmpty || pendingPhoto != nil
+    }
     private var photo: UIImage? { pendingPhoto ?? parking.photo(for: resort) }
 
     var body: some View {
@@ -44,7 +66,30 @@ struct ParkingSheet: View {
             }
             .onAppear {
                 note = spot?.note ?? ""
+                if let d = spot?.details, !d.isEmpty {
+                    lotName = d.lot ?? ""
+                    sectionName = d.section ?? ""
+                    level = d.level ?? 0
+                    row = d.row ?? ""
+                } else if let last = UserDefaults.standard.string(forKey: lastLotKey),
+                          lots.contains(where: { $0.name == last }) {
+                    lotName = last   // usually the same lot as last time
+                }
                 locationService.requestAndStart()
+            }
+            .onChange(of: lotName) { _, name in
+                if let lot = selectedLot {
+                    if !lot.allSections.contains(sectionName) { sectionName = "" }
+                    if lot.levels == nil { level = 0 }
+                    UserDefaults.standard.set(name, forKey: lastLotKey)
+                }
+                commitDetails()
+            }
+            .onChange(of: sectionName) { _, _ in commitDetails() }
+            .onChange(of: level) { _, _ in commitDetails() }
+            .onChange(of: focused) { old, _ in
+                if old == .note { commitNote() }
+                if old == .row { commitDetails() }
             }
             .onDisappear { locationService.stop() }
             .onChange(of: photoItem) { _, item in
@@ -71,6 +116,9 @@ struct ParkingSheet: View {
                     parking.clear(resort: resort)
                     ParkingReminder.cancel(resort: resort)
                     note = ""
+                    sectionName = ""
+                    level = 0
+                    row = ""
                     pendingPhoto = nil
                 }
             } message: {
@@ -98,8 +146,16 @@ struct ParkingSheet: View {
             if let locateError {
                 Text(locateError).font(.caption).foregroundStyle(.orange)
             }
+            if hasAnythingToSave && !isLocating {
+                Button {
+                    locateError = nil
+                    saveWithoutLocation()
+                } label: {
+                    Label(details.isEmpty ? "Save Without GPS" : "Save Section & Row Only", systemImage: "square.and.arrow.down")
+                }
+            }
         } footer: {
-            Text("Save it while you're standing by the car — ThrillTrack uses your phone's GPS. It syncs to your other devices signed in to the same iCloud account.")
+            Text("Save it while you're standing by the car — ThrillTrack uses your phone's GPS for walking directions. Or just pick the lot, section and row. It syncs to your other devices signed in to the same iCloud account.")
         }
 
         noteAndPhotoSections
@@ -127,13 +183,14 @@ struct ParkingSheet: View {
                 }
                 Button {
                     commitNote()
+                    commitDetails()
                     ParkingService.openWalkingDirections(to: spot)
                 } label: {
                     Label("Walk There in Maps", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
                         .font(.headline)
                 }
             } else {
-                Label("No GPS location saved — use the note and photo.", systemImage: "location.slash")
+                Label("No GPS location saved — find it by the section and row below.", systemImage: "location.slash")
                     .foregroundStyle(.secondary)
             }
         } header: {
@@ -173,12 +230,53 @@ struct ParkingSheet: View {
 
     @ViewBuilder
     private var noteAndPhotoSections: some View {
-        Section("Lot / Row") {
-            TextField("e.g. Zurg 112, Level 4 Hollywood", text: $note)
-                .focused($noteFocused)
+        if !lots.isEmpty {
+            Section {
+                Picker("Lot", selection: $lotName) {
+                    Text("Choose…").tag("")
+                    ForEach(lots) { Text($0.name).tag($0.name) }
+                }
+                if let lot = selectedLot {
+                    Picker("Section", selection: $sectionName) {
+                        Text("Choose…").tag("")
+                        ForEach(Array(lot.groups.enumerated()), id: \.offset) { _, group in
+                            if let groupName = group.name {
+                                Section(groupName) {
+                                    ForEach(group.sections, id: \.self) { Text($0).tag($0) }
+                                }
+                            } else {
+                                ForEach(group.sections, id: \.self) { Text($0).tag($0) }
+                            }
+                        }
+                    }
+                    if let levels = lot.levels {
+                        Picker("Level", selection: $level) {
+                            Text("—").tag(0)
+                            ForEach(Array(levels), id: \.self) { Text("Level \($0)").tag($0) }
+                        }
+                    }
+                    HStack {
+                        Text(lot.rowLabel.isEmpty ? "Number" : lot.rowLabel)
+                        TextField(lot.rowPrompt, text: $row)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.numbersAndPunctuation)
+                            .focused($focused, equals: .row)
+                            .submitLabel(.done)
+                            .onSubmit(commitDetails)
+                    }
+                }
+            } header: {
+                Text("Where You Parked")
+            } footer: {
+                Text("The lot, the character or name on the sign, and your row — like the Disney and Universal apps.")
+            }
+        }
+
+        Section(lots.isEmpty ? "Lot / Row" : "Notes") {
+            TextField(lots.isEmpty ? "e.g. P3, Level 2, Row C" : "Anything else (optional)", text: $note)
+                .focused($focused, equals: .note)
                 .submitLabel(.done)
                 .onSubmit(commitNote)
-                .onChange(of: noteFocused) { _, focused in if !focused { commitNote() } }
         }
 
         Section {
@@ -224,7 +322,7 @@ struct ParkingSheet: View {
             let locator = PreciseLocator()
             let location = try await locator.locate()
             if spot == nil {
-                parking.save(coordinate: location.coordinate, note: note, resort: resort)
+                parking.save(coordinate: location.coordinate, note: note, details: details, resort: resort)
             } else {
                 parking.updateLocation(location.coordinate, resort: resort)
             }
@@ -234,18 +332,26 @@ struct ParkingSheet: View {
             }
             refreshReminder()
         } catch PreciseLocator.Failure.denied {
-            locateError = "Location is off for ThrillTrack. Turn it on in Settings, or save a note and photo instead."
+            locateError = hasAnythingToSave
+                ? "Location is off for ThrillTrack. Saved what you entered — turn location on in Settings for walking directions."
+                : "Location is off for ThrillTrack. Pick your lot, section and row instead, or turn location on in Settings."
             saveWithoutLocationIfNeeded()
         } catch {
-            locateError = "Couldn't get a GPS fix. Saved your note and photo — try again in the open."
+            locateError = hasAnythingToSave
+                ? "Couldn't get a GPS fix. Saved what you entered — try again in the open."
+                : "Couldn't get a GPS fix. Pick your lot, section and row, or try again in the open."
             saveWithoutLocationIfNeeded()
         }
     }
 
-    /// No GPS: still keep the note/photo so the spot isn't lost
+    /// No GPS: still keep the section/row, note and photo so the spot isn't lost
     private func saveWithoutLocationIfNeeded() {
-        guard spot == nil, !note.trimmingCharacters(in: .whitespaces).isEmpty || pendingPhoto != nil else { return }
-        parking.save(coordinate: nil, note: note, resort: resort)
+        guard spot == nil, hasAnythingToSave else { return }
+        saveWithoutLocation()
+    }
+
+    private func saveWithoutLocation() {
+        parking.save(coordinate: nil, note: note, details: details, resort: resort)
         if let pendingPhoto {
             parking.setPhoto(pendingPhoto, resort: resort)
             self.pendingPhoto = nil
@@ -257,6 +363,12 @@ struct ParkingSheet: View {
         guard spot != nil, note != spot?.note else { return }
         parking.updateNote(note, resort: resort)
         refreshReminder()   // the reminder quotes the note
+    }
+
+    private func commitDetails() {
+        guard let spot, details != spot.details.normalized else { return }
+        parking.updateDetails(details, resort: resort)
+        refreshReminder()   // the reminder quotes the spot
     }
 
     private func refreshReminder() {
