@@ -1,4 +1,5 @@
 NEW: Car Locator (with Disney-style lot menus) + Home Screen shortcuts
+This build rolls up everything since the Instant Alerts build.
 
 Save where you parked
 • Tap the car button on the Wait Times map (top right), "Save Parking Spot" in My Day → Parking, or long-press the ThrillTrack icon → Find My Car.
