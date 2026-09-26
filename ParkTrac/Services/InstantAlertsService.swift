@@ -204,7 +204,7 @@ struct InstantAlertsSyncResponse: Decodable {
 final class InstantAlertsService {
     static let shared = InstantAlertsService()
 
-    static let defaultServerURL = "https://thrilltrack-alerts.deno.dev"
+    static let defaultServerURL = "https://thrilltrack-alerts.mattgottfried.deno.net"
     /// Server-side coverage counts only if we synced this recently
     static let coverageWindow: TimeInterval = 3 * 3600
 
