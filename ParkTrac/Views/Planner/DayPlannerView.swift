@@ -114,6 +114,29 @@ struct DayPlannerView: View {
                 }
             }
 
+            // Reopen watches (set from a down/closed ride's detail sheet)
+            let reopenWatches = ReopenWatchService.shared.watches.filter(\.isToday)
+            if !reopenWatches.isEmpty {
+                Section {
+                    ForEach(reopenWatches) { watch in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(watch.rideName).font(.subheadline.weight(.medium))
+                            Text("Alert when it's operating again")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .swipeActions {
+                            Button("Stop", role: .destructive) {
+                                ReopenWatchService.shared.remove(rideId: watch.rideId)
+                            }
+                        }
+                    }
+                } header: {
+                    Label("Watching for Reopen", systemImage: "bell.and.waves.left.and.right")
+                        .foregroundStyle(.green)
+                }
+            }
+
             // Who's Coming section
             Section {
                 if !appState.namedPartyMembers.isEmpty {

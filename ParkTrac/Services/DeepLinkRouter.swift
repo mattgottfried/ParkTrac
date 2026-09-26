@@ -94,7 +94,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound]
+        // A push from the alert server while we're open: pull its state so we don't alert again
+        if notification.request.trigger is UNPushNotificationTrigger {
+            await InstantAlertsService.shared.sync()
+        }
+        return [.banner, .list, .sound]
     }
 
     /// Buttons on wait-drop alerts for DAS / AAP holders. Registered at launch.

@@ -70,5 +70,8 @@ struct BackgroundRefreshService {
         WaitTimeRecorder.shared.record(rides: allRides, context: context)
         // Lightning Lane watches get background coverage too (≈hourly, iOS decides)
         LightningLaneWatchService.shared.check(rides: allRides)
+        ReopenWatchService.shared.check(rides: allRides)
+        // Keeps the alert server's copy from expiring
+        InstantAlertsService.shared.refreshIfStale()
     }
 }

@@ -115,6 +115,9 @@ struct SettingsView: View {
                          : "Marks every restaurant as not visited and clears both ratings. This can't be undone.")
                 }
 
+                // MARK: Instant Alerts
+                InstantAlertsSection()
+
                 // MARK: Booking Apps
                 Section {
                     Toggle(isOn: $disneyViaShortcut) {
@@ -232,5 +235,59 @@ struct SettingsView: View {
             r.wifeRating = 0
         }
         try? context.save()
+    }
+}
+
+// MARK: - Instant Alerts
+
+/// Server-sent push alerts (server/ on Deno Deploy) instead of iOS's ≈hourly background checks.
+private struct InstantAlertsSection: View {
+    @State private var showServer = false
+
+    var body: some View {
+        @Bindable var service = InstantAlertsService.shared
+        Section {
+            Toggle(isOn: $service.isEnabled) {
+                Label("Instant Alerts", systemImage: "bolt.badge.clock")
+            }
+            if service.isEnabled {
+                HStack(alignment: .firstTextBaseline) {
+                    Image(systemName: service.isHealthy ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                        .foregroundStyle(service.isHealthy ? .green : .orange)
+                    Text(service.statusText)
+                        .font(.subheadline)
+                        .foregroundStyle(service.isHealthy ? Color.primary : Color.orange)
+                }
+                .accessibilityElement(children: .combine)
+                if let last = service.lastPushAt {
+                    LabeledContent("Last alert sent", value: last.formatted(date: .abbreviated, time: .shortened))
+                        .font(.subheadline)
+                }
+                Button {
+                    Task { await service.sync() }
+                } label: {
+                    if service.isSyncing {
+                        HStack { ProgressView(); Text("Syncing…") }
+                    } else {
+                        Label("Sync Now", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                }
+                .disabled(service.isSyncing)
+                DisclosureGroup("Server", isExpanded: $showServer) {
+                    TextField("Server URL", text: $service.serverURL)
+                        .textContentType(.URL)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .font(.footnote.monospaced())
+                    Button("Use Default") { service.serverURL = InstantAlertsService.defaultServerURL }
+                        .font(.footnote)
+                }
+            }
+        } header: {
+            Text("Instant Alerts")
+        } footer: {
+            Text("Lightning Lane watches, wait alerts (with DAS/AAP buttons) and \"back up\" alerts arrive within about a minute, even when ThrillTrack is closed. Your ThrillTrack alert server checks wait times every minute and sends the notification; it only stores this phone's watches and a push address. When it can't be reached, the app falls back to its own checks.")
+        }
     }
 }

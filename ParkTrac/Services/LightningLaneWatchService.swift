@@ -74,15 +74,26 @@ final class LightningLaneWatchService {
         watches.removeAll { $0.id == watch.id || $0.rideId == watch.rideId }
         watches.append(watch)
         persist()
+        Task { @MainActor in InstantAlertsService.shared.watchesChanged() }
     }
 
     func remove(rideId: String) {
         watches.removeAll { $0.rideId == rideId }
         persist()
+        Task { @MainActor in InstantAlertsService.shared.watchesChanged() }
     }
 
     func remove(id: UUID) {
         watches.removeAll { $0.id == id }
+        persist()
+        Task { @MainActor in InstantAlertsService.shared.watchesChanged() }
+    }
+
+    /// The alert server already pushed this return — remember it so we only alert for earlier ones.
+    func markNotified(id: UUID, returnStart: Date) {
+        guard let index = watches.firstIndex(where: { $0.id == id }) else { return }
+        if let last = watches[index].lastNotifiedStart, last <= returnStart { return }
+        watches[index].lastNotifiedStart = returnStart
         persist()
     }
 
@@ -101,6 +112,8 @@ final class LightningLaneWatchService {
         let byId = Dictionary(rides.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         for index in watches.indices {
             let watch = watches[index]
+            // The alert server pushes this one (within a minute) — don't double up
+            guard !InstantAlertsService.shared.covers(watch.id.uuidString) else { continue }
             guard let ride = byId[watch.rideId],
                   let start = Self.alertStart(for: watch, info: ride.multiPass) else { continue }
 

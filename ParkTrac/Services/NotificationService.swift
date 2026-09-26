@@ -14,6 +14,8 @@ final class NotificationService {
                      resort: ParkGroup, parkNames: [String: String] = [:]) {
         let alerts = (try? context.fetch(FetchDescriptor<RideAlert>())) ?? []
         for alert in alerts where alert.isActive {
+            // The alert server pushes this one — don't double up
+            guard !InstantAlertsService.shared.covers(alert.serverId) else { continue }
             guard let ride = rides.first(where: { $0.id == alert.rideId }) else { continue }
             guard ride.isOperating, let wait = ride.waitMinutes, wait <= alert.thresholdMinutes else { continue }
             fireNotification(for: alert, currentWait: wait, resort: resort,
@@ -46,6 +48,24 @@ final class NotificationService {
             identifier: "alert-\(alert.rideId)-\(Date().timeIntervalSince1970)",
             content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
+    }
+
+    /// A ride you were watching is operating again.
+    func fireRideReopened(watch: ReopenWatch, wait: Int?) {
+        let content = UNMutableNotificationContent()
+        content.title = "✅ \(watch.rideName) is back up"
+        content.body = wait.map { "It's operating again — posted wait \($0) min." } ?? "It's operating again."
+        content.sound = .default
+        content.threadIdentifier = "reopen-\(watch.rideId)"
+        content.userInfo = [
+            DeepLink.userInfoKey: DeepLink.ride(id: watch.rideId).url.absoluteString,
+            NotificationKeys.rideId: watch.rideId,
+            NotificationKeys.rideName: watch.rideName,
+            NotificationKeys.parkName: watch.parkName,
+            NotificationKeys.resort: watch.resortRaw,
+        ]
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: "reopen-\(watch.rideId)", content: content, trigger: nil))
     }
 
     /// Lightning Lane watch hit: a Multi Pass return opened inside the user's window

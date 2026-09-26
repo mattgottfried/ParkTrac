@@ -5,6 +5,8 @@ struct SetAlertSheet: View {
     let ride: DisplayRide
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
+    @Environment(AppState.self) private var appState
+    @Environment(WaitTimesViewModel.self) private var viewModel
     @State private var threshold = 30
 
     var body: some View {
@@ -39,10 +41,15 @@ struct SetAlertSheet: View {
         // Remove any existing alert for this ride first
         let existing = (try? context.fetch(FetchDescriptor<RideAlert>())) ?? []
         for old in existing.filter({ $0.rideId == ride.id }) { context.delete(old) }
-        let alert = RideAlert(rideId: ride.id, rideName: ride.name, thresholdMinutes: threshold)
+        let parkName = viewModel.currentParks.first { $0.id == ride.parkId }?.name
+        let alert = RideAlert(rideId: ride.id, rideName: ride.name, thresholdMinutes: threshold,
+                              parkId: ride.parkId, parkName: parkName, resort: appState.selectedResort)
         context.insert(alert)
         try? context.save()
-        Task { await NotificationService.shared.requestAuthorization() }
+        Task {
+            await NotificationService.shared.requestAuthorization()
+            InstantAlertsService.shared.watchesChanged()
+        }
         dismiss()
     }
 }

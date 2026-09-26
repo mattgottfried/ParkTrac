@@ -251,6 +251,10 @@ struct RideDetailSheet: View {
 
                 // Alert section
                 VStack(spacing: 10) {
+                    // Down or closed: offer a one-shot "tell me when it's back up"
+                    if !ride.isOperating || ReopenWatchService.shared.watch(for: ride.id) != nil {
+                        reopenWatchRow
+                    }
                     let existingAlert = allAlerts.first(where: { $0.rideId == ride.id && $0.isActive })
                     if let alert = existingAlert {
                         HStack {
@@ -261,6 +265,7 @@ struct RideDetailSheet: View {
                             Button("Cancel") {
                                 alert.isActive = false
                                 try? context.save()
+                                InstantAlertsService.shared.watchesChanged()
                             }
                             .font(.caption)
                             .foregroundStyle(.red)
@@ -325,6 +330,37 @@ struct RideDetailSheet: View {
             AddPlanItemView(resort: parkGroup.rawValue, prefillRide: ride, prefillPark: parkName)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+        }
+    }
+
+    // MARK: - Reopen watch
+
+    @ViewBuilder
+    private var reopenWatchRow: some View {
+        if ReopenWatchService.shared.watch(for: ride.id) != nil {
+            HStack {
+                Label("Alert when it reopens", systemImage: "bell.badge.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.green)
+                Spacer()
+                Button("Cancel") { ReopenWatchService.shared.remove(rideId: ride.id) }
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(Color.green.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+        } else {
+            Button {
+                ReopenWatchService.shared.add(ride: ride, parkName: parkName, resort: parkGroup)
+            } label: {
+                Label(ride.status == "DOWN" ? "Alert Me When It's Back Up" : "Alert Me When It Opens",
+                      systemImage: "bell.and.waves.left.and.right")
+                    .font(.subheadline.weight(.medium))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+            }
+            .buttonStyle(.bordered)
+            .tint(.green)
         }
     }
 

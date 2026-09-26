@@ -61,6 +61,7 @@
 		AA0000000000000000000192 /* LightningLaneWatchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000193 /* LightningLaneWatchService.swift */; };
 		AA0000000000000000000196 /* ReturnTimeLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000197 /* ReturnTimeLogger.swift */; };
 		AA0000000000000000000198 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000199 /* ExportService.swift */; };
+		AA000000000000000000019A /* InstantAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000019B /* InstantAlertsService.swift */; };
 		AA0000000000000000000194 /* LightningLaneSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000195 /* LightningLaneSection.swift */; };
 		AA0000000000000000000127 /* CharacterData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000126 /* CharacterData.swift */; };
 		AA0000000000000000000129 /* ShowsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000128 /* ShowsListView.swift */; };
@@ -191,6 +192,7 @@
 		AA0000000000000000000193 /* LightningLaneWatchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningLaneWatchService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000197 /* ReturnTimeLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnTimeLogger.swift; sourceTree = "<group>"; };
 		AA0000000000000000000199 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
+		AA000000000000000000019B /* InstantAlertsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantAlertsService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000195 /* LightningLaneSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningLaneSection.swift; sourceTree = "<group>"; };
 		AA0000000000000000000126 /* CharacterData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterData.swift; sourceTree = "<group>"; };
 		AA0000000000000000000128 /* ShowsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowsListView.swift; sourceTree = "<group>"; };
@@ -355,6 +357,7 @@
 				AA0000000000000000000193 /* LightningLaneWatchService.swift */,
 				AA0000000000000000000197 /* ReturnTimeLogger.swift */,
 				AA0000000000000000000199 /* ExportService.swift */,
+				AA000000000000000000019B /* InstantAlertsService.swift */,
 				AA0000000000000000000126 /* CharacterData.swift */,
 				AA000000000000000000017C /* TicketPriceService.swift */,
 				AA0000000000000000000181 /* PersistenceController.swift */,
@@ -703,6 +706,7 @@
 				AA0000000000000000000192 /* LightningLaneWatchService.swift in Sources */,
 				AA0000000000000000000196 /* ReturnTimeLogger.swift in Sources */,
 				AA0000000000000000000198 /* ExportService.swift in Sources */,
+				AA000000000000000000019A /* InstantAlertsService.swift in Sources */,
 				AA0000000000000000000194 /* LightningLaneSection.swift in Sources */,
 				AA0000000000000000000127 /* CharacterData.swift in Sources */,
 				AA0000000000000000000129 /* ShowsListView.swift in Sources */,
