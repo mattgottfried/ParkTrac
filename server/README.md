@@ -39,14 +39,13 @@ The server stores only a random ID for each install, the push token, the phone's
    - Note the **Key ID**.
 3. **Team ID:** it's `X796Z5UW4P`, the same one shown under Membership.
 
-### 2. Deno Deploy (deno.com/deploy)
+### 2. Deno Deploy (console.deno.com)
 
 1. Sign in with GitHub.
-2. Create a new project from the **mattgottfried/ParkTrac** repo:
-   - Branch: `claude/vigilant-lamport-6DitA`
-   - Entrypoint: `server/main.ts`
-   - Install/build step: none
-3. Name the project **`thrilltrack-alerts`**. The app expects `https://thrilltrack-alerts.deno.dev`. If that name is taken, pick another and paste the new URL into ThrillTrack under Settings → Instant Alerts → Server.
+2. Create a new app (console.deno.com) from the **mattgottfried/ParkTrac** repo:
+   - Framework preset None, app directory `server`, entrypoint `main.ts`, no install/build command.
+   - Production deploys from the repo's default branch (`claude/vigilant-lamport-6DitA`), so every merge redeploys the server.
+3. Name the app **`thrilltrack-alerts`**. It is live at **`https://thrilltrack-alerts.mattgottfried.deno.net`** (`<app>.<org>.deno.net`), which is the app's default server. A different URL can be pasted into ThrillTrack under Settings → Instant Alerts → Server.
 4. If Deno Deploy asks about a database, attach a **Deno KV** database to the project.
 5. Add these environment variables:
 
@@ -57,7 +56,7 @@ The server stores only a random ID for each install, the push token, the phone's
    | `APNS_TEAM_ID` | `X796Z5UW4P` |
    | `APNS_TOPIC` | `com.mattgottfried.parktrac` |
 
-6. Open `https://thrilltrack-alerts.deno.dev/health`. It should return `{"ok":true,...}`.
+6. Open `https://thrilltrack-alerts.mattgottfried.deno.net/health`. It should return `{"ok":true,...}`.
 
 ### 3. The app
 
