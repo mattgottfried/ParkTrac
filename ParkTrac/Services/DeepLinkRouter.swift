@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import UserNotifications
 
 // MARK: - Deep Links
@@ -93,10 +94,67 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         [.banner, .list, .sound]
     }
 
+    /// Buttons on wait-drop alerts for DAS / AAP holders. Registered at launch.
+    static func registerCategories() {
+        let openUniversal = UNNotificationAction(
+            identifier: NotificationKeys.openBookingAppAction,
+            title: "Book in Universal App", options: [.foreground])
+        let openDisney = UNNotificationAction(
+            identifier: NotificationKeys.openBookingAppAction,
+            title: "Book in Disney App", options: [.foreground])
+        // Runs in the background — logs without opening ThrillTrack
+        let logged = UNNotificationAction(
+            identifier: NotificationKeys.loggedReturnAction,
+            title: "I Booked It — Log Return", options: [])
+        UNUserNotificationCenter.current().setNotificationCategories([
+            UNNotificationCategory(identifier: NotificationKeys.aapWaitCategory,
+                                   actions: [openUniversal, logged], intentIdentifiers: []),
+            UNNotificationCategory(identifier: NotificationKeys.dasWaitCategory,
+                                   actions: [openDisney, logged], intentIdentifiers: []),
+        ])
+    }
+
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse) async {
-        guard let raw = response.notification.request.content.userInfo[DeepLink.userInfoKey] as? String,
-              let url = URL(string: raw) else { return }
-        await MainActor.run { _ = DeepLinkRouter.shared.open(url: url) }
+        let info = response.notification.request.content.userInfo
+        switch response.actionIdentifier {
+        case NotificationKeys.openBookingAppAction:
+            guard let pass = Self.accessPass(from: info) else { return }
+            await MainActor.run {
+                // Land on the ride when they come back, then hand off to the resort's app
+                if let raw = info[DeepLink.userInfoKey] as? String, let url = URL(string: raw) {
+                    _ = DeepLinkRouter.shared.open(url: url)
+                }
+                UIApplication.shared.open(pass.bookingURL)
+            }
+
+        case NotificationKeys.loggedReturnAction:
+            guard let pass = Self.accessPass(from: info),
+                  let resortRaw = info[NotificationKeys.resort] as? String,
+                  let resort = ParkGroup(rawValue: resortRaw),
+                  let rideId = info[NotificationKeys.rideId] as? String,
+                  let rideName = info[NotificationKeys.rideName] as? String else { return }
+            let parkName = info[NotificationKeys.parkName] as? String ?? ""
+            let postedWait = info[NotificationKeys.postedWait] as? Int
+            await MainActor.run {
+                let returnStart = ReturnTimeLogger.logAccessPassNow(
+                    pass, rideId: rideId, rideName: rideName, parkName: parkName,
+                    resort: resort, postedWait: postedWait,
+                    context: PersistenceController.container.mainContext)
+                NotificationService.shared.confirmAccessPassLogged(
+                    passLabel: pass.label, rideName: rideName, returnStart: returnStart)
+            }
+
+        default:
+            guard let raw = info[DeepLink.userInfoKey] as? String,
+                  let url = URL(string: raw) else { return }
+            await MainActor.run { _ = DeepLinkRouter.shared.open(url: url) }
+        }
+    }
+
+    private static func accessPass(from info: [AnyHashable: Any]) -> AccessPass? {
+        guard let raw = info[NotificationKeys.resort] as? String,
+              let resort = ParkGroup(rawValue: raw) else { return nil }
+        return AccessPass.held(at: resort) ?? (resort == .universal ? .aap : .das)
     }
 }

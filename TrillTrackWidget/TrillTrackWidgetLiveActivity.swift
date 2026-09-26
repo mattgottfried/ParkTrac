@@ -90,7 +90,14 @@ private struct LockScreenView: View {
     }
 
     /// Label shown when the countdown target has passed.
+    /// DAS / AAP count down to when you may return (then valid until close),
+    /// unlike timed passes that count down to when the window closes.
+    private var isAccessPass: Bool {
+        context.attributes.mode == .returnTime && ["DAS", "AAP"].contains(context.attributes.label)
+    }
+
     private var closedText: String {
+        if isAccessPass { return "Ready — ride any time" }
         switch context.attributes.mode {
         case .dining:      return "Reservation time"
         case .ropeDrop:    return "Park is open"
@@ -101,6 +108,7 @@ private struct LockScreenView: View {
 
     /// Prefix shown under the live countdown (e.g. "Return by 3:15 PM").
     private func caption(for end: Date) -> String {
+        if isAccessPass { return "Return at \(end.formatted(date: .omitted, time: .shortened))" }
         switch context.attributes.mode {
         case .dining:      return "Reservation at \(end.formatted(date: .omitted, time: .shortened))"
         case .ropeDrop:    return "Opens at \(end.formatted(date: .omitted, time: .shortened))"
