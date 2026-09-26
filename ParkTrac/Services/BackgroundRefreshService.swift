@@ -68,6 +68,10 @@ struct BackgroundRefreshService {
         // the same implementation the foreground refresh uses
         let context = ModelContext(container)
         WaitTimeRecorder.shared.record(rides: allRides, context: context)
+        // Must-Do "good time to ride" nudges in the background too (≈hourly)
+        let mustDo = Set((NSUbiquitousKeyValueStore.default.array(forKey: "wishList") as? [String])
+                         ?? UserDefaults.standard.stringArray(forKey: "wishList") ?? [])
+        GoodTimeService.shared.update(rides: allRides, mustDo: mustDo, context: context)
         // Lightning Lane watches get background coverage too (≈hourly, iOS decides)
         LightningLaneWatchService.shared.check(rides: allRides)
         ReopenWatchService.shared.check(rides: allRides)

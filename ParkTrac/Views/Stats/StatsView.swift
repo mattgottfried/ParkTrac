@@ -104,6 +104,20 @@ struct StatsView: View {
                             .padding(.vertical, 4)
                     }
                     .padding(.horizontal)
+
+                    // Trip countdown + checklist + yen converter
+                    NavigationLink(destination: TripPlannerView()) {
+                        HStack {
+                            Label("Trip Planner", systemImage: "airplane")
+                            Spacer()
+                            if let text = TripService.shared.countdownText {
+                                Text(text).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        .font(.subheadline.weight(.medium))
+                        .padding(.vertical, 4)
+                    }
+                    .padding(.horizontal)
                     .padding(.bottom, 4)
 
                     // Restaurants card
