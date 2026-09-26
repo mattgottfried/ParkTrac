@@ -163,6 +163,11 @@ final class WaitTimesViewModel {
         return days.filter { $0.date.hasPrefix(todayStr) }
     }
 
+    /// Today's schedule entries for every loaded park at a resort (parking reminder uses the latest close)
+    func todaySchedule(forResort group: ParkGroup) -> [ParkScheduleDay] {
+        (parksByGroup[group] ?? []).flatMap { todaySchedule(for: $0) }
+    }
+
     static func dayString(_ date: Date, in timeZone: TimeZone) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")

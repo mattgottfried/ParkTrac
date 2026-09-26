@@ -520,6 +520,9 @@ struct ParkMapView: View {
                                       uniquingKeysWith: { first, _ in first }))
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
             syncRopeDropActivity()
+            // Schedules may have just loaded — (re)arm the "parks close soon" car reminder
+            ParkingReminder.refresh(resort: viewModel.selectedGroup,
+                                    schedule: viewModel.todaySchedule(forResort: viewModel.selectedGroup))
         }
         .sheet(item: $rideAction) { action in
             switch action {

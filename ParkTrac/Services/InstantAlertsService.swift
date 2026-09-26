@@ -415,9 +415,18 @@ final class InstantAlertsService {
     }
 }
 
-// MARK: - App delegate (push token)
+// MARK: - App delegate (push token, quick actions)
 
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    /// Hooks up Home Screen quick actions (cold launch here, warm via QuickActionSceneDelegate)
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession,
+                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        if let item = options.shortcutItem { QuickActions.handle(item) }
+        let config = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        config.delegateClass = QuickActionSceneDelegate.self
+        return config
+    }
+
     func application(_ application: UIApplication,
                      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let hex = deviceToken.map { String(format: "%02x", $0) }.joined()

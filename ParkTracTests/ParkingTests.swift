@@ -60,4 +60,47 @@ final class ParkingTests: XCTestCase {
         let b = CLLocationCoordinate2D(latitude: 28.4187 + 0.0072, longitude: -81.5812)
         XCTAssertEqual(ParkingDistance.meters(from: a, to: b), 800, accuracy: 10)
     }
+
+    // MARK: Park-close reminder
+
+    private func day(_ type: String, closesIn hours: Double) -> ParkScheduleDay {
+        let iso = ISO8601DateFormatter()
+        return ParkScheduleDay(date: "2026-10-01", openingTime: nil,
+                               closingTime: iso.string(from: now.addingTimeInterval(hours * 3600)),
+                               type: type, description: nil)
+    }
+
+    func testReminderUsesLatestRegularClose() throws {
+        // MK closes in 5 h, EPCOT in 6 h; a party runs later but doesn't count
+        let when = try XCTUnwrap(ParkingReminder.fireDate(
+            schedule: [day("OPERATING", closesIn: 5), day("OPERATING", closesIn: 6), day("TICKETED_EVENT", closesIn: 8)],
+            now: now))
+        XCTAssertEqual(when.closing.timeIntervalSince(now), 6 * 3600, accuracy: 1)
+        XCTAssertEqual(when.fire.timeIntervalSince(now), 5.5 * 3600, accuracy: 1)
+    }
+
+    func testReminderSkippedWhenTooLateOrUnknown() {
+        XCTAssertNil(ParkingReminder.fireDate(schedule: [day("OPERATING", closesIn: 0.25)], now: now), "inside the 30 min lead")
+        XCTAssertNil(ParkingReminder.fireDate(schedule: [], now: now))
+        XCTAssertNil(ParkingReminder.fireDate(schedule: [day("TICKETED_EVENT", closesIn: 5)], now: now))
+    }
+
+    // MARK: Quick actions
+
+    /// Info.plist UIApplicationShortcutItemType values must stay valid deep-link hosts.
+    func testQuickActionTypesAreDeepLinks() {
+        XCTAssertEqual(QuickActions.link(for: "parking"), .parking)
+        XCTAssertEqual(QuickActions.link(for: "plan"), .plan)
+        XCTAssertEqual(QuickActions.link(for: "waittimes"), .waitTimes)
+        XCTAssertNil(QuickActions.link(for: "nope"))
+    }
+
+    func testInfoPlistQuickActionsResolve() throws {
+        let items = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: "UIApplicationShortcutItems") as? [[String: Any]])
+        XCTAssertFalse(items.isEmpty)
+        for item in items {
+            let type = try XCTUnwrap(item["UIApplicationShortcutItemType"] as? String)
+            XCTAssertNotNil(QuickActions.link(for: type), type)
+        }
+    }
 }
