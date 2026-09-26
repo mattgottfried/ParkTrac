@@ -8,6 +8,7 @@ struct TrillTrackWidgetLiveActivity: Widget {
             LockScreenView(context: context)
                 .activityBackgroundTint(Color.black.opacity(0.85))
                 .activitySystemActionForegroundColor(Color.white)
+                .widgetURL(deepLinkURL(for: context.attributes))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -34,6 +35,7 @@ struct TrillTrackWidgetLiveActivity: Widget {
             } minimal: {
                 Image(systemName: icon(for: context.attributes))
             }
+            .widgetURL(deepLinkURL(for: context.attributes))
         }
     }
 
@@ -44,6 +46,17 @@ struct TrillTrackWidgetLiveActivity: Widget {
         case .dining:      return "fork.knife"
         case .ropeDrop:    return "sunrise.fill"
         case .nextBooking: return "clock.badge.checkmark.fill"
+        }
+    }
+
+    /// Where a tap on the activity lands. Mirrors `DeepLink` in the app target
+    /// (ParkTrac/Services/DeepLinkRouter.swift), which the widget doesn't compile.
+    private func deepLinkURL(for attributes: ThrillTrackActivityAttributes) -> URL? {
+        switch attributes.mode {
+        case .returnTime, .nextBooking: return URL(string: "thrilltrack://plan")
+        case .waitTimer:                return URL(string: "thrilltrack://timer")
+        case .dining:                   return URL(string: "thrilltrack://dining")
+        case .ropeDrop:                 return URL(string: "thrilltrack://waittimes")
         }
     }
 

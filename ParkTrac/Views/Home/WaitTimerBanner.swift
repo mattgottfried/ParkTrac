@@ -59,6 +59,8 @@ struct WaitTimerBanner: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color(.secondarySystemBackground))
+        .contentShape(Rectangle())
+        .onTapGesture { DeepLinkRouter.shared.open(.activeTimer) }
         .onReceive(ticker) { now = $0 }
     }
 

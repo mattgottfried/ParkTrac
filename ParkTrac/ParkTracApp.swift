@@ -1,12 +1,15 @@
 import SwiftUI
 import SwiftData
 import BackgroundTasks
+import UserNotifications
 
 @main
 struct ParkTracApp: App {
     let container: ModelContainer = PersistenceController.container
 
     init() {
+        // Must be set before launch finishes so a tap that launched the app is delivered
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: BackgroundRefreshService.taskIdentifier,
             using: nil

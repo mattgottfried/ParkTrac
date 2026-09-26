@@ -56,6 +56,8 @@ The user config must stay **unnamed** — naming it changes the store URL and or
 **Bucket list** is seeded once on first launch:
 `BucketListService.shared.seedIfNeeded(context:)` (called from `ParkTracApp.task`) reads `allSeedRestaurants` and `allSeedHotels` from `SeedData.swift` and inserts `BucketRestaurant` / `HotelStay` records that don't yet exist (insert-only, keyed by name — user-added custom entries survive).
 
+**Deep links**: `thrilltrack://` (Info.plist `CFBundleURLTypes`) → `DeepLink` / `DeepLinkRouter.shared` (`Services/DeepLinkRouter.swift`). Routes: `waittimes`, `ride/<id>`, `timer` (active wait timer's ride), `plan`, `dining`, `settings`. `ContentView` consumes `router.pending` (switches `AppTab`); `ParkMapView` opens `pendingRideId`; `StatsView` pushes `MyDiningView` on `showDining`. Sources: `.onOpenURL`, Live Activity `widgetURL` (the widget builds the same URL strings itself — it doesn't compile the router), notification `userInfo["deepLink"]` via `NotificationDelegate` (set in `ParkTracApp.init`, also shows banners in the foreground), and taps on `ReturnTimeBanner` / `WaitTimerBanner`. Navigate by calling `DeepLinkRouter.shared.open(...)` rather than adding new ad-hoc flags.
+
 **Dining log**: `MyDiningView` (reached from the Stats tab) is the active dining log — reservations (`DiningReservation`) plus visited `BucketRestaurant`s. There is no separate `Restaurant` model (the legacy one was removed).
 
 ### Key Models

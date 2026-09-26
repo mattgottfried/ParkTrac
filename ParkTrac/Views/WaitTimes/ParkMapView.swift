@@ -393,7 +393,20 @@ struct ParkMapView: View {
         .onChange(of: viewModel.currentParks) { _, _ in autoZoomIfInsidePark() }
         .onChange(of: region.center.latitude) { _, _ in autoSelectParkFromRegion() }
         .onChange(of: region.center.longitude) { _, _ in autoSelectParkFromRegion() }
+        .onChange(of: DeepLinkRouter.shared.pendingRideId, initial: true) { _, _ in openPendingRide() }
+        .onChange(of: DeepLinkRouter.shared.waitTimesReselectCount) { _, _ in
+            // Tab tapped again: back to the whole resort (or the selected park)
+            if let coord = viewModel.filterPark?.coordinate {
+                withAnimation {
+                    region = MKCoordinateRegion(center: coord,
+                        span: MKCoordinateSpan(latitudeDelta: 0.015, longitudeDelta: 0.015))
+                }
+            } else {
+                withAnimation { region = viewModel.selectedGroup.defaultRegion }
+            }
+        }
         .onChange(of: viewModel.lastRefreshed) { _, _ in
+            openPendingRide()
             NotificationService.shared.checkAlerts(rides: viewModel.allRides, context: modelContext)
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
             syncRopeDropActivity()
@@ -414,6 +427,21 @@ struct ParkMapView: View {
         .sheet(item: $selectedRide) { ride in
             let parkName = viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
             RideDetailSheet(ride: ride, theme: theme, parkGroup: viewModel.selectedGroup, parkName: parkName)
+        }
+    }
+
+    // MARK: - Deep Link
+
+    /// Opens the ride sheet requested by a deep link / notification once the ride is loaded.
+    private func openPendingRide() {
+        let router = DeepLinkRouter.shared
+        guard let id = router.pendingRideId else { return }
+        if let ride = viewModel.allRides.first(where: { $0.id == id }) {
+            router.pendingRideId = nil
+            selectedRide = ride
+        } else if viewModel.lastRefreshed != nil && !viewModel.isLoading {
+            // Loaded and still not found (e.g. other resort) — drop it rather than pop up later
+            router.pendingRideId = nil
         }
     }
 
@@ -686,20 +714,27 @@ struct ParkMapView: View {
                         : (viewModel.searchText.isEmpty ? "Loading wait times…" : "No rides match \"\(viewModel.searchText)\"."))
                 )
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(displayedRides) { ride in
-                            RideCardView(ride: ride, theme: theme)
-                                .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .onTapGesture { selectedRide = ride }
-                                .contextMenu { rideContextMenu(for: ride) }
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(displayedRides) { ride in
+                                RideCardView(ride: ride, theme: theme)
+                                    .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .onTapGesture { selectedRide = ride }
+                                    .contextMenu { rideContextMenu(for: ride) }
+                            }
+                        }
+                        .padding(.horizontal).padding(.vertical, 8)
+                    }
+                    .refreshable {
+                        await viewModel.refresh()
+                        userRefreshCount += 1
+                    }
+                    .onChange(of: DeepLinkRouter.shared.waitTimesReselectCount) { _, _ in
+                        if let first = displayedRides.first {
+                            withAnimation { proxy.scrollTo(first.id, anchor: .top) }
                         }
                     }
-                    .padding(.horizontal).padding(.vertical, 8)
-                }
-                .refreshable {
-                    await viewModel.refresh()
-                    userRefreshCount += 1
                 }
             }
         }

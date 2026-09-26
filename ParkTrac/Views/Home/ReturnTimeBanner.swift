@@ -56,6 +56,8 @@ struct ReturnTimeBanner: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(minsLeft <= 5 ? Color.red.opacity(0.12) : Color.orange.opacity(0.1))
+                .contentShape(Rectangle())
+                .onTapGesture { DeepLinkRouter.shared.open(.plan) }
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }

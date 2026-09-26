@@ -26,6 +26,7 @@ final class NotificationService {
         content.title = "⏱ Wait time dropped!"
         content.body = "\(alert.rideName) is now \(currentWait) min — under your \(alert.thresholdMinutes) min alert."
         content.sound = .default
+        content.userInfo = [DeepLink.userInfoKey: DeepLink.ride(id: alert.rideId).url.absoluteString]
         let request = UNNotificationRequest(
             identifier: "alert-\(alert.rideId)-\(Date().timeIntervalSince1970)",
             content: content, trigger: nil)
@@ -39,6 +40,7 @@ final class NotificationService {
         content.title = "⚡ Lightning Lane expiring soon"
         content.body = "\(rideName) return window closes in 10 minutes!"
         content.sound = .default
+        content.userInfo = [DeepLink.userInfoKey: DeepLink.plan.url.absoluteString]
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: fireAt),
             repeats: false)
@@ -56,6 +58,7 @@ final class NotificationService {
         content.title = "🎟 Pass renewal reminder"
         content.body = "\(resort) \(passName) expires in 30 days. Time to renew!"
         content.sound = .default
+        content.userInfo = [DeepLink.userInfoKey: DeepLink.settings.url.absoluteString]
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date),
             repeats: false)

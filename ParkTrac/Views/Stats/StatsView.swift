@@ -219,6 +219,13 @@ struct StatsView: View {
                 .padding(.bottom, 24)
             }
             .navigationTitle("Stats")
+            // Opened by thrilltrack://dining (e.g. the dining Live Activity)
+            .navigationDestination(isPresented: Binding(
+                get: { DeepLinkRouter.shared.showDining },
+                set: { DeepLinkRouter.shared.showDining = $0 }
+            )) {
+                MyDiningView()
+            }
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.visible, for: .navigationBar)
         }
