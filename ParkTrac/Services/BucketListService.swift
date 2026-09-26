@@ -20,14 +20,14 @@ actor BucketListService {
         for seed in allSeedRestaurants {
             let key = "\(seed.name)|\(seed.park)"
             guard !existingKeys.contains(key) else { continue }
+            // Catalog only. SeedData's isVisited / ratings are Matt & Heather's personal
+            // history, kept in the file for reference — never import them, or every new
+            // install (any Apple ID) would start with their visits and stats.
             let restaurant = BucketRestaurant(
                 name: seed.name,
                 park: seed.park,
                 resort: seed.resort,
-                category: seed.category,
-                isVisited: seed.isVisited,
-                mattRating: seed.mattRating,
-                wifeRating: seed.wifeRating
+                category: seed.category
             )
             context.insert(restaurant)
         }

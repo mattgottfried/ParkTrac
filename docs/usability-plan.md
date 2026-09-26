@@ -14,7 +14,77 @@ Goal: a set of small, low-risk updates in phases. Each phase can ship as its own
 
 ---
 
-## ▶ Current step: implement Phase 2 (Phase 1 pushed as 4e7ecc6, not yet built on the Mac)
+## ▶ Current step: bug fix — personal dining history is seeded into every install
+
+**Problem.** `Services/SeedData.swift` gives 47 `SeedRestaurant`s `isVisited: true` with Matt and Heather's real `mattRating` / `wifeRating`. `BucketListService.seedRestaurants` copies those fields into every new store. So a fresh simulator, a different Apple ID, or any other user starts with Matt and Heather's visits, and the Stats tab averages them. The "Matt" / "Heather" labels are also hardcoded. Hotel seeds carry no personal data.
+
+**User decisions:** keep SeedData.swift as-is but stop importing the personal fields; make the two names editable in Settings; add a Settings button to reset dining history.
+
+**1. Stop importing personal data** (`Services/BucketListService.swift`, `seedRestaurants`)
+- Build each `BucketRestaurant(name:park:resort:category:)` without passing `isVisited`, `mattRating` or `wifeRating`, so they use the model defaults (false / 0).
+- Add a comment saying `SeedData`'s visit/rating fields are kept on purpose for reference and must not be imported.
+- `SeedData.swift` stays unchanged. Existing stores are unaffected, because seeding is insert-only and keyed by name|park.
+
+**2. Editable reviewer names** (`Models/AppState.swift`)
+- Add `var raterOneName: String` and `var raterTwoName: String` using the same iCloud KVS pattern as `sortRidesAlphabetically`:
+  - a `didSet` that writes to `icloud`
+  - init that reads KVS first, then falls back to `UserDefaults`
+  - a line in `reloadFromiCloud()`
+- Default to "Matt" / "Heather" when nothing is stored. Add a computed `displayName` helper that falls back to the default if the field is blank.
+- Replace the literal labels with these names in:
+  - `Views/Stats/StatsView.swift` `ratingsRow` (lines ~279–280)
+  - `Views/BucketList/BucketRestaurantDetailView.swift` (`StarRatingView` labels, ~58–59)
+  - `Views/BucketList/HotelDetailView.swift` (~63–64)
+- These views already get `AppState` from the environment, or can take `@Environment(AppState.self)`. The detail views are sheets, which inherit the environment.
+- Model field names (`mattRating` / `wifeRating`) stay the same, so there's no CloudKit schema change.
+- Update CLAUDE.md's "Heather" note to say the names now come from Settings (default Matt / Heather).
+
+**3. Settings: names and reset** (`Views/Settings/SettingsView.swift`)
+- New "Dining & Hotel Ratings" section with two `TextField`s ("First reviewer", "Second reviewer") bound to `$state.raterOneName` / `raterTwoName`.
+- In the same section, a destructive "Reset Dining History…" button that opens a `.confirmationDialog`. The dialog says it clears visited status and both ratings on every restaurant, and that if iCloud sync is on, the reset reaches every device on this Apple ID. On confirm:
+  - fetch all `BucketRestaurant`
+  - set `isVisited = false`, `visitDate = nil`, `mattRating = 0`, `wifeRating = 0`
+  - `try? context.save()`
+- Notes, photos, custom entries and hotels are left alone. `DiningReservation` records are untouched.
+- Add `@Environment(\.modelContext)` to SettingsView.
+
+**Verification (on the Mac):**
+- Delete the app from the simulator, reinstall, and check that Stats dining shows no ratings and no restaurants are visited.
+- Rate a restaurant and check that the labels use the names set in Settings; rename one and check the labels update in the Stats and detail views.
+- Tap Reset Dining History and confirm; check that all visits and ratings clear.
+- On an existing install (your phone), nothing changes until you reset.
+
+**Coordinating with the Mac session.** The Mac Remote Control session is still checking Phase 2 and may push fixes to the same branch.
+- Before editing, run `git pull --rebase origin claude/compassionate-brahmagupta-vrjn15` to pick up any of its commits.
+- The fix touches StatsView, the two detail views, AppState, SettingsView and BucketListService. None of these were changed in Phase 2 except `AppState` (untouched in Phase 2) and StatsView (a one-line Phase 1 change), so conflicts are unlikely.
+- Just before pushing, `git pull --rebase` again. If the push is rejected, pull again, rebase and retry.
+- Never force-push.
+- Tell the user the Mac session should `git pull` before its next build.
+
+Commit to `claude/compassionate-brahmagupta-vrjn15` and push.
+
+---
+
+## Pending: have the Mac build and check Phases 1 and 2 through Remote Control (the user pastes the prompt)
+
+Target: the Remote Control session `session_012Tb2vdMRv7FMbAqLMVdZTw` ("ParkTrac iPhone 16 build and verification"). It's connected and idle, and its checkout is at 4e7ecc6, one commit behind `7302bdb`.
+
+1. Load `SendMessage` with ToolSearch and send the session this task:
+   > Pull `claude/compassionate-brahmagupta-vrjn15` (`git pull`; it should be at 7302bdb). Build with `xcodebuild -project ParkTrac.xcodeproj -scheme ParkTrac -destination 'platform=iOS Simulator,name=iPhone 16' build`, then fix compile errors until the build is clean. Then boot the simulator, install the app, launch it, and check each item below, taking a screenshot of each:
+   > - Stats → My Day, Spending and My Dining each show one nav bar, and back works.
+   > - Deleting a plan item shows the Undo toast. Undo brings the item back; waiting 4s makes the delete stick.
+   > - The Lightning Lane Done swipe is green.
+   > - Long-pressing a ride card shows the menu, and each item opens the right screen.
+   > - The filter button: Max wait 30 and Hide closed filter the list; sorting A–Z also flips the Settings toggle.
+   > - The Rides/Shows choice survives a relaunch.
+   >
+   > Commit any fixes with clear messages and push to the same branch. Reply with a pass/fail list and what you changed.
+2. If `SendMessage` can't reach it, fall back to having the user paste the same text into the session from the Claude Code app.
+3. When results arrive (new commits on the branch, or a reply), review the fixes. Then continue to Phase 3 (deep links) if the user wants.
+
+---
+
+## Phase 2: implementation details (DONE in 7302bdb)
 
 Work on branch `claude/compassionate-brahmagupta-vrjn15`, on top of Phase 1. This needs no new files, so no pbxproj edits.
 

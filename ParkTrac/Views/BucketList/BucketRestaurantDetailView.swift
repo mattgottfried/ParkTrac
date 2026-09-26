@@ -5,6 +5,7 @@ import PhotosUI
 struct BucketRestaurantDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
+    @Environment(AppState.self) private var appState
     let restaurant: BucketRestaurant
 
     @State private var isVisited: Bool
@@ -55,8 +56,8 @@ struct BucketRestaurantDetailView: View {
 
                 if isVisited {
                     Section("Ratings") {
-                        StarRatingView(label: "Matt", rating: $mattRating)
-                        StarRatingView(label: "Heather", rating: $heatherRating)
+                        StarRatingView(label: appState.raterOneLabel, rating: $mattRating)
+                        StarRatingView(label: appState.raterTwoLabel, rating: $heatherRating)
                     }
 
                     Section("Notes") {

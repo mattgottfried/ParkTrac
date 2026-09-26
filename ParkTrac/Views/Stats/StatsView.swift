@@ -276,8 +276,8 @@ struct StatsView: View {
 
     private func ratingsRow(matt: Double?, heat: Double?) -> some View {
         HStack(spacing: 16) {
-            if let m = matt { ratingChip(label: "Matt", rating: m) }
-            if let h = heat { ratingChip(label: "Heather", rating: h) }
+            if let m = matt { ratingChip(label: appState.raterOneLabel, rating: m) }
+            if let h = heat { ratingChip(label: appState.raterTwoLabel, rating: h) }
             Spacer()
         }
     }
