@@ -66,6 +66,12 @@ struct LocationData: Codable, Hashable {
     let latitude: Double?
     let longitude: Double?
 
+    // Declared explicitly: Swift only synthesizes CodingKeys usable by our own code when it
+    // also synthesizes init(from:), and we write that ourselves below.
+    enum CodingKeys: String, CodingKey {
+        case latitude, longitude
+    }
+
     init(latitude: Double?, longitude: Double?) {
         self.latitude = latitude
         self.longitude = longitude
