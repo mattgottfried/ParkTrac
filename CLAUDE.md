@@ -41,6 +41,14 @@ xcodebuild test -project ParkTrac.xcodeproj -scheme ParkTrac -destination 'platf
 
 Xcode Cloud reads `TestFlight/WhatToTest.en-US.txt` as the build's "What to Test". **Rewrite it with every push** that changes the app: what's new and what to check, in plain language (max 4,000 characters).
 
+### Xcode Cloud & upload limits
+
+Every push to `claude/vigilant-lamport-6DitA` triggers an Xcode Cloud archive + TestFlight upload, and App Store Connect caps uploads per app per day (ITMS-90382 "Upload limit reached" — wait a day). Xcode Cloud manages build numbers itself (uploads use its number, not `CURRENT_PROJECT_VERSION`).
+
+- **Minor merges get `[ci skip]` in the merge commit title/message** so they don't build: docs-only changes (CLAUDE.md, ideas.md, docs/), comment-only edits, test-only changes, and other changes the user doesn't need on a device.
+- App changes the user should test on device merge **without** `[ci skip]`, and update `TestFlight/WhatToTest.en-US.txt`.
+- When merging via the GitHub API, pass `commit_title: "Merge pull request #N … [ci skip]"`.
+
 ### Five-Tab Structure (`ContentView.swift`)
 1. **Wait Times** — `ParkMapView` — full-screen MapKit map with live ride wait time pins + a bottom panel listing rides/shows
 2. **My Day** — `DayPlannerView` — today's plan (rides, dining, Lightning Lane windows, guests)
