@@ -67,6 +67,39 @@ struct DayPlannerView: View {
                 }
             }
 
+            // Lightning Lane watches (notify-only; set from a ride's detail sheet)
+            let watches = LightningLaneWatchService.shared.watches.filter(\.isToday)
+            if !watches.isEmpty {
+                Section {
+                    ForEach(watches) { watch in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(watch.rideName).font(.subheadline.weight(.medium))
+                                Text("Alert if a return opens \(watch.windowText)")
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if let ll = waitTimesVM.allRides.first(where: { $0.id == watch.rideId })?.multiPass {
+                                Text(ll.shortText)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(ll.isAvailable ? Color.orange : Color.secondary)
+                            }
+                        }
+                        .accessibilityElement(children: .combine)
+                        .swipeActions {
+                            Button("Stop", role: .destructive) {
+                                LightningLaneWatchService.shared.remove(id: watch.id)
+                            }
+                        }
+                    }
+                } header: {
+                    Label("Watching for Lightning Lane", systemImage: "bell.badge.fill")
+                        .foregroundStyle(.orange)
+                } footer: {
+                    Text("Book in the Disney app when an alert arrives. Swipe to stop watching.")
+                }
+            }
+
             // Who's Coming section
             Section {
                 if appState.todayGuestIds.isEmpty {

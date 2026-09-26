@@ -36,6 +36,16 @@ struct RideCardView: View {
                         Text(ride.statusDisplay)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
+                        if ride.isOperating, let ll = ride.multiPass {
+                            Text(ll.shortText)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(ll.isAvailable ? Color.orange : Color.secondary)
+                        }
+                        if LightningLaneWatchService.shared.watch(for: ride.id) != nil {
+                            Image(systemName: "bell.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                        }
                         if let info = meta {
                             Circle()
                                 .fill(info.thrill.color)
@@ -88,8 +98,19 @@ struct RideCardView: View {
     }
 
     private var accessibilityValue: String {
-        guard let h = meta?.heightInches else { return ride.spokenStatus }
-        return "\(ride.spokenStatus), height requirement \(h) inches"
+        var parts = [ride.spokenStatus]
+        if ride.isOperating, let ll = ride.multiPass {
+            if ll.isAvailable, let start = ll.returnStart {
+                parts.append("Lightning Lane return \(start.formatted(date: .omitted, time: .shortened))")
+            } else {
+                parts.append(ll.shortText.replacingOccurrences(of: "LL", with: "Lightning Lane"))
+            }
+        }
+        if LightningLaneWatchService.shared.watch(for: ride.id) != nil {
+            parts.append("watching for Lightning Lane openings")
+        }
+        if let h = meta?.heightInches { parts.append("height requirement \(h) inches") }
+        return parts.joined(separator: ", ")
     }
 
     private func statusBadge(icon: String, label: String, color: Color) -> some View {

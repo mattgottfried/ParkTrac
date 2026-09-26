@@ -67,5 +67,7 @@ struct BackgroundRefreshService {
         // the same implementation the foreground refresh uses
         let context = ModelContext(container)
         WaitTimeRecorder.shared.record(rides: allRides, context: context)
+        // Lightning Lane watches get background coverage too (≈hourly, iOS decides)
+        LightningLaneWatchService.shared.check(rides: allRides)
     }
 }

@@ -33,6 +33,27 @@ final class NotificationService {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// Lightning Lane watch hit: a Multi Pass return opened inside the user's window
+    /// (or an earlier one than we last reported). Notify-only — booking happens in Disney's app.
+    func fireLightningLaneOpening(watch: LightningLaneWatch, returnStart: Date, previous: Date?) {
+        let time = returnStart.formatted(date: .omitted, time: .shortened)
+        let content = UNMutableNotificationContent()
+        if let previous {
+            content.title = "⚡ Earlier Lightning Lane: \(watch.rideName)"
+            content.body = "Return at \(time) is open now (earlier than \(previous.formatted(date: .omitted, time: .shortened))). Book it in the Disney app."
+        } else {
+            content.title = "⚡ Lightning Lane open: \(watch.rideName)"
+            content.body = "Return at \(time) is open now, inside your \(watch.windowText) window. Book it in the Disney app."
+        }
+        content.sound = .default
+        content.threadIdentifier = "ll-watch-\(watch.rideId)"
+        content.userInfo = [DeepLink.userInfoKey: DeepLink.ride(id: watch.rideId).url.absoluteString]
+        let request = UNNotificationRequest(
+            identifier: "llwatch-\(watch.rideId)-\(Int(returnStart.timeIntervalSince1970))",
+            content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
     func scheduleLLReminder(passId: String, rideName: String, returnEnd: Date) {
         let fireAt = returnEnd.addingTimeInterval(-600)  // 10 min before window closes
         guard fireAt > .now else { return }
