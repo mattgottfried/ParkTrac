@@ -1,17 +1,19 @@
-NEW: Instant Alerts + "back up" alerts
+NEW: Car Locator
 
-Instant Alerts (Settings → Instant Alerts)
-• Turn it on and your ThrillTrack alert server watches wait times every minute and sends a push, even when the app is closed — no more waiting for iOS's hourly background check.
-• Covers Lightning Lane / Priority Pass watches, wait-time alerts (DAS/AAP alerts keep their Book / I Booked It buttons), and the new reopen alerts.
-• The Settings row shows how many alerts the server is watching and when it last synced. If the server can't be reached, the app falls back to its own checks automatically.
-• The server has to be set up once first (Apple push key + Deno Deploy) — see server/README.md.
+Save where you parked
+• Tap the car button on the Wait Times map (top right) or "Save Parking Spot" in My Day → Parking.
+• Standing by the car, tap "Save Spot Here" — ThrillTrack takes a precise GPS fix (a few seconds).
+• Add the lot/row (e.g. "Zurg 112") and snap a photo of the row sign.
 
-Alert Me When It's Back Up
-• A down or closed ride's detail sheet has "Alert Me When It's Back Up" (or "…When It Opens"). You get one notification when it's operating again. Watches show in My Day and last for today.
+Find your car
+• A blue car pin shows on the Wait Times map; the car button turns blue.
+• Open it for a mini map, distance and walk time, and "Walk There in Maps" for Apple Maps walking directions.
+• The spot and note sync to your other devices on the same iCloud account; the photo stays on the phone that took it.
+• A spot lasts the park day (20 hours), then clears itself. "Move Spot to Here" and "Clear Spot" are in the sheet.
+• No GPS (location off, deep garage)? The note and photo still save.
 
 Please check:
-• Settings → Instant Alerts on → allow notifications → status turns green ("Watching N alerts · synced just now").
-• Set a wait alert above a ride's current wait, close the app — the push should arrive within about a minute.
-• On a down ride, tap "Alert Me When It's Back Up" — it appears in My Day; Cancel removes it.
-• Tap a pushed alert — it opens that ride; the DAS/AAP/Lightning Lane buttons still work from the push.
-• You should get one alert per event, not two (server + app).
+• Save a spot outside, walk away, reopen the sheet — the distance and walk time look right, and Walk There opens Maps.
+• Camera asks permission once, and the photo shows in the sheet (tap to enlarge).
+• The car pin appears on the map, and tapping it opens the sheet.
+• Instant Alerts from the last build still work.

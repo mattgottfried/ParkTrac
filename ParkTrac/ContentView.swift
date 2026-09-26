@@ -100,6 +100,11 @@ struct ContentView: View {
             OnboardingView()
                 .environment(appState)
         }
+        // Car locator — from the map, My Day, the car pin or thrilltrack://parking
+        .sheet(isPresented: Binding(get: { router.showParking }, set: { router.showParking = $0 })) {
+            ParkingSheet(resort: appState.selectedResort)
+                .environment(appState)
+        }
         .sheet(isPresented: $appState.showResortPicker) {
             ResortPickerSheet(appState: appState)
                 .presentationDetents([.medium, .large])
@@ -126,6 +131,8 @@ struct ContentView: View {
             selectedTab = .settings
         case .bucketList:
             selectedTab = .bucketList
+        case .parking:
+            router.showParking = true
         }
     }
 }
