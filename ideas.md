@@ -7,7 +7,8 @@ Shipped work is tracked in `docs/usability-plan.md` and the merged PRs. This fil
 ### Car locator — shipped
 Verify at the park: GPS accuracy in garages (top levels are fine, lower levels may need the note and photo), iCloud sync to Heather's phone, and Walk There.
 Also shipped: the park-close reminder and the Home Screen quick actions (Find My Car / My Day / Wait Times).
-Follow-up: lot and row suggestions for the Orlando lots and garages (needs verified names).
+Also shipped: lot → section → row menus for every Orlando lot and garage (names compiled Sept 2026; check the signs).
+Follow-up: Tokyo / USJ lot menus.
 
 ## Japan — shipped, verify on the trip (November)
 Built without live data (the API can't be reached from the cloud environment). On first use, confirm:

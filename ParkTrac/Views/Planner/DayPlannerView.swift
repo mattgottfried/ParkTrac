@@ -163,7 +163,8 @@ struct DayPlannerView: View {
                 if let spot = ParkingService.shared.spot(for: appState.selectedResort) {
                     Button { DeepLinkRouter.shared.open(.parking) } label: {
                         HStack {
-                            Label(spot.title, systemImage: "car.fill")
+                            Label(spot.summary.isEmpty ? spot.title : spot.summary, systemImage: "car.fill")
+                                .lineLimit(2)
                             Spacer()
                             Text("Saved \(spot.savedAt.formatted(date: .omitted, time: .shortened))")
                                 .font(.caption).foregroundStyle(.secondary)

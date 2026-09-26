@@ -103,4 +103,51 @@ final class ParkingTests: XCTestCase {
             XCTAssertNotNil(QuickActions.link(for: type), type)
         }
     }
+
+    // MARK: Lot menus
+
+    func testDisneyStyleDetails() {
+        var s = spot(savedAgo: 0, note: "")
+        s.details = ParkingDetails(lot: "Magic Kingdom", section: "Zurg", level: nil, row: " 112 ")
+        XCTAssertEqual(s.title, "Zurg · Row 112")
+        XCTAssertEqual(s.summary, "Magic Kingdom · Zurg · Row 112")
+    }
+
+    func testUniversalGarageUsesSignNumber() {
+        let d = ParkingDetails(lot: "CityWalk Garages", section: "King Kong", level: nil, row: "410")
+        XCTAssertEqual(d.locationText, "King Kong · 410")
+    }
+
+    func testGarageLevels() {
+        let d = ParkingDetails(lot: "Disney Springs", section: "Lime Garage", level: 3, row: nil)
+        XCTAssertEqual(d.locationText, "Lime Garage · Level 3")
+    }
+
+    func testNoteStillWorksAndBlanksAreEmpty() {
+        XCTAssertTrue(ParkingDetails(lot: " ", section: "", level: nil, row: nil).isEmpty)
+        let s = spot(savedAgo: 0, note: "P3 near elevator")
+        XCTAssertEqual(s.title, "P3 near elevator")
+        XCTAssertEqual(s.summary, "P3 near elevator")
+    }
+
+    /// Spots saved before the lot menus existed must still load.
+    func testOldSavedSpotDecodes() throws {
+        let json = #"{"Walt Disney World":{"latitude":28.4,"longitude":-81.5,"note":"Zurg 112","resortRaw":"Walt Disney World","savedAt":800000000}}"#
+        let spots = ParkingService.decode(Data(json.utf8))
+        let spot = try XCTUnwrap(spots["Walt Disney World"])
+        XCTAssertNil(spot.lot)
+        XCTAssertEqual(spot.title, "Zurg 112")
+    }
+
+    func testLotCatalog() {
+        let mk = ParkingLots.lots(for: .disney).first { $0.name == "Magic Kingdom" }
+        XCTAssertEqual(mk?.groups.map(\.name), ["Heroes", "Villains"])
+        XCTAssertTrue(mk?.allSections.contains("Zurg") == true)
+        XCTAssertEqual(ParkingLots.lots(for: .universal).map(\.name), ["CityWalk Garages", "Epic Universe"])
+        XCTAssertTrue(ParkingLots.lots(for: .tokyoDisney).isEmpty, "Japan uses the note")
+        // Section names are unique within a lot (they're the picker tags)
+        for lot in ParkingLots.lots(for: .disney) + ParkingLots.lots(for: .universal) {
+            XCTAssertEqual(Set(lot.allSections).count, lot.allSections.count, lot.name)
+        }
+    }
 }
