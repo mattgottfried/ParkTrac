@@ -40,10 +40,17 @@ struct MyDiningView: View {
                 // Upcoming Reservations section
                 Section {
                     if upcomingReservations.isEmpty {
-                        Text("No upcoming reservations")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .listRowBackground(Color.clear)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("No upcoming reservations")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Button {
+                                showAddReservation = true
+                            } label: {
+                                Label("Add Reservation", systemImage: "plus.circle.fill")
+                            }
+                        }
+                        .listRowBackground(Color.clear)
                     } else {
                         ForEach(upcomingReservations) { res in
                             ReservationRow(reservation: res)
@@ -104,9 +111,16 @@ struct MyDiningView: View {
                     .padding(.vertical, 8)
 
                     if resortVisited.isEmpty {
-                        Text("Mark restaurants as visited in the Bucket List tab.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Mark restaurants as visited in the Bucket List tab.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Button {
+                                DeepLinkRouter.shared.open(.bucketList)
+                            } label: {
+                                Label("Open Bucket List", systemImage: "checklist")
+                            }
+                        }
                     } else {
                         ForEach(resortVisited) { restaurant in
                             DiningRow(restaurant: restaurant)

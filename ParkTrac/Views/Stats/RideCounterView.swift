@@ -42,11 +42,14 @@ struct RideCounterView: View {
     var body: some View {
         List {
             if resortLogs.isEmpty {
-                ContentUnavailableView(
-                    "No rides logged yet",
-                    systemImage: "ticket",
-                    description: Text("Tap \u{201C}Rode It!\u{201D} on any ride to start tracking.")
-                )
+                ContentUnavailableView {
+                    Label("No rides logged yet", systemImage: "ticket")
+                } description: {
+                    Text("Tap \u{201C}Rode It!\u{201D} on any ride to start tracking.")
+                } actions: {
+                    Button("Open Wait Times") { DeepLinkRouter.shared.open(.waitTimes) }
+                        .buttonStyle(.borderedProminent)
+                }
                 .listRowBackground(Color.clear)
             } else {
                 Section {

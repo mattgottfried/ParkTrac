@@ -64,12 +64,28 @@ struct HotelListView: View {
             hotelStatsStrip
                 .padding(.bottom, 8)
 
-            if filtered.isEmpty {
-                ContentUnavailableView(
-                    "No Matches",
-                    systemImage: "line.3.horizontal.decrease.circle",
-                    description: Text("No hotels match the current filters.")
-                )
+            if resortHotels.isEmpty {
+                ContentUnavailableView {
+                    Label("No Hotels Yet", systemImage: "bed.double")
+                } description: {
+                    Text("Add hotels you've stayed at or want to try at \(appState.selectedResort.shortName).")
+                } actions: {
+                    Button("Add Hotel") { showAddSheet = true }
+                        .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if filtered.isEmpty {
+                ContentUnavailableView {
+                    Label("No Matches", systemImage: "line.3.horizontal.decrease.circle")
+                } description: {
+                    Text("No hotels match the current filters.")
+                } actions: {
+                    Button("Clear Filters") {
+                        visitedFilter = .all
+                        tierFilter = nil
+                    }
+                    .buttonStyle(.bordered)
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {

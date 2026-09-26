@@ -164,20 +164,34 @@ final class AppState {
 
     // MARK: - Today's Guests (keyed by date, auto-resets)
 
-    var todayGuestIds: [String] {
-        get {
-            let key = todayGuestKey
-            return UserDefaults.standard.stringArray(forKey: key) ?? []
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: todayGuestKey)
-        }
+    /// Names of guests coming today (Guest.name). Stored — not computed from UserDefaults —
+    /// so SwiftUI observes changes; persisted per day and reset by `reloadTodayGuestsIfNewDay()`.
+    /// (Previously keyed by `persistentModelID.hashValue`, which Swift re-randomizes every launch.)
+    var todayGuestNames: [String] = [] {
+        didSet { UserDefaults.standard.set(todayGuestNames, forKey: Self.guestKey(for: todayGuestDay)) }
+    }
+    private var todayGuestDay: String = AppState.dayStamp(.now)
+
+    /// Call when the app becomes active: starts a fresh guest list on a new day.
+    func reloadTodayGuestsIfNewDay() {
+        let today = Self.dayStamp(.now)
+        guard today != todayGuestDay else { return }
+        todayGuestDay = today
+        todayGuestNames = UserDefaults.standard.stringArray(forKey: Self.guestKey(for: today)) ?? []
     }
 
-    private var todayGuestKey: String {
+    private static func guestKey(for day: String) -> String { "todayGuestNames-\(day)" }
+
+    private static func dayStamp(_ date: Date) -> String {
         let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "en_US_POSIX")
         fmt.dateFormat = "yyyy-MM-dd"
-        return "todayGuests-\(fmt.string(from: .now))"
+        return fmt.string(from: date)
+    }
+
+    /// Party names from onboarding, minus the "Me" placeholder
+    var namedPartyMembers: [String] {
+        partyMembers.filter { !$0.isEmpty && $0 != "Me" }
     }
 
     init() {
@@ -235,6 +249,7 @@ final class AppState {
         // Onboarding + party (device-local)
         hasCompletedOnboarding = ud.bool(forKey: "hasCompletedOnboarding")
         partyMembers = ud.stringArray(forKey: "partyMembers") ?? []
+        todayGuestNames = ud.stringArray(forKey: AppState.guestKey(for: AppState.dayStamp(.now))) ?? []
 
         // Pass features (device-local)
         disneyPassCost = ud.double(forKey: "disneyPassCost")

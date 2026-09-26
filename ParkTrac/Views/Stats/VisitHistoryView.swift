@@ -47,11 +47,14 @@ struct VisitHistoryView: View {
     var body: some View {
         List {
             if visitDays.isEmpty {
-                ContentUnavailableView(
-                    "No visits yet",
-                    systemImage: "calendar",
-                    description: Text("Log rides with \"Rode It!\" and your visits will appear here.")
-                )
+                ContentUnavailableView {
+                    Label("No visits yet", systemImage: "calendar")
+                } description: {
+                    Text("Log rides with \"Rode It!\" and your visits will appear here.")
+                } actions: {
+                    Button("Open Wait Times") { DeepLinkRouter.shared.open(.waitTimes) }
+                        .buttonStyle(.borderedProminent)
+                }
                 .listRowBackground(Color.clear)
             } else {
                 // Summary stats

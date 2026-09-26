@@ -89,6 +89,7 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, phase in
             // Don't leave a deletion pending if the app gets suspended or killed
             if phase == .background { UndoDeleteCenter.shared.commit() }
+            if phase == .active { appState.reloadTodayGuestsIfNewDay() }
         }
         .environment(appState)
         .environment(waitTimesVM)
@@ -123,6 +124,8 @@ struct ContentView: View {
             router.showDining = true
         case .settings:
             selectedTab = .settings
+        case .bucketList:
+            selectedTab = .bucketList
         }
     }
 }

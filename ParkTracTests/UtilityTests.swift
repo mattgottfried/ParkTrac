@@ -14,6 +14,7 @@ final class DeepLinkTests: XCTestCase {
         XCTAssertEqual(link("thrilltrack://plan"), .plan)
         XCTAssertEqual(link("thrilltrack://dining"), .dining)
         XCTAssertEqual(link("thrilltrack://settings"), .settings)
+        XCTAssertEqual(link("thrilltrack://bucketlist"), .bucketList)
     }
 
     func testRejectsUnknownOrForeign() {
@@ -26,7 +27,7 @@ final class DeepLinkTests: XCTestCase {
     }
 
     func testRoundTrip() {
-        let links: [DeepLink] = [.waitTimes, .ride(id: "slinky-dog"), .activeTimer, .plan, .dining, .settings]
+        let links: [DeepLink] = [.waitTimes, .ride(id: "slinky-dog"), .activeTimer, .plan, .dining, .settings, .bucketList]
         for l in links { XCTAssertEqual(DeepLink(url: l.url), l, "\(l)") }
     }
 
@@ -64,6 +65,13 @@ final class ExportTests: XCTestCase {
         XCTAssertTrue(text.contains("Spent:"))
     }
 
+    func testDaySummaryListsPeople() {
+        let text = DaySummary.text(date: .now, resort: "Walt Disney World", rides: [],
+                                   planDone: 0, planTotal: 0, spent: 0,
+                                   people: ["Matt", "Heather", "Jake"])
+        XCTAssertTrue(text.contains("With Matt, Heather & Jake"))
+    }
+
     func testDaySummaryEmpty() {
         let text = DaySummary.text(date: .now, resort: "Universal Orlando Resort", rides: [],
                                    planDone: 0, planTotal: 0, spent: 0)
@@ -91,5 +99,19 @@ final class WalkEstimateTests: XCTestCase {
     func testTooFarReturnsNil() {
         let epcot = CLLocationCoordinate2D(latitude: 28.3747, longitude: -81.5494)  // ~6 km away
         XCTAssertNil(WalkEstimate.minutes(from: castle, to: epcot))
+    }
+}
+
+final class NameListTests: XCTestCase {
+    func testFormats() {
+        XCTAssertEqual(NameList.format([]), "")
+        XCTAssertEqual(NameList.format(["Matt"]), "Matt")
+        XCTAssertEqual(NameList.format(["Matt", "Heather"]), "Matt & Heather")
+        XCTAssertEqual(NameList.format(["Matt", "Heather", "Jake"]), "Matt, Heather & Jake")
+        XCTAssertEqual(NameList.format(["A", "B", "C", "D", "E"]), "A, B, C & 2 more")
+    }
+
+    func testIgnoresBlanks() {
+        XCTAssertEqual(NameList.format(["  Matt ", "", "Heather"]), "Matt & Heather")
     }
 }
