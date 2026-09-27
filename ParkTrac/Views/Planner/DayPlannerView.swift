@@ -13,6 +13,8 @@ struct DayPlannerView: View {
     @State private var showGuestPicker = false
     @State private var showSmartPlanner = false
     @State private var showAreaEntry = false
+    @State private var showTipBoard = false
+    @State private var showEndPlan = false
     /// Siri's "plan my day" request, passed to the Smart Planner once
     @State private var plannerRequest: String?
 
@@ -52,6 +54,55 @@ struct DayPlannerView: View {
 
     private var content: some View {
         List {
+            // Genie-style live plan (started from the Smart Planner)
+            if let plan = ItineraryService.shared.active(for: appState.selectedResort) {
+                Section {
+                    NextUpCard(resort: appState.selectedResort)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                }
+                Section {
+                    if let summary = plan.aiSummary {
+                        Label(summary, systemImage: "apple.intelligence")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(Array((ItineraryService.shared.live?.stops ?? []).enumerated()), id: \.offset) { _, stop in
+                        HStack(spacing: 12) {
+                            Text(stop.start, style: .time)
+                                .font(.caption.weight(.semibold))
+                                .monospacedDigit()
+                                .frame(width: 64, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(stop.title).font(.subheadline)
+                                if stop.kind == "ride" {
+                                    Text("~\(stop.waitMinutes) min wait" + (stop.walkMinutes > 0 ? " · \(stop.walkMinutes) min walk" : ""))
+                                        .font(.caption2).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .swipeActions {
+                            if let rideId = stop.rideId {
+                                Button("Done") { ItineraryService.shared.markDone(rideId) }.tint(.green)
+                                Button("Skip") { ItineraryService.shared.skip(rideId) }.tint(.gray)
+                            }
+                        }
+                    }
+                    if let unscheduled = ItineraryService.shared.live?.unscheduled, !unscheduled.isEmpty {
+                        Text("Won't fit before close: \(unscheduled.joined(separator: ", "))")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
+                    Button { showTipBoard = true } label: {
+                        Label("Tip Board", systemImage: "list.star")
+                    }
+                    Button("End Today's Plan", role: .destructive) { showEndPlan = true }
+                } header: {
+                    Text("Today's Plan · Updates Live")
+                } footer: {
+                    Text("Re-plans from where you are with live waits. Rides you log with Rode It! drop off automatically. Shared with your other devices.")
+                }
+            }
+
             // Upcoming / current trip countdown (Trip Planner)
             if let countdown = TripService.shared.countdownText {
                 NavigationLink {
@@ -257,6 +308,17 @@ struct DayPlannerView: View {
             DeepLinkRouter.shared.plannerRequest = nil
             DeepLinkRouter.shared.showSmartPlanner = false
             showSmartPlanner = true
+        }
+        .sheet(isPresented: $showTipBoard) {
+            TipBoardView()
+        }
+        .confirmationDialog("End today's plan?", isPresented: $showEndPlan, titleVisibility: .visible) {
+            Button("End Plan", role: .destructive) { ItineraryService.shared.end() }
+        }
+        // Keep the live plan fresh when My Day opens (Wait Times re-plans on every refresh)
+        .task {
+            ItineraryService.shared.replan(viewModel: waitTimesVM, resort: appState.selectedResort,
+                                           location: nil, context: context)
         }
         .sheet(isPresented: $showAreaEntry) {
             AreaEntrySheet(resort: appState.selectedResort)

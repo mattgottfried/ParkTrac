@@ -3,10 +3,10 @@ import Foundation
 import FoundationModels
 #endif
 
-/// Apple Intelligence (on-device Foundation Models, iOS 26+) turns a plain-English request —
-/// "dinner at 6:30, want Seven Dwarfs and Space Mountain, no water rides" — into
-/// `PlanConstraints`. The schedule itself is always built by `DayPlanBuilder`, so the model
-/// only has to understand the request, never invent times or waits.
+/// Apple Intelligence (on-device Foundation Models, iOS 26+) plans the order of the rides the
+/// guest picked, from each ride's expected wait by hour, the shows and dining at set times, and
+/// any notes ("dinner at 6:30, snack break at 3"). ThrillTrack then times the plan
+/// (`DayPlanBuilder.build(ordered:)`), so the times always add up.
 enum PlannerAI {
     enum Failure: LocalizedError {
         case unavailable
@@ -23,56 +23,129 @@ enum PlannerAI {
         return false
     }
 
-    static func interpret(_ request: String, rideNames: [String], showNames: [String],
-                          now: Date = .now) async throws -> PlanConstraints {
+    // MARK: Input / output
+
+    struct PlanInput {
+        struct Ride {
+            let name: String
+            let waitsByHour: [Int: Int]
+            let isMustDo: Bool
+        }
+        struct Fixed {
+            let title: String
+            let time: Date
+        }
+        var rides: [Ride]
+        var shows: [Fixed]
+        var dining: [Fixed]
+        var start: Date
+        var end: Date?
+        var notes: String
+        var interests: [String] = []
+    }
+
+    struct AIPlan: Equatable {
+        var order: [String]
+        var extraEvents: [PlanConstraints.Event]
+        var summary: String
+        /// Interests read from the notes ("we love coasters") — merged with the ones picked
+        var interests: [String] = []
+    }
+
+    static func plan(_ input: PlanInput) async throws -> AIPlan {
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *), SystemLanguageModel.default.isAvailable {
-            return try await Model.interpret(request, rideNames: rideNames, showNames: showNames, now: now)
+            return try await Model.plan(input)
         }
         #endif
         throw Failure.unavailable
     }
 
-    static func prompt(_ request: String, rideNames: [String], showNames: [String], now: Date) -> String {
-        let time = now.formatted(date: .omitted, time: .shortened)
-        return """
-        It is now \(time).
-        Rides open right now: \(rideNames.joined(separator: "; "))
-        Shows today: \(showNames.isEmpty ? "none" : showNames.joined(separator: "; "))
+    // MARK: Prompt (pure, unit tested)
 
-        Guest's request: \(request)
+    static let instructions = """
+    You plan the order of a theme park day. You get the rides the guest picked, each with its expected \
+    standby wait by hour, plus shows and dining at set times, when the day starts and ends, and the guest's notes.
+    Return every picked ride exactly once, in the order to ride them, using the names exactly as given.
+    Aim for short waits: put each ride where its expected wait is lowest, and do rides that get busier later \
+    in the day first. Must-Do rides matter most. Follow the guest's notes about timing (for example \
+    "ride it right before close" means put it last). Leave room for the shows and dining — ThrillTrack keeps \
+    those at their times and works out the exact times of the rides.
+    If the notes say what kinds of rides the party likes, list them in interests using only: thrill, coasters, \
+    gentle, dark rides, water, simulators, shows.
+    If the notes mention a meal or break at a time, add it to extraEvents with a 24-hour HH:mm time and a length \
+    in minutes (meals 60–90, snacks or breaks 20–30 unless the guest says otherwise). Don't invent anything else.
+    Write summary as one or two friendly sentences explaining the plan.
+    """
+
+    static func hhmm(_ date: Date, calendar: Calendar = .current) -> String {
+        let c = calendar.dateComponents([.hour, .minute], from: date)
+        return String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0)
+    }
+
+    static func hourLabel(_ hour: Int) -> String {
+        let h = hour % 12 == 0 ? 12 : hour % 12
+        return "\(h)\(hour < 12 ? "am" : "pm")"
+    }
+
+    static func prompt(_ input: PlanInput, calendar: Calendar = .current) -> String {
+        let startHour = calendar.component(.hour, from: input.start)
+        let endHour = input.end.map { calendar.component(.hour, from: $0) } ?? 22
+        let hours = startHour <= endHour ? Array(startHour...endHour) : [startHour]
+
+        let rides = input.rides.map { ride -> String in
+            let waits = hours.compactMap { h in ride.waitsByHour[h].map { "\(hourLabel(h)) \($0)" } }
+            return "- \(ride.name)\(ride.isMustDo ? " (Must-Do)" : ""): expected wait in minutes — "
+                + (waits.isEmpty ? "unknown" : waits.joined(separator: ", "))
+        }
+        let fixed = (input.shows.map { "- Show: \($0.title) at \(hhmm($0.time, calendar: calendar))" }
+            + input.dining.map { "- Dining: \($0.title) at \(hhmm($0.time, calendar: calendar))" })
+        let notes = input.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return """
+        The day starts at \(hhmm(input.start, calendar: calendar))\(input.end.map { " and the park closes at \(hhmm($0, calendar: calendar))" } ?? "").
+
+        Rides the guest picked:
+        \(rides.joined(separator: "\n"))
+
+        Set times:
+        \(fixed.isEmpty ? "none" : fixed.joined(separator: "\n"))
+
+        Interests: \(input.interests.isEmpty ? "none given" : input.interests.joined(separator: ", "))
+        Guest's notes: \(notes.isEmpty ? "none" : notes)
         """
     }
 
-    static let instructions = """
-    You help plan a theme park day. Turn the guest's request into planning constraints.
-    Only use ride and show names exactly as they appear in the lists you're given.
-    Times are 24-hour "HH:mm" in the park's local time; leave a time empty if the guest didn't give one.
-    Dining reservations, meals and breaks the guest mentions become fixed events with a length in minutes \
-    (meals 60–90, snacks or breaks 20–30 unless the guest says otherwise).
-    Don't invent rides, shows or times the guest didn't ask for.
-    """
+    /// The model's order → rides: names matched loosely, each ride once, and any picked ride the
+    /// model left out goes at the end (the guest's picks are always planned).
+    static func resolveOrder(_ names: [String], rides: [PlanRide]) -> [PlanRide] {
+        var result: [PlanRide] = []
+        var used = Set<String>()
+        for name in names {
+            let match = rides.first { $0.name == name && !used.contains($0.id) }
+                ?? rides.first { PlanConstraints.matches(name, $0.name) && !used.contains($0.id) }
+            if let match {
+                result.append(match)
+                used.insert(match.id)
+            }
+        }
+        return result + rides.filter { !used.contains($0.id) }
+    }
 }
 
 #if canImport(FoundationModels)
 @available(iOS 26.0, *)
 private enum Model {
     @Generable
-    struct Request {
-        @Guide(description: "Rides the guest wants to do, using names from the ride list")
-        var mustRide: [String]
-        @Guide(description: "Rides the guest wants to skip, using names from the ride list")
-        var avoid: [String]
-        @Guide(description: "Kinds of rides to skip, from: water, coaster, spinner, simulator, dark ride, thrill")
-        var avoidKinds: [String]
-        @Guide(description: "Shows the guest wants to see, using names from the show list")
-        var includeShows: [String]
-        @Guide(description: "When to start, 24-hour HH:mm, or empty")
-        var startTime: String
-        @Guide(description: "When to finish, 24-hour HH:mm, or empty")
-        var endTime: String
-        @Guide(description: "Meals, dining reservations or breaks at a set time")
-        var fixedEvents: [Event]
+    struct Response {
+        @Guide(description: "Every picked ride name exactly once, in the order to ride them")
+        var order: [String]
+        @Guide(description: "Meals or breaks from the guest's notes, if any")
+        var extraEvents: [Event]
+        @Guide(description: "One or two friendly sentences explaining the plan")
+        var summary: String
+        @Guide(description: "Kinds of rides the notes say the party likes, from: thrill, coasters, gentle, dark rides, water, simulators, shows")
+        var interests: [String]
     }
 
     @Generable
@@ -85,18 +158,15 @@ private enum Model {
         var minutes: Int
     }
 
-    static func interpret(_ request: String, rideNames: [String], showNames: [String],
-                          now: Date) async throws -> PlanConstraints {
+    static func plan(_ input: PlannerAI.PlanInput) async throws -> PlannerAI.AIPlan {
         let session = LanguageModelSession(instructions: PlannerAI.instructions)
-        let response = try await session.respond(
-            to: PlannerAI.prompt(request, rideNames: rideNames, showNames: showNames, now: now),
-            generating: Request.self)
+        let response = try await session.respond(to: PlannerAI.prompt(input), generating: Response.self)
         let r = response.content
-        let blank: (String) -> String? = { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
-        return PlanConstraints(
-            mustRide: r.mustRide, avoid: r.avoid, avoidKinds: r.avoidKinds, includeShows: r.includeShows,
-            startTime: blank(r.startTime), endTime: blank(r.endTime),
-            fixedEvents: r.fixedEvents.map { .init(title: $0.title, time: $0.time, minutes: max(10, min($0.minutes, 240))) })
+        return PlannerAI.AIPlan(
+            order: r.order,
+            extraEvents: r.extraEvents.map { .init(title: $0.title, time: $0.time, minutes: max(10, min($0.minutes, 240))) },
+            summary: r.summary.trimmingCharacters(in: .whitespacesAndNewlines),
+            interests: r.interests)
     }
 }
 #endif
