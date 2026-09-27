@@ -1,5 +1,15 @@
 NEW since the last build (car locator roll-up):
 
+Smarter Smart Planner + Apple Intelligence
+• My Day → Smart Planner → "Tell Me Your Plan": type something like "Dinner at 6:30, want Seven Dwarfs and Space Mountain, no water rides". Apple Intelligence reads it on your iPhone; ThrillTrack builds the schedule.
+• Each ride is now placed when it's usually shortest for that ride (from your past visits and live waits), with walking time between rides.
+• Today's dining reservations and shows stay at their times; rides that won't fit before close are listed.
+
+Siri
+• "Hey Siri, what should I ride next in ThrillTrack" — suggests a short wait now (Must-Dos and unusually short rides first).
+• "Plan my day in ThrillTrack" — Siri asks what to include, then opens the planner with it.
+• "Where did I park in ThrillTrack" / "Save my parking spot in ThrillTrack".
+
 Good Time to Ride
 • Rides whose wait is well below usual get a green "Good time · usually ~70" tag, and a "Good Time to Ride" strip sits at the top of the ride list (Must-Dos first).
 • "Usual" comes from the waits ThrillTrack has recorded on this phone — the same time of day on earlier days, or earlier today. It needs a few visits' worth of data, so it gets better the more you use the app.
@@ -13,6 +23,8 @@ Time Sensitive alerts
 • Ride alerts get through Focus modes (Sleep, Work, Driving). The first time, iOS asks — choose Allow.
 
 Please check:
+• Smart Planner with a typed request builds a sensible day around your dinner time.
+• Each Siri phrase works (the first time, Siri may ask to allow ThrillTrack).
 • After a few park visits, a green "Good time" tag appears on a ride that's unusually short, and a Must-Do sends a heads-up.
 • Trip Planner: set dates, tick items on one phone, see them on the other.
 • Switch to Tokyo Disney → Stats → Spending → add ¥1,500 — it shows ≈ $10.

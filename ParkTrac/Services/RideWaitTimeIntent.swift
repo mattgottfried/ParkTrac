@@ -2,7 +2,7 @@ import AppIntents
 
 struct GetRideWaitTimeIntent: AppIntent {
     static var title: LocalizedStringResource = "Ride Wait Time"
-    static var description = IntentDescription("Check the current wait time for a Disney World or Universal Orlando ride.")
+    static var description = IntentDescription("Check the current wait time for a ride at any ThrillTrack resort.")
 
     @Parameter(title: "Ride Name")
     var rideName: String
@@ -35,6 +35,43 @@ struct ParkTracShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Ride Wait Time",
             systemImageName: "clock.fill"
+        )
+        AppShortcut(
+            intent: WhatToRideNextIntent(),
+            phrases: [
+                "What should I ride next in \(.applicationName)",
+                "What should I ride with \(.applicationName)",
+                "Find a short wait in \(.applicationName)"
+            ],
+            shortTitle: "Ride Next",
+            systemImageName: "figure.walk"
+        )
+        AppShortcut(
+            intent: PlanMyDayIntent(),
+            phrases: [
+                "Plan my day in \(.applicationName)",
+                "Plan my park day with \(.applicationName)"
+            ],
+            shortTitle: "Plan My Day",
+            systemImageName: "wand.and.stars"
+        )
+        AppShortcut(
+            intent: WhereDidIParkIntent(),
+            phrases: [
+                "Where did I park in \(.applicationName)",
+                "Find my car in \(.applicationName)"
+            ],
+            shortTitle: "Where Did I Park?",
+            systemImageName: "car.fill"
+        )
+        AppShortcut(
+            intent: SaveParkingSpotIntent(),
+            phrases: [
+                "Save my parking spot in \(.applicationName)",
+                "Remember where I parked with \(.applicationName)"
+            ],
+            shortTitle: "Save Parking Spot",
+            systemImageName: "car"
         )
     }
 }

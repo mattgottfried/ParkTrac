@@ -134,6 +134,9 @@ struct ContentView: View {
             selectedTab = .bucketList
         case .parking:
             router.showParking = true
+        case .planner:
+            selectedTab = .myDay
+            router.showSmartPlanner = true
         }
     }
 }

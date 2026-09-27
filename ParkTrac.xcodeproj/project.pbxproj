@@ -65,6 +65,9 @@
 		AA000000000000000000019C /* ParkingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000019D /* ParkingService.swift */; };
 		AA00000000000000000001A0 /* GoodTimeToRide.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A1 /* GoodTimeToRide.swift */; };
 		AA00000000000000000001A2 /* TripService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A3 /* TripService.swift */; };
+		AA00000000000000000001A6 /* DayPlanBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A7 /* DayPlanBuilder.swift */; };
+		AA00000000000000000001A8 /* PlannerAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A9 /* PlannerAI.swift */; };
+		AA00000000000000000001AA /* SiriIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001AB /* SiriIntents.swift */; };
 		AA000000000000000000019E /* ParkingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000019F /* ParkingSheet.swift */; };
 		AA0000000000000000000194 /* LightningLaneSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000195 /* LightningLaneSection.swift */; };
 		AA0000000000000000000127 /* CharacterData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000126 /* CharacterData.swift */; };
@@ -201,6 +204,9 @@
 		AA000000000000000000019D /* ParkingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkingService.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A1 /* GoodTimeToRide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoodTimeToRide.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A3 /* TripService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripService.swift; sourceTree = "<group>"; };
+		AA00000000000000000001A7 /* DayPlanBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPlanBuilder.swift; sourceTree = "<group>"; };
+		AA00000000000000000001A9 /* PlannerAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerAI.swift; sourceTree = "<group>"; };
+		AA00000000000000000001AB /* SiriIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriIntents.swift; sourceTree = "<group>"; };
 		AA000000000000000000019F /* ParkingSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkingSheet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000195 /* LightningLaneSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningLaneSection.swift; sourceTree = "<group>"; };
 		AA0000000000000000000126 /* CharacterData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterData.swift; sourceTree = "<group>"; };
@@ -371,6 +377,9 @@
 				AA000000000000000000019D /* ParkingService.swift */,
 				AA00000000000000000001A1 /* GoodTimeToRide.swift */,
 				AA00000000000000000001A3 /* TripService.swift */,
+				AA00000000000000000001A7 /* DayPlanBuilder.swift */,
+				AA00000000000000000001A9 /* PlannerAI.swift */,
+				AA00000000000000000001AB /* SiriIntents.swift */,
 				AA0000000000000000000126 /* CharacterData.swift */,
 				AA000000000000000000017C /* TicketPriceService.swift */,
 				AA0000000000000000000181 /* PersistenceController.swift */,
@@ -725,6 +734,9 @@
 				AA000000000000000000019C /* ParkingService.swift in Sources */,
 				AA00000000000000000001A0 /* GoodTimeToRide.swift in Sources */,
 				AA00000000000000000001A2 /* TripService.swift in Sources */,
+				AA00000000000000000001A6 /* DayPlanBuilder.swift in Sources */,
+				AA00000000000000000001A8 /* PlannerAI.swift in Sources */,
+				AA00000000000000000001AA /* SiriIntents.swift in Sources */,
 				AA000000000000000000019E /* ParkingSheet.swift in Sources */,
 				AA0000000000000000000194 /* LightningLaneSection.swift in Sources */,
 				AA0000000000000000000127 /* CharacterData.swift in Sources */,
@@ -943,6 +955,11 @@
 		AA0000000000000000000012 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-weak_framework",
+					FoundationModels,
+				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ParkTrac/ParkTrac.entitlements;
@@ -967,6 +984,11 @@
 		AA0000000000000000000013 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-weak_framework",
+					FoundationModels,
+				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ParkTrac/ParkTrac.entitlements;
