@@ -65,3 +65,10 @@ No more pull-to-refresh on the ride list
 
 Tap a show
 - Shows in the Wait Times list now open a show page: today's showtimes (the next one highlighted), a 🔔 on each future showing for a reminder 15 minutes before, and Add to My Day (opens with the show and its next showtime picked).
+
+Redesigned Live Activities + new "Next Up" on the Lock Screen
+- New look for every Live Activity: a colored icon for each type, a bigger countdown, and cleaner Dynamic Island views.
+- Lightning Lane / Express returns show a progress bar across the return window ("Window open · closes in 42:10", 2:15 – 3:15 PM).
+- The wait stopwatch fills a bar toward the posted wait, so you can see if the line is beating the sign.
+- NEW: while a Smart Planner plan is running, a "Next Up" Live Activity shows your next ride with its wait tile, when to get in line, the walk, what's after it, "4 of 9 done" and any rain heads-up. It updates whenever the app refreshes wait times and ends when you end the plan. Turn it off in Settings → Next Up on Lock Screen.
+- Check: start a plan → lock the phone → Next Up is there; long-press the Dynamic Island; log a Lightning Lane return and watch the bar.

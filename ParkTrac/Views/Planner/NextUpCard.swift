@@ -122,11 +122,11 @@ struct NextUpCard: View {
 
     /// "Get in line ~2:16 PM · ~35 min wait · 6 min walk" / "6:30 PM"
     private func detail(for stop: PlannedStop) -> String {
-        guard stop.kind == "ride" else { return "At \(timeText(stop.start))" }
-        let arrive = stop.start.addingTimeInterval(Double(stop.walkMinutes) * 60)
-        var parts = [arrive <= Date.now.addingTimeInterval(120) ? "Go now" : "Get in line ~\(timeText(arrive))",
-                     "~\(stop.waitMinutes) min wait"]
-        if stop.walkMinutes > 0 { parts.append("\(stop.walkMinutes) min walk") }
+        let base = ParkDayActivity.detail(for: stop)
+        guard stop.kind == "ride" else { return base }
+        // "Get in line ~2:16 PM · ~35 min wait · 6 min walk"
+        var parts = base.components(separatedBy: " · ")
+        parts.insert("~\(stop.waitMinutes) min wait", at: 1)
         return parts.joined(separator: " · ")
     }
 
