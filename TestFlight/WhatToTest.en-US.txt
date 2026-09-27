@@ -102,3 +102,9 @@ Plan a future day
 - My Day → Coming Up → Plan a Future Day opens the planner on tomorrow.
 - Check: plan tomorrow, save it, see it under Coming Up; the next morning it should appear as Next Up.
 - Fixed: planning a future day said every ride "didn't fit before the park closes" (it was using today's closing time). It now uses that day's hours, or 9 PM if they aren't published yet.
+
+Change the plan after it's made
+- The Smart Planner result now shows how much walking the plan has ("About 42 min of walking between stops") and a "Change the Plan" section.
+- One-tap fixes: Less Walking (finishes one part of the park before crossing to the next), Must-Dos First, Shortest Waits. Each says what changed ("Walking cut from about 42 to 18 min").
+- With Apple Intelligence, type what you want ("keep rides close together", "TRON last", "lunch at noon") and send. It rewrites the order and ThrillTrack re-times it; you can keep asking. Walking requests also get a route clean-up, since the model can't measure distances itself.
+- Apple Intelligence now also knows which rides are near each other (areas) from the first plan.

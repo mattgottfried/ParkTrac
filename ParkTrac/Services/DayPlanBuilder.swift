@@ -321,3 +321,96 @@ struct PlanConstraints: Equatable {
         return c
     }
 }
+
+// MARK: - Walking-aware ordering (pure)
+
+/// Reordering picks so the day doesn't zig-zag across the park.
+enum PlanOrdering {
+    /// Walk between two rides (the builder's default when a location is missing)
+    static func walk(_ a: PlanRide, _ b: PlanRide) -> Int {
+        DayPlanBuilder.walkMinutes(from: a.coordinate, to: b.coordinate)
+    }
+
+    /// Minutes walked going through the rides in this order
+    static func totalWalk(_ order: [PlanRide]) -> Int {
+        zip(order, order.dropFirst()).reduce(0) { $0 + walk($1.0, $1.1) }
+    }
+
+    /// Keeps the first ride, then always goes to the nearest remaining one, then removes any
+    /// crossings (2-opt). Rides without a location keep their order at the end.
+    static func lessWalking(_ order: [PlanRide]) -> [PlanRide] {
+        let located = order.filter { $0.coordinate != nil }
+        let unlocated = order.filter { $0.coordinate == nil }
+        guard located.count > 2, let first = located.first else { return order }
+
+        var route = [first]
+        var left = Array(located.dropFirst())
+        while let last = route.last, !left.isEmpty {
+            guard let i = left.indices.min(by: { walk(last, left[$0]) < walk(last, left[$1]) }) else { break }
+            route.append(left.remove(at: i))
+        }
+
+        var improved = true
+        while improved {
+            improved = false
+            for i in 1..<(route.count - 1) {
+                for j in (i + 1)..<route.count {
+                    var candidate = route
+                    candidate[i...j].reverse()
+                    if totalWalk(candidate) < totalWalk(route) {
+                        route = candidate
+                        improved = true
+                    }
+                }
+            }
+        }
+        return route + unlocated
+    }
+
+    /// Must-Dos first, otherwise the same order
+    static func mustDosFirst(_ order: [PlanRide], mustDo: Set<String>) -> [PlanRide] {
+        order.filter { mustDo.contains($0.id) } + order.filter { !mustDo.contains($0.id) }
+    }
+
+    /// "keep rides close together", "less back and forth", "stop zig-zagging"…
+    static func wantsLessWalking(_ request: String) -> Bool {
+        let t = request.lowercased()
+        return ["walk", "close to each other", "close together", "closer", "near each other", "nearby",
+                "back and forth", "zig", "across the park", "same area", "one area", "cluster"]
+            .contains { t.contains($0) }
+    }
+}
+
+/// Groups rides a short walk apart into areas "A", "B", … (for Apple Intelligence's prompt).
+enum PlanAreas {
+    /// Rides within this many minutes' walk share an area
+    static let sameAreaWalk = 5
+
+    static func assign(_ rides: [PlanRide]) -> [String: String] {
+        var parent = Array(rides.indices)
+        func root(_ i: Int) -> Int {
+            var r = i
+            while parent[r] != r { r = parent[r] }
+            return r
+        }
+        for i in rides.indices where rides[i].coordinate != nil {
+            for j in rides.indices where j > i && rides[j].coordinate != nil {
+                if let a = rides[i].coordinate, let b = rides[j].coordinate,
+                   let minutes = WalkEstimate.minutes(from: a, to: b), minutes <= sameAreaWalk {
+                    parent[root(j)] = root(i)
+                }
+            }
+        }
+        var labels: [Int: String] = [:]
+        var out: [String: String] = [:]
+        for i in rides.indices where rides[i].coordinate != nil {
+            let r = root(i)
+            if labels[r] == nil {
+                let n = labels.count
+                labels[r] = n < 26 ? String(UnicodeScalar(UInt8(65 + n))) : "\(n + 1)"
+            }
+            out[rides[i].id] = labels[r]
+        }
+        return out
+    }
+}
