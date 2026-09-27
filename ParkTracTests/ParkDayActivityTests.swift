@@ -37,4 +37,27 @@ final class ParkDayActivityTests: XCTestCase {
     func testNothingNext() {
         XCTAssertNil(ParkDayActivity.state(stops: [], done: 9, total: 9, rain: nil, now: now))
     }
+
+    func testTimelineHasTheNextThreeStops() throws {
+        let stops = [stop("A", in: 10, walk: 5), stop("Show", kind: "show", in: 60), stop("B", in: 90), stop("C", in: 120)]
+        let state = try XCTUnwrap(ParkDayActivity.state(stops: stops, done: 1, total: 5, rain: nil, now: now))
+        let upcoming = try XCTUnwrap(state.upcoming)
+        XCTAssertEqual(upcoming.map(\.title), ["A", "Show", "B"])
+        XCTAssertEqual(upcoming[0].time, now.addingTimeInterval(15 * 60), "ride: get-in-line time after the walk")
+        XCTAssertEqual(upcoming[0].wait, 35)
+        XCTAssertNil(upcoming[1].wait, "no wait for a show")
+        XCTAssertEqual(upcoming[1].time, now.addingTimeInterval(60 * 60))
+        XCTAssertEqual(state.stopRideId, "A", "Done / Skip act on the next ride")
+    }
+
+    func testNoButtonsForASetTimeStop() {
+        let state = ParkDayActivity.state(stops: [stop("Fireworks", kind: "show", in: 30)], done: 0, total: 1,
+                                          rain: nil, now: now)
+        XCTAssertNil(state?.stopRideId)
+    }
+
+    func testStopwatchRounding() {
+        XCTAssertEqual(TimerMath.actualMinutes(start: now, now: now.addingTimeInterval(20)), 1, "at least a minute")
+        XCTAssertEqual(TimerMath.actualMinutes(start: now, now: now.addingTimeInterval(45 * 60 + 50)), 45)
+    }
 }

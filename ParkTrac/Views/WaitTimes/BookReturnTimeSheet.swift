@@ -175,7 +175,8 @@ struct BookReturnTimeSheet: View {
         // Now only). Runs alongside the return-time activity — ActivityKit
         // supports multiple concurrent activities from one app.
         if trackNextBooking && !isOpenEnded && nextBookingAt > .now {
-            LiveActivityManager.startNextBooking(rideName: ride.name, eligibleAt: nextBookingAt)
+            LiveActivityManager.startNextBooking(rideName: ride.name, eligibleAt: nextBookingAt,
+                                                 resortRaw: parkGroup.rawValue)
         }
     }
 }

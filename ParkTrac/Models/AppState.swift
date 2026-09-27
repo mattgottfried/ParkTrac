@@ -266,6 +266,20 @@ final class AppState {
             object: kv,
             queue: .main
         ) { [weak self] _ in self?.reloadFromiCloud() }
+
+        // The stopwatch was stopped from its Live Activity ("I'm On")
+        NotificationCenter.default.addObserver(
+            forName: .waitTimerChangedExternally, object: nil, queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            let ud = UserDefaults.standard
+            self.activeTimerRideId = ud.string(forKey: "activeTimerRideId")
+            let ts = ud.double(forKey: "activeTimerStart")
+            self.activeTimerStart = ts > 0 ? Date(timeIntervalSince1970: ts) : nil
+            self.timerRideName = ud.string(forKey: "timerRideName") ?? ""
+            self.timerPostedMinutes = ud.integer(forKey: "timerPostedMinutes")
+            self.timerResort = ud.string(forKey: "timerResort") ?? ""
+        }
     }
 
     func toggleWish(_ rideId: String) {

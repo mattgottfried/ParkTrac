@@ -113,6 +113,8 @@
 		AA0000000000000000000188 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000187 /* LiveActivityManager.swift */; };
 		AA000000000000000000018A /* ThrillTrackActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */; };
 		AA000000000000000000018B /* ThrillTrackActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */; };
+		AA00000000000000000001B8 /* LiveActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001B9 /* LiveActivityIntents.swift */; };
+		AA00000000000000000001BA /* LiveActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001B9 /* LiveActivityIntents.swift */; };
 		C972E4CA300AADAF00E01CAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4C9300AADAF00E01CAC /* WidgetKit.framework */; };
 		C972E4CC300AADAF00E01CAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C972E4CB300AADAF00E01CAC /* SwiftUI.framework */; };
 		C972E4DD300AADB000E01CAC /* TrillTrackWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -258,6 +260,7 @@
 		AA000000000000000000018C /* DiningEmailIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiningEmailIntent.swift; sourceTree = "<group>"; };
 		AA0000000000000000000187 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrillTrackActivityAttributes.swift; sourceTree = "<group>"; };
+		AA00000000000000000001B9 /* LiveActivityIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityIntents.swift; sourceTree = "<group>"; };
 		C972E4C7300AADAF00E01CAC /* TrillTrackWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrillTrackWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C972E4C9300AADAF00E01CAC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C972E4CB300AADAF00E01CAC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -403,6 +406,7 @@
 				AA000000000000000000018C /* DiningEmailIntent.swift */,
 				AA0000000000000000000187 /* LiveActivityManager.swift */,
 				AA0000000000000000000189 /* ThrillTrackActivityAttributes.swift */,
+				AA00000000000000000001B9 /* LiveActivityIntents.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -796,6 +800,7 @@
 				AA000000000000000000018D /* DiningEmailIntent.swift in Sources */,
 				AA0000000000000000000188 /* LiveActivityManager.swift in Sources */,
 				AA000000000000000000018A /* ThrillTrackActivityAttributes.swift in Sources */,
+				AA00000000000000000001B8 /* LiveActivityIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -804,6 +809,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000000000000000000018B /* ThrillTrackActivityAttributes.swift in Sources */,
+				AA00000000000000000001BA /* LiveActivityIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

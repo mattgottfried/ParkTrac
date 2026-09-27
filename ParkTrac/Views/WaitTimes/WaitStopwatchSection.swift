@@ -68,7 +68,8 @@ struct WaitStopwatchSection: View {
                     appState.timerResort = ride.parkId  // resort context for WaitTimerBanner
                     elapsed = 0
                     LiveActivityManager.startWaitTimer(
-                        rideName: ride.name, parkName: parkName, startedAt: start, postedMinutes: postedWait ?? 0
+                        rideName: ride.name, parkName: parkName, startedAt: start, postedMinutes: postedWait ?? 0,
+                        rideId: ride.id, resortRaw: appState.selectedResort.rawValue
                     )
                 } label: {
                     Label("Start Timer", systemImage: "stopwatch")

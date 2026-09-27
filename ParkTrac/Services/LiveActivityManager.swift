@@ -30,11 +30,12 @@ enum LiveActivityManager {
 
     /// - Parameter returnStart: when a timed window opens (progress bar); nil for DAS/AAP
     static func startReturnTime(passLabel: String, rideName: String, parkName: String, returnEnd: Date?,
-                                returnStart: Date? = nil) {
+                                returnStart: Date? = nil, rideId: String? = nil, resortRaw: String? = nil) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         endReturnTime()
         let attributes = ThrillTrackActivityAttributes(
-            mode: .returnTime, label: passLabel, title: rideName, subtitle: parkName
+            mode: .returnTime, label: passLabel, title: rideName, subtitle: parkName,
+            rideId: rideId, resortRaw: resortRaw
         )
         let state = ThrillTrackActivityAttributes.ContentState(countdownEnd: returnEnd, startedAt: nil, postedMinutes: nil,
                                                                windowStart: returnStart)
@@ -43,18 +44,19 @@ enum LiveActivityManager {
     }
 
     static func endReturnTime() {
-        guard let activity = returnTimeActivity else { return }
         returnTimeActivity = nil
-        Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        endAll(.returnTime)
     }
 
     // MARK: - Wait stopwatch
 
-    static func startWaitTimer(rideName: String, parkName: String, startedAt: Date, postedMinutes: Int) {
+    static func startWaitTimer(rideName: String, parkName: String, startedAt: Date, postedMinutes: Int,
+                               rideId: String? = nil, resortRaw: String? = nil) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         endWaitTimer()
         let attributes = ThrillTrackActivityAttributes(
-            mode: .waitTimer, label: "Wait Timer", title: rideName, subtitle: parkName
+            mode: .waitTimer, label: "Wait Timer", title: rideName, subtitle: parkName,
+            rideId: rideId, resortRaw: resortRaw
         )
         let state = ThrillTrackActivityAttributes.ContentState(countdownEnd: nil, startedAt: startedAt, postedMinutes: postedMinutes)
         let content = ActivityContent(state: state, staleDate: nil)
@@ -62,19 +64,28 @@ enum LiveActivityManager {
     }
 
     static func endWaitTimer() {
-        guard let activity = waitTimerActivity else { return }
         waitTimerActivity = nil
-        Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        endAll(.waitTimer)
+    }
+
+    /// Ends every running activity of a mode — including ones started before an app relaunch
+    /// (e.g. when a Live Activity button launched the app in the background).
+    private static func endAll(_ mode: ThrillTrackActivityAttributes.Mode) {
+        for activity in Activity<ThrillTrackActivityAttributes>.activities where activity.attributes.mode == mode {
+            Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        }
     }
 
     // MARK: - Dining reservation countdown
 
-    static func startDining(restaurantName: String, parkName: String, partySize: Int, reservationTime: Date) {
+    static func startDining(restaurantName: String, parkName: String, partySize: Int, reservationTime: Date,
+                            resortRaw: String? = nil) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         endDining()
         let subtitle = partySize > 0 ? "Party of \(partySize) · \(parkName)" : parkName
         let attributes = ThrillTrackActivityAttributes(
-            mode: .dining, label: "Dining Reservation", title: restaurantName, subtitle: subtitle
+            mode: .dining, label: "Dining Reservation", title: restaurantName, subtitle: subtitle,
+            resortRaw: resortRaw
         )
         let state = ThrillTrackActivityAttributes.ContentState(countdownEnd: reservationTime, startedAt: nil, postedMinutes: nil)
         let content = ActivityContent(state: state, staleDate: reservationTime)
@@ -95,11 +106,11 @@ enum LiveActivityManager {
 
     // MARK: - Rope drop (park opening) countdown
 
-    static func startRopeDrop(parkName: String, openingTime: Date) {
+    static func startRopeDrop(parkName: String, openingTime: Date, resortRaw: String? = nil) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         endRopeDrop()
         let attributes = ThrillTrackActivityAttributes(
-            mode: .ropeDrop, label: "Rope Drop", title: parkName, subtitle: ""
+            mode: .ropeDrop, label: "Rope Drop", title: parkName, subtitle: "", resortRaw: resortRaw
         )
         let state = ThrillTrackActivityAttributes.ContentState(countdownEnd: openingTime, startedAt: nil, postedMinutes: nil)
         let content = ActivityContent(state: state, staleDate: openingTime)
@@ -114,11 +125,12 @@ enum LiveActivityManager {
 
     // MARK: - Next Lightning Lane booking eligibility countdown
 
-    static func startNextBooking(rideName: String, eligibleAt: Date) {
+    static func startNextBooking(rideName: String, eligibleAt: Date, resortRaw: String? = nil) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         endNextBooking()
         let attributes = ThrillTrackActivityAttributes(
-            mode: .nextBooking, label: "Next Booking", title: rideName, subtitle: "Estimate — verify in official app"
+            mode: .nextBooking, label: "Next Booking", title: rideName, subtitle: "Estimate — verify in official app",
+            resortRaw: resortRaw
         )
         let state = ThrillTrackActivityAttributes.ContentState(countdownEnd: eligibleAt, startedAt: nil, postedMinutes: nil)
         let content = ActivityContent(state: state, staleDate: eligibleAt)
@@ -140,7 +152,7 @@ enum LiveActivityManager {
 
     /// Starts, updates or (with nil) ends the Park Day activity. No-ops when nothing changed,
     /// so it's safe to call after every wait-time refresh.
-    static func updateParkDay(title: String, state: ThrillTrackActivityAttributes.ContentState?) {
+    static func updateParkDay(title: String, resortRaw: String? = nil, state: ThrillTrackActivityAttributes.ContentState?) {
         guard parkDayEnabled, let state else {
             endParkDay()
             return
@@ -157,7 +169,8 @@ enum LiveActivityManager {
         }
         endParkDay()
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        let attributes = ThrillTrackActivityAttributes(mode: .parkDay, label: "Next Up", title: title, subtitle: "")
+        let attributes = ThrillTrackActivityAttributes(mode: .parkDay, label: "Next Up", title: title, subtitle: "",
+                                                       resortRaw: resortRaw)
         parkDayActivity = try? Activity.request(attributes: attributes, content: content)
     }
 
@@ -196,7 +209,8 @@ enum LiveActivityManager {
             restaurantName: res.restaurantName,
             parkName: res.resort,
             partySize: res.partySize,
-            reservationTime: res.date
+            reservationTime: res.date,
+            resortRaw: res.resort
         )
     }
 }
@@ -214,10 +228,21 @@ enum ParkDayActivity {
     }
 
     /// The Lock Screen / Dynamic Island content for the live plan, or nil when there's nothing next.
+    /// Stops shown on the Lock Screen timeline
+    static let timelineCount = 3
+
     static func state(stops: [PlannedStop], done: Int, total: Int, rain: String?,
                       now: Date = .now) -> ThrillTrackActivityAttributes.ContentState? {
         guard let stop = stops.first else { return nil }
         let then = stops.dropFirst().first.map { "Then: \($0.title) (\(time($0.start)))" }
+        let upcoming = stops.prefix(timelineCount).map { s in
+            ThrillTrackActivityAttributes.UpcomingStop(
+                title: s.title,
+                // Rides: when to get in line (after the walk); set-time events: their start
+                time: s.kind == "ride" ? s.start.addingTimeInterval(Double(s.walkMinutes) * 60) : s.start,
+                wait: s.kind == "ride" ? s.waitMinutes : nil,
+                kind: s.kind)
+        }
         return ThrillTrackActivityAttributes.ContentState(
             countdownEnd: nil, startedAt: nil, postedMinutes: nil,
             stopTitle: stop.title,
@@ -225,10 +250,109 @@ enum ParkDayActivity {
             stopDetail: detail(for: stop, now: now),
             thenText: then,
             progressText: total > 0 ? "\(done) of \(total) done" : nil,
-            rainText: rain)
+            rainText: rain,
+            stopRideId: stop.kind == "ride" ? stop.rideId : nil,
+            upcoming: Array(upcoming))
     }
 
     private static func time(_ date: Date) -> String {
         date.formatted(date: .omitted, time: .shortened)
     }
+}
+
+// MARK: - Live Activity buttons (app side)
+
+/// Runs the Live Activity buttons (`LiveActivityIntents.swift`) inside the app. Registered in
+/// `ParkTracApp.init`, so it works even when a button launches the app in the background.
+@MainActor
+enum LiveActivityActionHandler {
+    static func register() {
+        LiveActivityActions.handler = { action in await handle(action) }
+    }
+
+    static func handle(_ action: LiveActivityAction) async {
+        switch action {
+        case .done(let rideId):
+            ItineraryService.shared.markDone(rideId)
+            refreshParkDay()
+        case .skip(let rideId):
+            ItineraryService.shared.skip(rideId)
+            refreshParkDay()
+        case .finishTimer:
+            finishTimer()
+        case .usedReturn(let rideId):
+            usedReturn(rideId: rideId)
+        }
+    }
+
+    /// Push the plan's new next stop right away; the next foreground refresh re-plans fully.
+    private static func refreshParkDay() {
+        let service = ItineraryService.shared
+        guard let plan = service.itinerary,
+              let running = Activity<ThrillTrackActivityAttributes>.activities.first(where: { $0.attributes.mode == .parkDay })
+        else { return }
+        LiveActivityManager.updateParkDay(
+            title: running.attributes.title, resortRaw: running.attributes.resortRaw,
+            state: ParkDayActivity.state(stops: service.live?.stops ?? [], done: plan.doneIds.count,
+                                         total: plan.rides.count,
+                                         rain: RainForecastService.shared.headline(for: plan.resort)))
+    }
+
+    /// "I'm On": log the ride with the time waited, the same as the stopwatch's Done Waiting.
+    private static func finishTimer() {
+        let defaults = UserDefaults.standard
+        let running = Activity<ThrillTrackActivityAttributes>.activities.first { $0.attributes.mode == .waitTimer }
+        let startTs = defaults.double(forKey: "activeTimerStart")
+        if let rideId = defaults.string(forKey: "activeTimerRideId"), startTs > 0 {
+            let posted = defaults.integer(forKey: "timerPostedMinutes")
+            let log = RideLog(
+                rideId: rideId,
+                rideName: running?.attributes.title ?? defaults.string(forKey: "timerRideName") ?? "",
+                parkId: defaults.string(forKey: "timerResort") ?? "",   // the stopwatch stores the park id here
+                parkName: running?.attributes.subtitle ?? "",
+                resort: running?.attributes.resortRaw ?? "",
+                riddenAt: .now,
+                waitMinutes: posted == 0 ? nil : posted,
+                actualWaitMinutes: TimerMath.actualMinutes(start: Date(timeIntervalSince1970: startTs)),
+                notes: "")
+            let context = PersistenceController.container.mainContext
+            context.insert(log)
+            try? context.save()
+        }
+        for key in ["activeTimerRideId", "activeTimerStart", "timerRideName", "timerPostedMinutes", "timerResort"] {
+            defaults.removeObject(forKey: key)
+        }
+        LiveActivityManager.endWaitTimer()
+        NotificationCenter.default.post(name: .waitTimerChangedExternally, object: nil)
+    }
+
+    /// "Used It": tick off today's return for this ride and end its countdown.
+    private static func usedReturn(rideId: String) {
+        let context = PersistenceController.container.mainContext
+        let items = (try? context.fetch(FetchDescriptor<PlanItem>())) ?? []
+        for item in items where TimerMath.isOpenReturn(item, rideId: rideId) {
+            item.isDone = true
+        }
+        try? context.save()
+        LiveActivityManager.endReturnTime()
+    }
+}
+
+/// Small pure pieces of the button actions (unit tested).
+enum TimerMath {
+    /// Same rounding as the stopwatch: whole minutes, at least 1
+    static func actualMinutes(start: Date, now: Date = .now) -> Int {
+        max(1, Int(now.timeIntervalSince(start) / 60))
+    }
+
+    /// Today's unfinished Lightning Lane / DAS / AAP return for a ride
+    static func isOpenReturn(_ item: PlanItem, rideId: String, calendar: Calendar = .current, now: Date = .now) -> Bool {
+        (item.kind == "ll" || item.kind == "aap") && !item.isDone && item.rideId == rideId
+            && calendar.isDate(item.date, inSameDayAs: now)
+    }
+}
+
+extension Notification.Name {
+    /// The stopwatch was stopped from outside the app's UI (a Live Activity button)
+    static let waitTimerChangedExternally = Notification.Name("waitTimerChangedExternally")
 }

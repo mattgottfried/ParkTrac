@@ -377,7 +377,7 @@ final class ItineraryService {
         // Lock Screen / Dynamic Island: Next Up
         let parkTitle = viewModel.filterPark?.name ?? resort.rawValue
         LiveActivityManager.updateParkDay(
-            title: parkTitle,
+            title: parkTitle, resortRaw: resort.rawValue,
             state: ParkDayActivity.state(stops: live?.stops ?? [], done: it.doneIds.count, total: it.rides.count,
                                          rain: RainForecastService.shared.headline(for: resort)))
     }
