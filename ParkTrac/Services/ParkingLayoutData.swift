@@ -2,7 +2,7 @@ import CoreLocation
 
 // Generated from OpenStreetMap (© OpenStreetMap contributors, ODbL) — parking lot outlines and
 // parking-aisle lines for the sections OSM names. Row lines are sorted across the lot; OSM has
-// no row numbers, so the numbering comes from saved spots (`ParkingRowGuess`).
+// no row numbers — those come from the `ParkingLots` ranges (`ParkingGuess`).
 extension ParkingLayouts {
     static let presets: [ParkingLayout] = [
         ParkingLayout(lot: "EPCOT", section: "Rocket",

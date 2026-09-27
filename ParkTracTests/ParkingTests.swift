@@ -141,7 +141,7 @@ final class ParkingTests: XCTestCase {
 
     func testLotCatalog() {
         let mk = ParkingLots.lots(for: .disney).first { $0.name == "Magic Kingdom" }
-        XCTAssertEqual(mk?.groups.map(\.name), ["Heroes", "Villains"])
+        XCTAssertEqual(mk?.groups.map(\.name), ["Heroes", "Villains", "Accessible"])
         XCTAssertTrue(mk?.allSections.contains("Zurg") == true)
         XCTAssertEqual(ParkingLots.lots(for: .universal).map(\.name), ["CityWalk Garages", "Epic Universe"])
         XCTAssertTrue(ParkingLots.lots(for: .tokyoDisney).isEmpty, "Japan uses the note")

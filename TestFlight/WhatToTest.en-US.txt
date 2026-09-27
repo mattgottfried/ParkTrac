@@ -108,3 +108,10 @@ Change the plan after it's made
 - One-tap fixes: Less Walking (finishes one part of the park before crossing to the next), Must-Dos First, Shortest Waits. Each says what changed ("Walking cut from about 42 to 18 min").
 - With Apple Intelligence, type what you want ("keep rides close together", "TRON last", "lunch at noon") and send. It rewrites the order and ThrillTrack re-times it; you can keep asking. Walking requests also get a route clean-up, since the model can't measure distances itself.
 - Apple Intelligence now also knows which rides are near each other (areas) from the first plan.
+
+Car locator: row wheel + guessing
+- Sections and rows now match the Disney and Universal apps (thanks for the lists): new Medical, BB-8, Dragon, Monster and Valet sections; Blizzard Beach and Typhoon Lagoon (incl. "Peak").
+- Rows are a scroll wheel like the Disney app — no typing.
+- Opening the car locator takes a GPS fix and guesses: at EPCOT (all 8 sections), Hollywood Studios (Minnie, Jessie, Mickey, Buzz, Olaf) and Epic Universe's Explorer it finds your section from the lot map and your row from the mapped row lines. Elsewhere (Magic Kingdom, Animal Kingdom…) it learns from spots saved there before — yours and, with "Help Map This Lot" on, everyone's (anonymous: section, row and GPS point only).
+- CityWalk garages aren't guessed (GPS can't tell the level).
+- Check: at a lot, open the car locator — section and row should be filled in with "Guessed from…"; spin the wheel if it's off and save. The first save in a mapped section also fixes which way its rows are numbered.

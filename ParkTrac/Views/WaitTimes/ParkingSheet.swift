@@ -26,6 +26,11 @@ struct ParkingSheet: View {
     @State private var pendingPhoto: UIImage?
     @State private var showClearConfirm = false
     @State private var showFullPhoto = false
+    /// A GPS fix taken as the sheet opens — for the guess, and reused by Save if it's fresh
+    @State private var earlyFix: CLLocation?
+    /// "Guessed from the lot map" / "…from saved spots" under the wheel
+    @State private var guessNote: String?
+    @AppStorage(ParkingService.shareKey) private var shareLayouts = true
     private enum Field { case note, row }
     @FocusState private var focused: Field?
 
@@ -33,6 +38,12 @@ struct ParkingSheet: View {
     private var lots: [ParkingLot] { ParkingLots.lots(for: resort) }
     private var selectedLot: ParkingLot? { lots.first { $0.name == lotName } }
     private var lastLotKey: String { "lastParkingLot_\(RideMetadata.normalize(resort.rawValue))" }
+
+    /// The row wheel's values for what's picked (empty = type it, or no rows)
+    private var rowChoices: [String] {
+        guard let lot = selectedLot else { return [] }
+        return lot.rows(for: lot.groups.isEmpty ? nil : (sectionName.isEmpty ? nil : sectionName))
+    }
 
     /// What the menus currently say
     private var details: ParkingDetails {
@@ -76,6 +87,7 @@ struct ParkingSheet: View {
                     lotName = last   // usually the same lot as last time
                 }
                 locationService.requestAndStart()
+                if spot == nil { Task { await guessFromHere() } }
             }
             .onChange(of: lotName) { _, name in
                 if let lot = selectedLot {
@@ -85,7 +97,12 @@ struct ParkingSheet: View {
                 }
                 commitDetails()
             }
-            .onChange(of: sectionName) { _, _ in commitDetails() }
+            .onChange(of: sectionName) { _, _ in
+                // A row from another section's range doesn't belong on this wheel
+                if !rowChoices.isEmpty, !rowChoices.contains(row) { row = "" }
+                commitDetails()
+            }
+            .onChange(of: row) { _, _ in if !rowChoices.isEmpty { commitDetails() } }
             .onChange(of: level) { _, _ in commitDetails() }
             .onChange(of: focused) { old, _ in
                 if old == .note { commitNote() }
@@ -237,15 +254,17 @@ struct ParkingSheet: View {
                     ForEach(lots) { Text($0.name).tag($0.name) }
                 }
                 if let lot = selectedLot {
-                    Picker("Section", selection: $sectionName) {
-                        Text("Choose…").tag("")
-                        ForEach(Array(lot.groups.enumerated()), id: \.offset) { _, group in
-                            if let groupName = group.name {
-                                Section(groupName) {
-                                    ForEach(group.sections, id: \.self) { Text($0).tag($0) }
+                    if !lot.groups.isEmpty {
+                        Picker("Section", selection: $sectionName) {
+                            Text("Choose…").tag("")
+                            ForEach(Array(lot.groups.enumerated()), id: \.offset) { _, group in
+                                if let groupName = group.name {
+                                    Section(groupName) {
+                                        ForEach(group.sections.map(\.name), id: \.self) { Text($0).tag($0) }
+                                    }
+                                } else {
+                                    ForEach(group.sections.map(\.name), id: \.self) { Text($0).tag($0) }
                                 }
-                            } else {
-                                ForEach(group.sections, id: \.self) { Text($0).tag($0) }
                             }
                         }
                     }
@@ -255,20 +274,42 @@ struct ParkingSheet: View {
                             ForEach(Array(levels), id: \.self) { Text("Level \($0)").tag($0) }
                         }
                     }
-                    HStack {
-                        Text(lot.rowLabel.isEmpty ? "Number" : lot.rowLabel)
-                        TextField(lot.rowPrompt, text: $row)
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.numbersAndPunctuation)
-                            .focused($focused, equals: .row)
-                            .submitLabel(.done)
-                            .onSubmit(commitDetails)
+                    if !rowChoices.isEmpty {
+                        // Spin to the row, like the Disney app
+                        VStack(spacing: 4) {
+                            Text(lot.rowLabel.isEmpty ? "Number" : "Select \(lot.rowLabel)")
+                                .font(.subheadline.weight(.semibold))
+                            Picker(lot.rowLabel.isEmpty ? "Number" : lot.rowLabel, selection: $row) {
+                                Text("—").tag("")
+                                ForEach(rowChoices, id: \.self) { Text($0).tag($0) }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(height: 130)
+                            if let guessNote {
+                                Label(guessNote, systemImage: "location.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    } else if lot.groups.isEmpty || !sectionName.isEmpty || lot.levels != nil {
+                        HStack {
+                            Text(lot.rowLabel.isEmpty ? "Number" : lot.rowLabel)
+                            TextField(lot.rowPrompt, text: $row)
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.numbersAndPunctuation)
+                                .focused($focused, equals: .row)
+                                .submitLabel(.done)
+                                .onSubmit(commitDetails)
+                        }
                     }
                 }
+                Toggle("Help Map This Lot", isOn: $shareLayouts)
+                    .font(.subheadline)
             } header: {
                 Text("Where You Parked")
             } footer: {
-                Text("The lot, the character or name on the sign, and your row — like the Disney and Universal apps.")
+                Text("ThrillTrack guesses your section and row from where you're standing — from the lot map where it has one, and from spots saved here before. \"Help Map This Lot\" shares only the section, row and its GPS point (nothing about you) so everyone's guesses get better.")
             }
         }
 
@@ -311,6 +352,37 @@ struct ParkingSheet: View {
         }
     }
 
+    // MARK: Guess
+
+    /// Where am I? → fill in the lot, section and row (never overwriting what you picked)
+    @MainActor
+    private func guessFromHere() async {
+        await parking.refreshShared(resort: resort)
+        guard let fix = try? await PreciseLocator().locate(timeout: 6) else { return }
+        earlyFix = fix
+        guard spot == nil else { return }
+        let parks = viewModel.parksByGroup[resort] ?? []
+        let result = ParkingGuess.guess(
+            at: fix.coordinate, lots: lots, samples: parking.allSamples(for: resort),
+            parkCoordinate: { lotName in
+                parks.first { $0.name.localizedCaseInsensitiveContains(lotName) || lotName.localizedCaseInsensitiveContains($0.name) }?
+                    .coordinate
+            })
+        guard let lot = result.lot, lotName.isEmpty || lotName == lot else { return }
+        lotName = lot
+        if let section = result.section, sectionName.isEmpty { sectionName = section }
+        // Let the section's onChange settle before choosing the row
+        try? await Task.sleep(for: .milliseconds(50))
+        if let guessed = result.row, row.isEmpty, rowChoices.contains(guessed) {
+            row = guessed
+            guessNote = result.fromMap
+                ? "Guessed from the lot map — spin if it's off"
+                : "Guessed from spots saved here before — spin if it's off"
+        } else if result.section != nil {
+            guessNote = result.fromMap ? "Section found from the lot map" : nil
+        }
+    }
+
     // MARK: Actions
 
     @MainActor
@@ -319,8 +391,12 @@ struct ParkingSheet: View {
         isLocating = true
         defer { isLocating = false }
         do {
-            let locator = PreciseLocator()
-            let location = try await locator.locate()
+            let location: CLLocation
+            if let earlyFix, Date.now.timeIntervalSince(earlyFix.timestamp) < 120, earlyFix.horizontalAccuracy <= 25 {
+                location = earlyFix
+            } else {
+                location = try await PreciseLocator().locate()
+            }
             if spot == nil {
                 parking.save(coordinate: location.coordinate, note: note, details: details, resort: resort)
             } else {
