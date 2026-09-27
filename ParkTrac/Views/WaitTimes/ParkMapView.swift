@@ -731,7 +731,8 @@ struct ParkMapView: View {
         let key = "\(park.id)-\(opening.timeIntervalSince1970)"
         guard key != lastRopeDropKey else { return }
         lastRopeDropKey = key
-        LiveActivityManager.startRopeDrop(parkName: park.name, openingTime: opening)
+        LiveActivityManager.startRopeDrop(parkName: park.name, openingTime: opening,
+                                          resortRaw: viewModel.selectedGroup.rawValue)
     }
 
     // MARK: - Zoom-Based Auto-Select

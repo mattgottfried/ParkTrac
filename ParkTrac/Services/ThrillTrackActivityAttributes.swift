@@ -4,6 +4,16 @@ import Foundation
 /// Shared between the main app (starts/ends activities) and the widget
 /// extension (renders them) — this file must be compiled into BOTH targets.
 struct ThrillTrackActivityAttributes: ActivityAttributes {
+    /// One stop on the Park Day timeline
+    struct UpcomingStop: Codable, Hashable {
+        var title: String
+        var time: Date
+        /// Expected wait for rides; nil for shows / dining / breaks
+        var wait: Int?
+        /// "ride" | "show" | "dining" | "break"
+        var kind: String
+    }
+
     enum Mode: String, Codable, Hashable {
         /// Lightning Lane / Express Now / DAS / AAP return window countdown
         case returnTime
@@ -38,10 +48,18 @@ struct ThrillTrackActivityAttributes: ActivityAttributes {
         var progressText: String? = nil
         /// "Rain likely 3–5 PM"
         var rainText: String? = nil
+        /// Ride id of the next stop — the Done / Skip buttons act on it
+        var stopRideId: String? = nil
+        /// The next three stops for the timeline
+        var upcoming: [UpcomingStop]? = nil
     }
 
     var mode: Mode
     var label: String     // e.g. "Lightning Lane", "Dining Reservation", "Rope Drop", "Next Booking", "Next Up"
     var title: String     // ride name / restaurant name / park name
     var subtitle: String  // park name / party-size info / empty
+    /// Ride the activity is about (return time, stopwatch) — for its button
+    var rideId: String? = nil
+    /// `ParkGroup.rawValue` — picks the resort's colors
+    var resortRaw: String? = nil
 }

@@ -13,6 +13,8 @@ struct ParkTracApp: App {
         // Must be set before launch finishes so a tap that launched the app is delivered
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
         NotificationDelegate.registerCategories()
+        // Live Activity buttons (Done / Skip / I'm On / Used It) run here
+        LiveActivityActionHandler.register()
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: BackgroundRefreshService.taskIdentifier,
             using: nil

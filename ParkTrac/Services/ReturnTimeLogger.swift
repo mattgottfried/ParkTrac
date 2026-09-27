@@ -177,7 +177,7 @@ enum ReturnTimeLogger {
             // Count down to when you can come back; after that it reads "valid until park close"
             LiveActivityManager.startReturnTime(
                 passLabel: passLabel, rideName: rideName, parkName: parkName,
-                returnEnd: returnStart > .now ? returnStart : nil)
+                returnEnd: returnStart > .now ? returnStart : nil, rideId: rideId, resortRaw: resort)
             Task {
                 await NotificationService.shared.requestAuthorization()
                 NotificationService.shared.scheduleReturnReady(
@@ -186,7 +186,7 @@ enum ReturnTimeLogger {
         } else {
             LiveActivityManager.startReturnTime(
                 passLabel: passLabel, rideName: rideName, parkName: parkName, returnEnd: returnEnd,
-                returnStart: returnStart)
+                returnStart: returnStart, rideId: rideId, resortRaw: resort)
             Task {
                 await NotificationService.shared.requestAuthorization()
                 NotificationService.shared.scheduleLLReminder(
