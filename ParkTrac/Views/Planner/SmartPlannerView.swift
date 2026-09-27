@@ -445,7 +445,7 @@ struct SmartPlannerView: View {
                                             interests: Interest.allCases.filter { interests.contains($0) }.map(\.label))
             do {
                 let ai = try await PlannerAI.plan(input)
-                let extras = ai.extraEvents.compactMap { e -> FixedEvent? in
+                let extras = PlannerAI.groundedExtras(ai.extraEvents, notes: notes).compactMap { e -> FixedEvent? in
                     guard let at = PlanConstraints.date(e.time, on: startTime) else { return nil }
                     return FixedEvent(title: e.title, kind: PlanConstraints.eventKind(for: e.title),
                                       start: at, minutes: e.minutes, parkName: parkName)

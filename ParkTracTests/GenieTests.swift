@@ -60,6 +60,20 @@ final class GenieTests: XCTestCase {
         XCTAssertTrue(text.contains("Guest's notes: Rise right before close"))
     }
 
+    func testGroundedExtrasDropsInventedAndRepeatedDining() {
+        let invented = PlanConstraints.Event(title: "Dinner at Be Our Guest", time: "21:00", minutes: 60)
+        let again = PlanConstraints.Event(title: "Dinner at Be Our Guest", time: "22:00", minutes: 60)
+        // No notes → nothing the model adds survives
+        XCTAssertEqual(PlannerAI.groundedExtras([invented, again], notes: ""), [])
+        // Notes that don't mention a meal → dropped
+        XCTAssertEqual(PlannerAI.groundedExtras([invented], notes: "Ride TRON right before close"), [])
+        // Asked for dinner → kept once
+        XCTAssertEqual(PlannerAI.groundedExtras([invented, again], notes: "dinner at 9"), [invented])
+        let snack = PlanConstraints.Event(title: "Snack break", time: "15:00", minutes: 20)
+        let snack2 = PlanConstraints.Event(title: "Afternoon snack", time: "15:10", minutes: 20)
+        XCTAssertEqual(PlannerAI.groundedExtras([snack, snack2], notes: "snack around 3"), [snack])
+    }
+
     func testEventKind() {
         XCTAssertEqual(PlanConstraints.eventKind(for: "Dinner at Be Our Guest"), "dining")
         XCTAssertEqual(PlanConstraints.eventKind(for: "Snack break"), "break")

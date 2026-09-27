@@ -74,7 +74,8 @@ enum PlannerAI {
     If the notes say what kinds of rides the party likes, list them in interests using only: thrill, coasters, \
     gentle, dark rides, water, simulators, shows.
     If the notes mention a meal or break at a time, add it to extraEvents with a 24-hour HH:mm time and a length \
-    in minutes (meals 60–90, snacks or breaks 20–30 unless the guest says otherwise). Don't invent anything else.
+    in minutes (meals 60–90, snacks or breaks 20–30 unless the guest says otherwise). If the notes don't mention \
+a meal or break, extraEvents must be empty. Never add dining the guest didn't ask for, and never add anything twice.
     Write summary as one or two friendly sentences explaining the plan.
     """
 
@@ -116,6 +117,44 @@ enum PlannerAI {
         """
     }
 
+    /// Keeps only the meals/breaks the guest actually asked for: the on-device model sometimes
+    /// invents dining (or repeats it), so each event must share a word with the notes, and
+    /// duplicates (same title, or the same kind at an overlapping time) are dropped.
+    static func groundedExtras(_ events: [PlanConstraints.Event], notes: String) -> [PlanConstraints.Event] {
+        let noteWords = words(notes)
+        guard !noteWords.isEmpty else { return [] }
+        var kept: [PlanConstraints.Event] = []
+        for event in events {
+            guard !words(event.title).isDisjoint(with: noteWords) else { continue }
+            let kind = PlanConstraints.eventKind(for: event.title)
+            let duplicate = kept.contains { other in
+                RideMetadata.normalize(other.title) == RideMetadata.normalize(event.title)
+                    || (PlanConstraints.eventKind(for: other.title) == kind && overlaps(other, event))
+            }
+            if !duplicate { kept.append(event) }
+        }
+        return kept
+    }
+
+    private static let fillerWords: Set<String> = ["the", "and", "for", "with", "our", "at", "a", "an", "in", "on", "to", "of"]
+
+    private static func words(_ text: String) -> Set<String> {
+        Set(text.lowercased()
+            .components(separatedBy: CharacterSet.letters.inverted)
+            .filter { $0.count >= 3 && !fillerWords.contains($0) })
+    }
+
+    private static func minutesOfDay(_ hhmm: String) -> Int? {
+        let parts = hhmm.split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else { return nil }
+        return parts[0] * 60 + parts[1]
+    }
+
+    private static func overlaps(_ a: PlanConstraints.Event, _ b: PlanConstraints.Event) -> Bool {
+        guard let sa = minutesOfDay(a.time), let sb = minutesOfDay(b.time) else { return false }
+        return sa < sb + b.minutes && sb < sa + a.minutes
+    }
+
     /// The model's order → rides: names matched loosely, each ride once, and any picked ride the
     /// model left out goes at the end (the guest's picks are always planned).
     static func resolveOrder(_ names: [String], rides: [PlanRide]) -> [PlanRide] {
@@ -140,7 +179,7 @@ private enum Model {
     struct Response {
         @Guide(description: "Every picked ride name exactly once, in the order to ride them")
         var order: [String]
-        @Guide(description: "Meals or breaks from the guest's notes, if any")
+        @Guide(description: "Only meals or breaks the guest's notes ask for; empty when the notes don't mention one")
         var extraEvents: [Event]
         @Guide(description: "One or two friendly sentences explaining the plan")
         var summary: String
@@ -150,7 +189,7 @@ private enum Model {
 
     @Generable
     struct Event {
-        @Guide(description: "What it is, e.g. Dinner at Be Our Guest")
+        @Guide(description: "The meal or break in the guest's own words")
         var title: String
         @Guide(description: "Start time, 24-hour HH:mm")
         var time: String
