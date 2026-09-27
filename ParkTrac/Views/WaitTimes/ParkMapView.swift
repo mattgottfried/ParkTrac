@@ -1073,7 +1073,9 @@ struct ParkMapView: View {
             Divider()
 
             if showTab == .shows {
-                ShowsListView(shows: viewModel.currentShows, theme: theme, timeZone: viewModel.selectedGroup.timeZone)
+                ShowsListView(shows: viewModel.currentShows, theme: theme, timeZone: viewModel.selectedGroup.timeZone,
+                              resort: viewModel.selectedGroup,
+                              parkName: { id in viewModel.currentParks.first { $0.id == id }?.name ?? "" })
             } else if viewModel.isLoadingParks || (viewModel.isLoading && viewModel.allRides.isEmpty) {
                 ProgressView("Loading…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let errorMsg = viewModel.errorMessage, viewModel.allRides.isEmpty {

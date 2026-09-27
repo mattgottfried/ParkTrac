@@ -109,6 +109,8 @@ The user config must stay **unnamed** — naming it changes the store URL and or
 
 **Rain plan** (`Services/RainForecast.swift`): `RainForecastService` pulls Open-Meteo hourly rain chance for the resort (`ParkGroup.weatherCoordinate`, ≤ every 30 min from `ParkMapView`'s refresh); hours ≥50% are wet. `DayPlanBuilder.build(…wetHours:)` adds `rainPenalty` to outdoor rides in wet hours (`PlanRide.isIndoor` from `RideMetadata.isIndoor` — dark rides/simulators/shows + `indoorOverrides`), `PlannerAI` prompts mark indoor rides and rain hours, `RainHeadsUp` shows on Next Up / Smart Planner, and a once-a-day notification fires 15–60 min before the rain (Settings toggle `rainAlerts`).
 
+**Shows**: rows in `ShowsListView` open `ShowDetailSheet` (same file): today's showtimes, a per-showing 15-min reminder (local notification id `show-<id>-<epoch>`), and Add to My Day with `prefillShow`.
+
 **Add to My Day** (`Views/Planner/AddPlanItemView.swift`): one screen — type chips, the resort's rides (multi-select, `WaitTile` badges, closed rides dimmed) or shows inline by park, then When chips (Anytime / Now / Best ~time from `WaitForecast.call` / showtimes / Pick a time). Opened from a ride or show it starts compact (`.medium`). LL returns save through `ReturnTimeLogger.log`. Defaults in `AddPlanDefaults`.
 
 **Siri** (`Services/SiriIntents.swift`, shortcuts in `RideWaitTimeIntent.swift`'s `ParkTracShortcuts`): "What should I ride next" (`NextRideAdvisor`: Must-Do good-time deals → any deal → Must-Dos by wait → rest), "Where did I park", "Save my parking spot" (opens the sheet), "Plan my day" (asks what to include, opens the Smart Planner via `thrilltrack://planner` + `DeepLinkRouter.plannerRequest`), plus the ride wait lookup.
