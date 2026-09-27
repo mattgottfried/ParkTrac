@@ -21,7 +21,9 @@ struct CrowdCalendarCard: View {
                 .font(.subheadline)
             }
 
-            Text("Predicted crowd levels for \(resort.rawValue)")
+            Text(CrowdHistoryService.shared.days(for: resort) != nil
+                 ? "Past days measured from real waits; the next two weeks predicted from recent weeks"
+                 : "Predicted crowd levels for \(resort.rawValue)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -40,24 +42,15 @@ struct CrowdCalendarCard: View {
                 }
             }
 
-            // Selected day advice
+            // Selected day
             if let date = selectedDate {
-                let level = CrowdCalendarService.crowdLevel(for: date, resort: resort)
-                HStack(spacing: 8) {
-                    Image(systemName: "info.circle.fill")
-                        .foregroundStyle(level.color)
-                    Text(CrowdCalendarService.bestTimeAdvice(for: level))
-                        .font(.caption)
-                        .foregroundStyle(.primary)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(level.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                CrowdDayDetail(date: date, resort: resort, showDate: false)
             }
         }
         .padding()
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .task { await CrowdHistoryService.shared.refreshIfNeeded(resort: resort) }
     }
 }
 
@@ -120,24 +113,8 @@ struct CrowdCalendarView: View {
 
                 // Selected day detail
                 if let date = selectedDate {
-                    let level = CrowdCalendarService.crowdLevel(for: date, resort: resort)
-                    VStack(spacing: 8) {
-                        HStack {
-                            Text(dateLabel(date))
-                                .font(.subheadline.weight(.semibold))
-                            Spacer()
-                            Text(level.rawValue)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(level.color)
-                        }
-                        Text(CrowdCalendarService.bestTimeAdvice(for: level))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding()
-                    .background(level.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
+                    CrowdDayDetail(date: date, resort: resort, showDate: true)
+                        .padding(.horizontal)
                 }
 
                 // Legend
@@ -155,6 +132,7 @@ struct CrowdCalendarView: View {
         }
         .navigationTitle("Crowd Calendar")
         .navigationBarTitleDisplayMode(.inline)
+        .task { await CrowdHistoryService.shared.refreshIfNeeded(resort: resort) }
     }
 
     // MARK: - Helpers
@@ -231,7 +209,16 @@ struct DayCell: View {
     var disneyTier: DisneyPassTier = .none
     var universalTier: UniversalPassTier = .none
 
-    private var level: CrowdLevel { CrowdCalendarService.crowdLevel(for: date, resort: resort) }
+    private var source: CrowdHistory.Source {
+        CrowdHistory.source(for: date, data: CrowdHistoryService.shared.days(for: resort))
+    }
+    private var level: CrowdLevel {
+        CrowdHistory.level(for: date, resort: resort, data: CrowdHistoryService.shared.days(for: resort))
+    }
+    private var isMeasured: Bool {
+        if case .measured = source { return true }
+        return false
+    }
     private var isToday: Bool { Calendar.current.isDateInToday(date) }
     private var isPast: Bool { date < Calendar.current.startOfDay(for: .now) }
     private var isBlockedOut: Bool {
@@ -245,7 +232,8 @@ struct DayCell: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 6)
-                .fill(isPast ? level.color.opacity(0.2) : level.color.opacity(0.7))
+                // Past days we measured stay readable; past guesses fade
+                .fill(isPast ? level.color.opacity(isMeasured ? 0.5 : 0.2) : level.color.opacity(0.7))
 
             if isToday {
                 RoundedRectangle(cornerRadius: 6)
@@ -259,7 +247,7 @@ struct DayCell: View {
 
             Text("\(Calendar.current.component(.day, from: date))")
                 .font(.system(size: dayFontSize, weight: isToday ? .bold : .regular))
-                .foregroundStyle(isPast ? Color.secondary : Color.white)
+                .foregroundStyle(isPast && !isMeasured ? Color.secondary : Color.white)
         }
         .overlay(alignment: .topTrailing) {
             if isBlockedOut {
@@ -274,6 +262,56 @@ struct DayCell: View {
         .accessibilityLabel(date.formatted(.dateTime.weekday(.wide).month(.wide).day()))
         .accessibilityValue(isBlockedOut ? "\(level.rawValue) crowds, blocked out" : "\(level.rawValue) crowds")
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
+// MARK: - Selected day
+
+/// Level, where it came from (measured / recent weeks / seasonal) and the advice.
+struct CrowdDayDetail: View {
+    let date: Date
+    let resort: ParkGroup
+    var showDate: Bool = true
+
+    var body: some View {
+        let data = CrowdHistoryService.shared.days(for: resort)
+        let level = CrowdHistory.level(for: date, resort: resort, data: data)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                if showDate {
+                    Text(date.formatted(date: .complete, time: .omitted))
+                        .font(.subheadline.weight(.semibold))
+                }
+                Spacer(minLength: 0)
+                Text(level.rawValue)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(level.color)
+            }
+            switch CrowdHistory.source(for: date, data: data) {
+            case .measured(let avg):
+                Label("Measured: average wait ~\(Int(avg.rounded())) min", systemImage: "checkmark.seal.fill")
+                    .font(.caption.weight(.semibold))
+                if let data, let parks = CrowdHistory.parkLine(on: date, data: data) {
+                    Text(parks).font(.caption2).foregroundStyle(.secondary)
+                }
+            case .recent(let avg, let days):
+                Label("Predicted from the last \(days) \(date.formatted(.dateTime.weekday(.wide)))s: ~\(Int(avg.rounded())) min",
+                      systemImage: "chart.line.uptrend.xyaxis")
+                    .font(.caption.weight(.semibold))
+            case .seasonal:
+                Label("Seasonal estimate", systemImage: "calendar")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+            if date >= Calendar.current.startOfDay(for: .now) {
+                Text(CrowdCalendarService.bestTimeAdvice(for: level))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(level.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 

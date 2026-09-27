@@ -1,5 +1,14 @@
 import { assertEquals } from "@std/assert";
-import { createHistory, type HourRecord, localParts, median, parksFrom, summarize, waitsFrom } from "./history.ts";
+import {
+  createHistory,
+  dailyAverages,
+  type HourRecord,
+  localParts,
+  median,
+  parksFrom,
+  summarize,
+  waitsFrom,
+} from "./history.ts";
 import type { LiveEntry } from "./logic.ts";
 
 // 2027-01-15 is a Friday
@@ -95,5 +104,40 @@ Deno.test("record + endpoint round trip", async () => {
   assertEquals(body.rides, { r1: { "10": 50 } });
 
   assertEquals((await history.handle(new URL("http://x/v1/history?parkId=mk&weekday=9"))).status, 400);
+  kv.close();
+});
+
+Deno.test("dailyAverages uses the middle of the day", () => {
+  const records = [
+    rec("2027-01-15", 6, 9, { a: [100] }), // before 10am — ignored
+    rec("2027-01-15", 6, 12, { a: [40, 50], b: [30] }),
+    rec("2027-01-15", 6, 18, { a: [20] }),
+    rec("2027-01-16", 7, 14, { a: [61] }),
+  ];
+  assertEquals(dailyAverages(records), { "2027-01-15": 35, "2027-01-16": 61 });
+});
+
+Deno.test("days endpoint groups parks by resort", async () => {
+  const kv = await Deno.openKv(":memory:");
+  const history = createHistory({
+    kv,
+    now: () => FRI_10AM_NY + 2 * 3600, // noon
+    fetchDestinations: () =>
+      Promise.resolve([
+        { slug: "waltdisneyworldresort", parks: [{ id: "mk", name: "Magic Kingdom" }] },
+        { slug: "universalorlando", parks: [{ id: "usf", name: "Universal Studios Florida" }] },
+      ]),
+    fetchLive: () =>
+      Promise.resolve([{
+        id: "r1",
+        entityType: "ATTRACTION",
+        status: "OPERATING",
+        queue: { STANDBY: { waitTime: 45 } },
+      }]),
+  });
+  await history.record();
+  const body = await (await history.handleDays(new URL("http://x/v1/days?resort=waltdisneyworldresort"))).json();
+  assertEquals(body.parks, [{ id: "mk", name: "Magic Kingdom", days: { "2027-01-15": 45 } }]);
+  assertEquals((await history.handleDays(new URL("http://x/v1/days?resort=nope"))).status, 400);
   kv.close();
 });

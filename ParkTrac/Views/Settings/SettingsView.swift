@@ -11,6 +11,7 @@ struct SettingsView: View {
     @AppStorage(GoodTimeService.alertsEnabledKey) private var goodTimeAlerts = true
     @AppStorage(RainForecastService.alertsEnabledKey) private var rainAlerts = true
     @AppStorage(LiveActivityManager.parkDayEnabledKey) private var parkDayActivity = true
+    @AppStorage(MustDoDownService.enabledKey) private var mustDoDownAlerts = true
     @AppStorage(LaunchResort.askKey) private var askResortOnLaunch = true
     @AppStorage(BookingApp.disney.useShortcutKey) private var disneyViaShortcut = false
     @AppStorage(BookingApp.universal.useShortcutKey) private var universalViaShortcut = false
@@ -132,6 +133,10 @@ struct SettingsView: View {
                     Toggle(isOn: $goodTimeAlerts) {
                         Label("Good Time to Ride Alerts", systemImage: "arrow.down.circle")
                     }
+                    Toggle(isOn: $mustDoDownAlerts) {
+                        Label("Must-Do Down Alerts", systemImage: "exclamationmark.triangle")
+                    }
+                    .onChange(of: mustDoDownAlerts) { _, _ in InstantAlertsService.shared.watchesChanged() }
                     Toggle(isOn: $rainAlerts) {
                         Label("Rain Heads-Up", systemImage: "cloud.rain")
                     }
@@ -142,7 +147,7 @@ struct SettingsView: View {
                         if !on { LiveActivityManager.endParkDay() }
                     }
                 } footer: {
-                    Text("Good Time: once a day per ride, a heads-up when a Must-Do's wait is well below what it usually is at that time — from your own visits, or everyone's recorded waits. Rain: once a day, about half an hour before rain is likely at the resort; the planner already moves indoor rides into those hours. Next Up: while a Smart Planner plan is running, a Live Activity keeps your next stop and its wait on the Lock Screen and Dynamic Island.")
+                    Text("Good Time: once a day per ride, a heads-up when a Must-Do's wait is well below what it usually is at that time — from your own visits, or everyone's recorded waits. Rain: once a day, about half an hour before rain is likely at the resort; the planner already moves indoor rides into those hours. Must-Do Down: when a Must-Do stops running, and again when it's back up (instantly with Instant Alerts on). Next Up: while a Smart Planner plan is running, a Live Activity keeps your next stop and its wait on the Lock Screen and Dynamic Island.")
                 }
 
                 // MARK: Booking Apps

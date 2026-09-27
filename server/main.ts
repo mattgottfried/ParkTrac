@@ -38,5 +38,6 @@ Deno.cron("record wait history", "*/10 * * * *", async () => {
 Deno.serve((req) => {
   const url = new URL(req.url);
   if (req.method === "GET" && url.pathname === "/v1/history") return history.handle(url);
+  if (req.method === "GET" && url.pathname === "/v1/days") return history.handleDays(url);
   return app.handler(req);
 });

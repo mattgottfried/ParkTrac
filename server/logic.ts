@@ -35,7 +35,12 @@ export interface ReopenWatch extends WatchBase {
   kind: "reopen";
 }
 
-export type Watch = LLWatch | WaitWatch | ReopenWatch;
+/** A Must-Do ride: alert when it goes down, and again when it's back up (repeats all day). */
+export interface DownWatch extends WatchBase {
+  kind: "down";
+}
+
+export type Watch = LLWatch | WaitWatch | ReopenWatch | DownWatch;
 
 /** What the server remembers per watch between polls (returned to the app on sync). */
 export interface WatchState {
@@ -43,6 +48,8 @@ export interface WatchState {
   lastNotifiedStart?: number;
   /** wait / reopen: fired, the app should deactivate it */
   fired?: boolean;
+  /** down: the ride is down and we've said so — the next "operating" sends "back up" */
+  isDown?: boolean;
 }
 
 /** One ride from themeparks.wiki GET /entity/{parkId}/live */
@@ -210,6 +217,9 @@ export function evaluate(
       };
     }
 
+    case "down":
+      return evaluateDown(watch, entry, state);
+
     case "reopen": {
       if (state.fired || !isOperating(entry)) return { state };
       const wait = entry.queue?.STANDBY?.waitTime;
@@ -231,6 +241,54 @@ export function evaluate(
       };
     }
   }
+}
+
+/** Same rule as the app's MustDoDown.transition. CLOSED / refurbishment quietly resets. */
+export function downTransition(isDown: boolean, status: string | null | undefined): {
+  event?: "down" | "backUp";
+  isDown: boolean;
+} {
+  if (status === "DOWN") return isDown ? { isDown: true } : { event: "down", isDown: true };
+  if (status === "OPERATING") return isDown ? { event: "backUp", isDown: false } : { isDown: false };
+  return { isDown: false };
+}
+
+export function evaluateDown(watch: DownWatch, entry: LiveEntry, state: WatchState): Evaluation {
+  const t = downTransition(state.isDown ?? false, entry.status);
+  const next: WatchState = { ...state, isDown: t.isDown };
+  if (!t.event) return { state: next };
+  const info = {
+    [KEYS.deepLink]: rideLink(watch.rideId),
+    [KEYS.rideId]: watch.rideId,
+    [KEYS.rideName]: watch.rideName,
+    [KEYS.parkName]: watch.parkName,
+    [KEYS.resort]: watch.resort,
+  };
+  if (t.event === "down") {
+    return {
+      state: next,
+      push: {
+        title: `⚠️ ${watch.rideName} is down`,
+        body: "One of your Must-Dos just stopped running. ThrillTrack will tell you when it's back up.",
+        threadId: `mustdo-${watch.rideId}`,
+        collapseId: `mustdo-down-${watch.rideId}`,
+        info,
+      },
+    };
+  }
+  const wait = entry.queue?.STANDBY?.waitTime;
+  return {
+    state: next,
+    push: {
+      title: `✅ ${watch.rideName} is back up`,
+      body: typeof wait === "number"
+        ? `Your Must-Do is running again — posted wait ${wait} min.`
+        : "Your Must-Do is running again.",
+      threadId: `mustdo-${watch.rideId}`,
+      collapseId: `mustdo-up-${watch.rideId}`,
+      info,
+    },
+  };
 }
 
 // MARK: - Sync validation
@@ -259,6 +317,7 @@ function validWatch(w: any): w is Watch {
     case "wait":
       return num(w.threshold) && (w.accessPass == null || w.accessPass === "DAS" || w.accessPass === "AAP");
     case "reopen":
+    case "down":
       return true;
     default:
       return false;

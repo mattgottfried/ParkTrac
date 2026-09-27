@@ -85,11 +85,112 @@ final class ReopenWatchService {
     }
 }
 
+// MARK: - Must-Do down alerts
+
+/// A Must-Do ride to watch: alert when it goes down, and again when it's back up.
+/// Refreshed from the ride list after every foreground refresh (so the server knows the park).
+struct MustDoRide: Codable, Equatable {
+    var rideId: String
+    var rideName: String
+    var parkId: String
+    var parkName: String
+    var resortRaw: String
+
+    /// Id shared with the server
+    var watchId: String { "mustdo-\(rideId)" }
+}
+
+enum MustDoDown {
+    enum Event: Equatable { case down, backUp }
+
+    /// Same rule as the server's `downTransition` (server/logic.ts). CLOSED / refurbishment resets quietly.
+    static func transition(isDown: Bool, status: String?) -> (event: Event?, isDown: Bool) {
+        switch status {
+        case "DOWN": return isDown ? (event: nil, isDown: true) : (event: .down, isDown: true)
+        case "OPERATING": return isDown ? (event: .backUp, isDown: false) : (event: nil, isDown: false)
+        default: return (event: nil, isDown: false)
+        }
+    }
+}
+
+@Observable
+final class MustDoDownService {
+    static let shared = MustDoDownService()
+
+    static let enabledKey = "mustDoDownAlerts"
+    static var isEnabled: Bool { UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true }
+
+    private static let ridesKey = "mustDoDownRides"
+    private static let downKey = "mustDoDownIsDown"
+
+    private(set) var rides: [MustDoRide] = []
+    /// Rides we've already said are down (so "back up" follows, and "down" isn't repeated)
+    private var downIds: Set<String>
+
+    private init() {
+        let d = UserDefaults.standard
+        if let data = d.data(forKey: Self.ridesKey), let saved = try? JSONDecoder().decode([MustDoRide].self, from: data) {
+            rides = saved
+        }
+        downIds = Set(d.stringArray(forKey: Self.downKey) ?? [])
+    }
+
+    /// After every foreground refresh: remember the Must-Dos (for the server) and alert locally
+    /// for any the server isn't covering.
+    @MainActor
+    func update(rides live: [DisplayRide], mustDo: Set<String>, resort: ParkGroup, parkName: (String) -> String) {
+        guard Self.isEnabled else {
+            if !rides.isEmpty { rides = []; persist(); InstantAlertsService.shared.watchesChanged() }
+            return
+        }
+        // Keep Must-Dos from other resorts; replace this resort's with the current list
+        let here = live.filter { mustDo.contains($0.id) }.map {
+            MustDoRide(rideId: $0.id, rideName: $0.name, parkId: $0.parkId, parkName: parkName($0.parkId),
+                       resortRaw: resort.rawValue)
+        }
+        let next = rides.filter { $0.resortRaw != resort.rawValue && mustDo.contains($0.rideId) } + here
+        if next != rides {
+            rides = next
+            persist()
+            InstantAlertsService.shared.watchesChanged()
+        }
+
+        for ride in live where mustDo.contains(ride.id) {
+            let was = downIds.contains(ride.id)
+            let t = MustDoDown.transition(isDown: was, status: ride.status)
+            if t.isDown { downIds.insert(ride.id) } else { downIds.remove(ride.id) }
+            guard let event = t.event, !InstantAlertsService.shared.covers("mustdo-\(ride.id)") else { continue }
+            switch event {
+            case .down:
+                NotificationService.shared.fireMustDoDown(rideId: ride.id, rideName: ride.name)
+            case .backUp:
+                NotificationService.shared.fireMustDoBackUp(rideId: ride.id, rideName: ride.name, wait: ride.waitMinutes)
+            }
+        }
+        persist()
+    }
+
+    /// The server already alerted (sync response) — keep local memory in step
+    func apply(serverIsDown: [String: Bool]) {
+        for ride in rides {
+            guard let down = serverIsDown[ride.watchId] else { continue }
+            if down { downIds.insert(ride.rideId) } else { downIds.remove(ride.rideId) }
+        }
+        persist()
+    }
+
+    private func persist() {
+        let d = UserDefaults.standard
+        if let data = try? JSONEncoder().encode(rides) { d.set(data, forKey: Self.ridesKey) }
+        d.set(Array(downIds), forKey: Self.downKey)
+    }
+}
+
 // MARK: - Server watch payload
 
 /// One watch as the alert server (server/logic.ts) expects it. Field names must match.
 struct ServerWatch: Codable, Equatable {
-    enum Kind: String, Codable { case ll, wait, reopen }
+    enum Kind: String, Codable { case ll, wait, reopen, down }
 
     var id: String
     var kind: Kind
@@ -137,6 +238,7 @@ enum InstantAlertsPayload {
     static let waitAlertLifetime: TimeInterval = 24 * 3600
 
     static func watches(ll: [LightningLaneWatch], alerts: [WaitAlertSnapshot], reopen: [ReopenWatch],
+                        mustDo: [MustDoRide] = [],
                         accessPass: (ParkGroup) -> AccessPass?, now: Date = .now,
                         calendar: Calendar = .current) -> [ServerWatch] {
         var out: [ServerWatch] = []
@@ -164,6 +266,12 @@ enum InstantAlertsPayload {
                 id: r.id.uuidString, kind: .reopen, rideId: r.rideId, rideName: r.rideName, parkId: r.parkId,
                 parkName: r.parkName, resort: r.resortRaw, expiresAt: endOfDay.timeIntervalSince1970))
         }
+        for m in mustDo where !m.parkId.isEmpty {
+            out.append(ServerWatch(
+                id: m.watchId, kind: .down, rideId: m.rideId, rideName: m.rideName, parkId: m.parkId,
+                parkName: m.parkName, resort: m.resortRaw,
+                expiresAt: now.addingTimeInterval(waitAlertLifetime).timeIntervalSince1970))
+        }
         return out
     }
 }
@@ -182,6 +290,7 @@ struct InstantAlertsSyncResponse: Decodable {
     struct State: Decodable, Equatable {
         var lastNotifiedStart: Double?
         var fired: Bool?
+        var isDown: Bool?
     }
     var ok: Bool?
     var error: String?
@@ -348,6 +457,7 @@ final class InstantAlertsService {
             ll: LightningLaneWatchService.shared.watches.filter(\.isToday),
             alerts: alerts.map(\.snapshot),
             reopen: ReopenWatchService.shared.watches,
+            mustDo: MustDoDownService.isEnabled ? MustDoDownService.shared.rides : [],
             accessPass: AccessPass.held(at:))
         let body = InstantAlertsSyncRequest(deviceId: deviceId, token: token, environment: Self.environment,
                                             timeZone: TimeZone.current.identifier, watches: watches)
@@ -392,6 +502,7 @@ final class InstantAlertsService {
         for watch in ReopenWatchService.shared.watches where states[watch.id.uuidString]?.fired == true {
             ReopenWatchService.shared.remove(id: watch.id)
         }
+        MustDoDownService.shared.apply(serverIsDown: states.compactMapValues(\.isDown))
     }
 
     private func endpoint(_ path: String) -> URL? {

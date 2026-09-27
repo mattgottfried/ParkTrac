@@ -72,3 +72,18 @@ Redesigned Live Activities + new "Next Up" on the Lock Screen
 - The wait stopwatch fills a bar toward the posted wait, so you can see if the line is beating the sign.
 - NEW: while a Smart Planner plan is running, a "Next Up" Live Activity shows your next ride with its wait tile, when to get in line, the walk, what's after it, "4 of 9 done" and any rain heads-up. It updates whenever the app refreshes wait times and ends when you end the plan. Turn it off in Settings → Next Up on Lock Screen.
 - Check: start a plan → lock the phone → Next Up is there; long-press the Dynamic Island; log a Lightning Lane return and watch the bar.
+
+Must-Do down alerts
+- When one of your Must-Do (⭐) rides goes down you get "⚠️ … is down", and "✅ … is back up" with the posted wait when it's running again. It works all day, every time.
+- With Instant Alerts on, these come from the alert server within about a minute even when ThrillTrack is closed; otherwise they arrive when the app refreshes.
+- Settings → Must-Do Down Alerts turns them off.
+
+Real crowd calendar
+- The Crowd Calendar now uses ThrillTrack's recorded waits. Past days show the measured average wait (tap a day: "Measured: average wait ~38 min" with each park's number).
+- The next two weeks are predicted from the same weekday over recent weeks ("Predicted from the last 3 Saturdays"). Further out it falls back to the seasonal estimate.
+- This fills in as the server collects data. Check after a few days that past days show "Measured".
+
+Day recap
+- My Day → ✨ button (top right): today's recap card with rides, time in line, how much you beat the posted waits, your best-timed ride, repeat rides, steps and distance walked, and money spent.
+- Share it as an image card or as text. Past days: Stats → Recaps.
+- ThrillTrack asks for Motion & Fitness permission for the step count (the phone keeps about a week).

@@ -24,6 +24,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>ThrillTrack uses the camera to photograph your parking row sign so you can find your car later.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>ThrillTrack counts your steps for the day recap — how far you walked around the parks.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ThrillTrack uses your location to center the map on the park you're visiting and to save where you parked.</string>
 	<key>NSSupportsLiveActivities</key>

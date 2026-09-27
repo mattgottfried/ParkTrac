@@ -628,6 +628,10 @@ struct ParkMapView: View {
                                       uniquingKeysWith: { first, _ in first }))
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
             GoodTimeService.shared.update(rides: viewModel.allRides, mustDo: appState.wishList, context: modelContext)
+            // Must-Do down / back-up alerts (server pushes when Instant Alerts is on)
+            MustDoDownService.shared.update(rides: viewModel.allRides, mustDo: appState.wishList,
+                                            resort: viewModel.selectedGroup,
+                                            parkName: { id in viewModel.currentParks.first { $0.id == id }?.name ?? "" })
             // Community wait history (server) — once per park per day
             let historyParks = viewModel.currentParks.map(\.id)
             let historyZone = viewModel.selectedGroup.timeZone

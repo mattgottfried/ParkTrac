@@ -28,6 +28,15 @@ export interface HistoryPark {
   id: string;
   name: string;
   timeZone: string;
+  /** themeparks.wiki destination slug, e.g. "waltdisneyworldresort" */
+  slug?: string;
+}
+
+/** Crowd calendar: each park's average posted wait per local day */
+export interface DaysSummary {
+  slug: string;
+  parks: { id: string; name: string; days: Record<string, number> }[];
+  builtAt: number;
 }
 
 export interface HourRecord {
@@ -130,13 +139,33 @@ export function summarize(records: HourRecord[], weekday: number, minDays = HIST
   return { days: days.size, rides };
 }
 
+/** Crowd level of each day: the mean of every ride sample between `fromHour` and `toHour`
+ *  (local, inclusive — the busy middle of the day), rounded to one decimal. */
+export function dailyAverages(records: HourRecord[], fromHour = 10, toHour = 18): Record<string, number> {
+  const sums = new Map<string, { total: number; count: number }>();
+  for (const r of records) {
+    if (r.hour < fromHour || r.hour > toHour) continue;
+    const s = sums.get(r.date) ?? { total: 0, count: 0 };
+    for (const waits of Object.values(r.waits)) {
+      for (const w of waits) {
+        s.total += w;
+        s.count++;
+      }
+    }
+    sums.set(r.date, s);
+  }
+  const out: Record<string, number> = {};
+  for (const [date, s] of sums) if (s.count > 0) out[date] = Math.round((s.total / s.count) * 10) / 10;
+  return out;
+}
+
 /** Parks of the four resorts from themeparks.wiki GET /destinations. */
 export function parksFrom(destinations: Destination[]): HistoryPark[] {
   const out: HistoryPark[] = [];
   for (const r of RESORTS) {
     const d = destinations.find((x) => x.slug === r.slug);
     for (const p of d?.parks ?? []) {
-      if (typeof p.id === "string") out.push({ id: p.id, name: p.name ?? "", timeZone: r.timeZone });
+      if (typeof p.id === "string") out.push({ id: p.id, name: p.name ?? "", timeZone: r.timeZone, slug: r.slug });
     }
   }
   return out;
@@ -180,7 +209,10 @@ export function createHistory(deps: HistoryDeps) {
 
   async function parks(): Promise<HistoryPark[]> {
     const cached = await kv.get<{ fetchedAt: number; parks: HistoryPark[] }>(["hist-parks"]);
-    if (cached.value && now() - cached.value.fetchedAt < HISTORY.parksMaxAgeSec) return cached.value.parks;
+    // Lists cached before parks carried their resort slug are refetched
+    if (
+      cached.value && now() - cached.value.fetchedAt < HISTORY.parksMaxAgeSec && cached.value.parks.every((p) => p.slug)
+    ) return cached.value.parks;
     const destinations = await deps.fetchDestinations();
     const list = destinations ? parksFrom(destinations) : [];
     if (list.length > 0) {
@@ -227,6 +259,28 @@ export function createHistory(deps: HistoryDeps) {
     return built;
   }
 
+  /** Each park of a resort with its average wait per recorded day (cached 6 hours). */
+  async function days(slug: string): Promise<DaysSummary> {
+    const key = ["days-sum", slug];
+    const cached = (await kv.get<DaysSummary>(key)).value;
+    if (cached && now() - cached.builtAt < HISTORY.summaryMaxAgeSec) return cached;
+    const out: DaysSummary = { slug, parks: [], builtAt: now() };
+    for (const park of (await parks()).filter((p) => p.slug === slug)) {
+      const records: HourRecord[] = [];
+      for await (const e of kv.list<HourRecord>({ prefix: ["hist", park.id] })) records.push(e.value);
+      out.parks.push({ id: park.id, name: park.name, days: dailyAverages(records) });
+    }
+    await kv.set(key, out, { expireIn: HISTORY.summaryMaxAgeSec * 1000 * 2 });
+    return out;
+  }
+
+  /** GET /v1/days?resort=waltdisneyworldresort */
+  async function handleDays(url: URL): Promise<Response> {
+    const slug = url.searchParams.get("resort") ?? "";
+    if (!RESORTS.some((r) => r.slug === slug)) return json({ error: "bad resort" }, 400);
+    return json(await days(slug));
+  }
+
   /** GET /v1/history?parkId=…&weekday=1…7 */
   async function handle(url: URL): Promise<Response> {
     const parkId = url.searchParams.get("parkId") ?? "";
@@ -236,5 +290,5 @@ export function createHistory(deps: HistoryDeps) {
     return json(await summary(parkId, weekday));
   }
 
-  return { record, summary, handle, parks };
+  return { record, summary, handle, handleDays, days, parks };
 }
