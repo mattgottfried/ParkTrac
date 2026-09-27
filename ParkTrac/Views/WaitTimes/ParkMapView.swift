@@ -17,6 +17,34 @@ final class RidePointAnnotation: MKPointAnnotation {
 /// Where you parked (ParkingService). Tapping it opens the parking sheet.
 final class ParkingPointAnnotation: MKPointAnnotation {}
 
+// MARK: - Map focus (which park the list follows)
+
+/// Zoomed out → all parks; zoomed in near a park → that park; in between → keep what's showing
+/// (so the list doesn't flicker while zooming). Pure, unit tested.
+enum MapFocus: Equatable {
+    case allParks
+    case park(String)
+    case keep
+
+    static let allParksSpan = 0.05
+    static let parkSpan = 0.035
+    static let maxParkDistance: CLLocationDistance = 3000
+
+    static func decide(span: Double, center: CLLocationCoordinate2D,
+                       parks: [(id: String, coordinate: CLLocationCoordinate2D)]) -> MapFocus {
+        if span >= allParksSpan { return .allParks }
+        guard span <= parkSpan else { return .keep }
+        let here = CLLocation(latitude: center.latitude, longitude: center.longitude)
+        let nearest = parks
+            .map { (id: $0.id, distance: here.distance(from: CLLocation(latitude: $0.coordinate.latitude,
+                                                                          longitude: $0.coordinate.longitude))) }
+            .filter { $0.distance <= maxParkDistance }
+            .min { $0.distance < $1.distance }
+        // Zoomed in somewhere that isn't a park (Disney Springs, CityWalk) → whole resort
+        return nearest.map { .park($0.id) } ?? .allParks
+    }
+}
+
 // MARK: - Custom UIKit Annotation View
 
 final class RideAnnotationView: MKAnnotationView, UIContextMenuInteractionDelegate {
@@ -395,36 +423,18 @@ struct ParkMapView: View {
                 if viewModel.isLoadingParks {
                     ProgressView().padding(.vertical, 4)
                 } else if !viewModel.currentParks.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            Button("All Parks") {
-                                viewModel.filterPark = nil
-                                showMustDoOnly = false
-                            }
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(viewModel.filterPark == nil && !showMustDoOnly
-                                ? theme.annotationTextColor : .primary)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(viewModel.filterPark == nil && !showMustDoOnly
-                                ? theme.primaryColor : Color(.systemBackground).opacity(0.85))
-                            .clipShape(Capsule()).shadow(radius: 1)
-
+                    HStack(spacing: 8) {
+                        // Park: follows the map as you zoom; pick one to fly there
+                        Menu {
                             Button {
-                                showMustDoOnly.toggle()
+                                viewModel.filterPark = nil
+                                withAnimation { region = viewModel.selectedGroup.defaultRegion }
                             } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: showMustDoOnly ? "star.fill" : "star")
-                                    Text("Must Do")
-                                }
+                                if viewModel.filterPark == nil { Label("All Parks", systemImage: "checkmark") }
+                                else { Text("All Parks") }
                             }
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(showMustDoOnly ? theme.annotationTextColor : .primary)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(showMustDoOnly ? Color.yellow : Color(.systemBackground).opacity(0.85))
-                            .clipShape(Capsule()).shadow(radius: 1)
-
                             ForEach(viewModel.currentParks) { park in
-                                Button(park.name) {
+                                Button {
                                     viewModel.filterPark = park
                                     if let coord = park.coordinate {
                                         withAnimation {
@@ -433,19 +443,44 @@ struct ParkMapView: View {
                                                 span: MKCoordinateSpan(latitudeDelta: 0.015, longitudeDelta: 0.015))
                                         }
                                     }
+                                } label: {
+                                    if viewModel.filterPark?.id == park.id { Label(park.name, systemImage: "checkmark") }
+                                    else { Text(park.name) }
                                 }
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(viewModel.filterPark?.id == park.id
-                                    ? theme.annotationTextColor : .primary)
-                                .padding(.horizontal, 12).padding(.vertical, 6)
-                                .background(viewModel.filterPark?.id == park.id
-                                    ? theme.primaryColor : Color(.systemBackground).opacity(0.85))
-                                .clipShape(Capsule()).shadow(radius: 1)
                             }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Text(viewModel.filterPark?.name ?? "All Parks")
+                                    .lineLimit(1)
+                                Image(systemName: "chevron.down")
+                                    .font(.caption2.weight(.bold))
+                            }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .background(.regularMaterial, in: Capsule())
+                            .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
                         }
-                        .padding(.horizontal)
+                        .accessibilityLabel("Park: \(viewModel.filterPark?.name ?? "All Parks")")
+                        .accessibilityHint("Choose a park. It also changes as you zoom the map.")
+
+                        // Must-Do only
+                        Button {
+                            showMustDoOnly.toggle()
+                        } label: {
+                            Image(systemName: showMustDoOnly ? "star.fill" : "star")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(showMustDoOnly ? Color.yellow : Color.primary)
+                                .padding(9)
+                                .background(.regularMaterial, in: Circle())
+                                .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
+                        }
+                        .accessibilityLabel(showMustDoOnly ? "Showing Must-Dos only" : "Show Must-Dos only")
+                        .accessibilityAddTraits(showMustDoOnly ? .isSelected : [])
+
+                        Spacer()
                     }
-                    // Chips still grow, but not so far that they cover the map
+                    .padding(.horizontal)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 }
             }
@@ -510,6 +545,7 @@ struct ParkMapView: View {
         .onChange(of: viewModel.currentParks) { _, _ in autoZoomIfInsidePark() }
         .onChange(of: region.center.latitude) { _, _ in autoSelectParkFromRegion() }
         .onChange(of: region.center.longitude) { _, _ in autoSelectParkFromRegion() }
+        .onChange(of: region.span.latitudeDelta) { _, _ in autoSelectParkFromRegion() }
         .onChange(of: DeepLinkRouter.shared.pendingRideId, initial: true) { _, _ in openPendingRide() }
         .onChange(of: DeepLinkRouter.shared.waitTimesReselectCount) { _, _ in
             // Tab tapped again: back to the whole resort (or the selected park)
@@ -622,25 +658,21 @@ struct ParkMapView: View {
 
     /// When the user pans/zooms so the map center is over a park and the zoom
     /// is close enough, automatically select that park's chip.
+    /// The list (and hours bar) follow the map: zoomed out → all parks, zoomed into a park → that park.
     private func autoSelectParkFromRegion() {
-        // Only trigger when zoomed in close enough
-        guard region.span.latitudeDelta < 0.05 else {
-            // Zoomed out — clear park filter if it was set by this mechanism
-            // (Don't clear if the user explicitly tapped a chip)
-            return
+        let parks = viewModel.currentParks.compactMap { park -> (id: String, coordinate: CLLocationCoordinate2D)? in
+            park.coordinate.map { (id: park.id, coordinate: $0) }
         }
-        let center = CLLocation(latitude: region.center.latitude,
-                                longitude: region.center.longitude)
-        let nearest = viewModel.currentParks
-            .compactMap { park -> (ParkEntity, CLLocationDistance)? in
-                guard let coord = park.coordinate else { return nil }
-                let loc = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
-                let dist = center.distance(from: loc)
-                return dist < 3000 ? (park, dist) : nil
+        switch MapFocus.decide(span: region.span.latitudeDelta, center: region.center, parks: parks) {
+        case .allParks:
+            if viewModel.filterPark != nil { viewModel.filterPark = nil }
+        case .park(let id):
+            if viewModel.filterPark?.id != id {
+                viewModel.filterPark = viewModel.currentParks.first { $0.id == id }
             }
-            .min { $0.1 < $1.1 }?.0
-        guard let park = nearest, viewModel.filterPark?.id != park.id else { return }
-        viewModel.filterPark = park
+        case .keep:
+            break
+        }
     }
 
     // MARK: - GPS Auto-Zoom
@@ -674,10 +706,8 @@ struct ParkMapView: View {
                             .background(level.color.opacity(0.12), in: Capsule())
                     }
                 }
-                if let avg = viewModel.currentAverageWait {
-                    let parkName = viewModel.filterPark?.name ?? viewModel.currentParks.first?.name ?? ""
-                    let parkId   = viewModel.filterPark?.id  ?? viewModel.currentParks.first?.id  ?? ""
-                    ParkComparisonView(parkName: parkName, parkId: parkId, currentAvgWait: avg)
+                if let avg = viewModel.currentAverageWait, let park = viewModel.filterPark {
+                    ParkComparisonView(parkName: park.name, parkId: park.id, currentAvgWait: avg)
                 }
                 if let refreshed = viewModel.lastRefreshed {
                     TimelineView(.periodic(from: .now, by: 30)) { ctx in
@@ -892,7 +922,8 @@ struct ParkMapView: View {
             panelHeader
 
             // Park Hours Header
-            if let park = viewModel.filterPark ?? viewModel.currentParks.first {
+            // Only for a specific park — zoomed out to the whole resort there's no single park's hours
+            if let park = viewModel.filterPark {
                 ParkHoursHeaderView(
                     park: park,
                     schedule: viewModel.todaySchedule(for: park),
