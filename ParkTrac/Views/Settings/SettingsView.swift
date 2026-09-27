@@ -9,6 +9,7 @@ struct SettingsView: View {
     @Query private var allRideLogs: [RideLog]
     @Query private var allPurchases: [PurchaseLog]
     @AppStorage(GoodTimeService.alertsEnabledKey) private var goodTimeAlerts = true
+    @AppStorage(LaunchResort.askKey) private var askResortOnLaunch = true
     @AppStorage(BookingApp.disney.useShortcutKey) private var disneyViaShortcut = false
     @AppStorage(BookingApp.universal.useShortcutKey) private var universalViaShortcut = false
     @AppStorage(BookingApp.tokyoDisney.useShortcutKey) private var tokyoDisneyViaShortcut = false
@@ -51,8 +52,13 @@ struct SettingsView: View {
                     } label: {
                         Label("Switch Resort", systemImage: "arrow.left.arrow.right")
                     }
+                    Toggle(isOn: $askResortOnLaunch) {
+                        Label("Choose Resort at Launch", systemImage: "sparkles")
+                    }
                 } header: {
                     Text("Resort")
+                } footer: {
+                    Text("Shows the resort picker each time ThrillTrack opens (it suggests the one you're at). Off: opens straight to your last resort.")
                 }
 
                 // MARK: Annual Passes

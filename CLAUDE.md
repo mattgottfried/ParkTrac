@@ -21,7 +21,7 @@ xcodebuild -project ParkTrac.xcodeproj -scheme ParkTrac -destination 'platform=i
 xcodebuild test -project ParkTrac.xcodeproj -scheme ParkTrac -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-`ParkTracTests/` is a folder-synced group (like `TrillTrackWidget/`): new test files there are picked up automatically, no pbxproj edits. Tests cover the AAP/DAS return rules, themeparks.wiki Lightning Lane + schedule decoding, `LightningLaneWatchService.alertStart`, deep-link parsing, CSV/day-summary export, `WalkEstimate`, ride heights / name matching / `AreaEntry`, the instant-alerts payload, parking spots, Good Time to Ride, the Trip Planner, the Smart Planner engine / Siri pick, and the Genie-style live plan (order, interests, Tip Board). Keep new business logic in pure/static functions so it can be tested here. Resort `rawValue`s are persisted in SwiftData (`PlanItem.resort`, `RideLog.resort`, …) — never rename existing `ParkGroup` cases/raw values.
+`ParkTracTests/` is a folder-synced group (like `TrillTrackWidget/`): new test files there are picked up automatically, no pbxproj edits. Tests cover the AAP/DAS return rules, themeparks.wiki Lightning Lane + schedule decoding, `LightningLaneWatchService.alertStart`, deep-link parsing, CSV/day-summary export, `WalkEstimate`, ride heights / name matching / `AreaEntry`, the instant-alerts payload, parking spots, Good Time to Ride, the Trip Planner, the Smart Planner engine / Siri pick, and the Genie-style live plan (order, interests, Tip Board), `MapFocus` and `LaunchResort`. Keep new business logic in pure/static functions so it can be tested here. Resort `rawValue`s are persisted in SwiftData (`PlanItem.resort`, `RideLog.resort`, …) — never rename existing `ParkGroup` cases/raw values.
 
 **When adding new Swift source files**, the file MUST be registered in `ParkTrac.xcodeproj/project.pbxproj` in four places: `PBXBuildFile`, `PBXFileReference`, the owning `PBXGroup`'s `children`, and `PBXSourcesBuildPhase`. Missing this step causes "No such module" or linker errors at build time. When deleting files, remove all four entries. The project uses synthetic sequential IDs (`AA00…`) — take the next unused pair.
 
@@ -57,7 +57,7 @@ Every push to `claude/vigilant-lamport-6DitA` triggers an Xcode Cloud archive + 
 4. **Stats** — `StatsView` — hub linking dining log (`MyDiningView`), ride counter, spending, crowd calendar, badges, etc.
 5. **Settings** — `SettingsView` — prefs, resort switch, passes, tools, storage/sync status
 
-A banner stack (resort switcher, blockout, return-time, wait-timer) sits above the TabView. The app has **no third-party dependencies** — no SPM packages (GoogleMobileAds was removed).
+A banner stack (resort switcher, blockout, return-time, wait-timer) sits above the TabView. On cold launch a `LaunchResortView` overlay (in `ContentView.swift`) asks for the resort while parks load underneath — it suggests the resort you're at (`LaunchResort.suggested`, last known location within 10 km) else the last one; skipped for deep links/notifications/Siri/quick actions and right after onboarding; Settings → "Choose Resort at Launch" (`askResortOnLaunch`, default on). The app has **no third-party dependencies** — no SPM packages (GoogleMobileAds was removed).
 
 ### Persistence (`PersistenceController.swift`)
 
@@ -74,6 +74,7 @@ The user config must stay **unnamed** — naming it changes the store URL and or
 
 - Parks are discovered **dynamically** at launch: `ParkAPIService.fetchDestinationChildren(destinationId:)` returns park IDs — there are **no hardcoded park entity IDs**. Only the destination IDs in `ParkGroup` are hardcoded.
 - `WaitTimesViewModel.loadAllParks()` fetches parks for both resorts concurrently. Rides auto-refresh every 60 seconds while the Wait Times tab is visible.
+- The park filter follows the map (`MapFocus.decide` in `ParkMapView.swift`: span ≥ 0.05 → all parks, ≤ 0.035 near a park → that park, in between → keep); the top-left dropdown picks a park and flies there. The hours bar and park comparison show only when a single park is in focus.
 - Each park has a **persisted ride catalog** (UserDefaults `rideCatalog_<parkId>`, refreshed once per calendar day from `/children`) that supplies the roster and GPS coordinates; live data fills in wait/status. Rides missing from live data render as CLOSED (red ✗ badge; DOWN gets orange ⚠) instead of disappearing when a park closes. Schedules fetch once per park per session; only live data refetches each cycle. `allRides` is a stored property rebuilt once per refresh — don't turn it back into a computed join.
 
 **Wait-time recording** (feeds predictions):

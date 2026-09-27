@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 enum AppTab: Hashable {
     case waitTimes, myDay, bucketList, stats, settings
@@ -8,6 +9,8 @@ struct ContentView: View {
     @State private var appState = AppState()
     @State private var waitTimesVM = WaitTimesViewModel()
     @State private var selectedTab: AppTab = .waitTimes
+    /// Launch screen: pick a resort while wait times start loading underneath
+    @State private var showLaunchPicker = LaunchResort.shouldAsk
     @Environment(\.scenePhase) private var scenePhase
     private var router: DeepLinkRouter { .shared }
 
@@ -79,6 +82,17 @@ struct ContentView: View {
                 .padding(.bottom, 60)
                 .animation(.spring(duration: 0.3), value: UndoDeleteCenter.shared.message)
         }
+        .overlay {
+            if showLaunchPicker && appState.hasCompletedOnboarding {
+                LaunchResortView(appState: appState, isLoading: waitTimesVM.isLoadingParks) {
+                    withAnimation(.easeOut(duration: 0.3)) { showLaunchPicker = false }
+                }
+                .transition(.opacity)
+                .zIndex(1)
+            }
+        }
+        // Onboarding already asked for the resort — don't show the launch picker right after it
+        .onChange(of: appState.hasCompletedOnboarding) { _, done in if done { showLaunchPicker = false } }
         .onOpenURL { url in router.open(url: url) }
         // `initial: true` catches a link that arrived before this view existed (cold launch)
         .onChange(of: router.pending, initial: true) { _, link in
@@ -114,6 +128,8 @@ struct ContentView: View {
     }
 
     private func handle(_ link: DeepLink) {
+        // Opened from a notification, Siri, a Home Screen shortcut or a link — go straight there
+        showLaunchPicker = false
         switch link {
         case .waitTimes:
             selectedTab = .waitTimes
@@ -270,5 +286,142 @@ private struct ResortPickerSheet: View {
             )
         }
         .buttonStyle(.plain)
+    }
+}
+
+
+// MARK: - Launch resort picker
+
+/// Which resort the launch screen suggests: the one you're at (last known location), else last used.
+enum LaunchResort {
+    static let askKey = "askResortOnLaunch"
+    /// Within this distance of a resort's center counts as "you're here"
+    static let nearbyMeters: CLLocationDistance = 10_000
+
+    static var shouldAsk: Bool {
+        UserDefaults.standard.object(forKey: askKey) as? Bool ?? true
+    }
+
+    static func suggested(last: ParkGroup, location: CLLocationCoordinate2D?) -> ParkGroup {
+        guard let location else { return last }
+        let here = CLLocation(latitude: location.latitude, longitude: location.longitude)
+        let nearest = ParkGroup.allCases
+            .map { (resort: $0, distance: here.distance(from: CLLocation(latitude: $0.defaultCoordinate.latitude,
+                                                                          longitude: $0.defaultCoordinate.longitude))) }
+            .min { $0.distance < $1.distance }
+        guard let nearest, nearest.distance <= nearbyMeters else { return last }
+        return nearest.resort
+    }
+}
+
+private struct LaunchResortView: View {
+    let appState: AppState
+    let isLoading: Bool
+    let onDone: () -> Void
+
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 34
+    @State private var suggested: ParkGroup = .disney
+    @State private var isNearby = false
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [suggested.theme.primaryColor.opacity(0.95), suggested.theme.primaryColor.opacity(0.65)],
+                           startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+                .animation(.easeInOut, value: suggested)
+
+            VStack(spacing: 22) {
+                Spacer(minLength: 12)
+                VStack(spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: iconSize, weight: .bold))
+                    Text("ThrillTrack")
+                        .font(.largeTitle.weight(.heavy))
+                    Text("Where are you headed?")
+                        .font(.title3.weight(.medium))
+                        .opacity(0.9)
+                    if let countdown = TripService.shared.countdownText {
+                        Label(countdown, systemImage: "airplane")
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 12).padding(.vertical, 5)
+                            .background(.white.opacity(0.18), in: Capsule())
+                            .padding(.top, 4)
+                    }
+                }
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+
+                VStack(spacing: 14) {
+                    ForEach(["Orlando", "Japan"], id: \.self) { region in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(region)
+                                .font(.caption.weight(.bold))
+                                .textCase(.uppercase)
+                                .foregroundStyle(.white.opacity(0.85))
+                            HStack(spacing: 12) {
+                                ForEach(ParkGroup.allCases.filter { $0.isOrlando == (region == "Orlando") }) { resort in
+                                    card(resort)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+
+                Spacer()
+
+                HStack(spacing: 8) {
+                    if isLoading { ProgressView().tint(.white) }
+                    Text(isLoading ? "Loading wait times…" : "Wait times ready")
+                        .font(.footnote.weight(.medium))
+                }
+                .foregroundStyle(.white.opacity(0.9))
+                .padding(.bottom, 8)
+            }
+            .padding(.vertical)
+        }
+        .onAppear {
+            let location = CLLocationManager().location?.coordinate   // last known fix, no prompt
+            suggested = LaunchResort.suggested(last: appState.selectedResort, location: location)
+            if let location {
+                let center = CLLocation(latitude: suggested.defaultCoordinate.latitude,
+                                        longitude: suggested.defaultCoordinate.longitude)
+                isNearby = CLLocation(latitude: location.latitude, longitude: location.longitude)
+                    .distance(from: center) <= LaunchResort.nearbyMeters
+            }
+        }
+    }
+
+    private func card(_ resort: ParkGroup) -> some View {
+        let highlighted = resort == suggested
+        return Button {
+            if appState.selectedResort != resort { appState.selectedResort = resort }
+            onDone()
+        } label: {
+            VStack(spacing: 8) {
+                Image(systemName: resort.systemImage)
+                    .font(.system(size: iconSize))
+                    .foregroundStyle(resort.theme.primaryColor)
+                Text(resort.rawValue)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.primary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                Text(highlighted ? (isNearby ? "You're here" : "Last time") : " ")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(resort.theme.primaryColor)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 6)
+            .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(highlighted ? Color.white : Color.clear, lineWidth: 3))
+            .shadow(color: .black.opacity(highlighted ? 0.25 : 0.12), radius: highlighted ? 8 : 4, y: 2)
+            .scaleEffect(highlighted ? 1.03 : 1)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(resort.rawValue + (highlighted ? (isNearby ? ", you're here" : ", last time") : ""))
     }
 }
