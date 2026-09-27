@@ -62,3 +62,6 @@ No more pull-to-refresh on the ride list
 - Pulling down on the list sometimes cancelled the refresh and showed "Couldn't refresh wait times" over rides that were fine. Pull-to-refresh is gone; waits still update on their own every minute.
 - If waits are more than 5 minutes old, the orange "Wait times from N min ago" pill in the panel is now a button: tap it to refresh.
 - A failed refresh no longer hides the rides you already have.
+
+Tap a show
+- Shows in the Wait Times list now open a show page: today's showtimes (the next one highlighted), a 🔔 on each future showing for a reminder 15 minutes before, and Add to My Day (opens with the show and its next showtime picked).
