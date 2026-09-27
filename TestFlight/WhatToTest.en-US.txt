@@ -1,4 +1,4 @@
-NEW since the last build (car locator roll-up):
+NEW since the last build (car locator roll-up): Smart Planner + Apple Intelligence, Siri, Good Time to Ride, Trip Planner, Time Sensitive alerts.
 
 Smarter Smart Planner + Apple Intelligence
 • My Day → Smart Planner → "Tell Me Your Plan": type something like "Dinner at 6:30, want Seven Dwarfs and Space Mountain, no water rides". Apple Intelligence reads it on your iPhone; ThrillTrack builds the schedule.
