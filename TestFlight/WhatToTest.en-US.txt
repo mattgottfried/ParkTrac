@@ -17,3 +17,13 @@ Easier to expand and shrink the ride list
 - Drag or tap anywhere on the top of the panel (the park name and "Updated…" line), not just the little gray bar.
 - The panel follows your finger while you drag, and a quick flick up or down is enough.
 - Check: drag up to expand, drag down to shrink, tap the park name to toggle, and the Must-Do / filter buttons still work.
+
+Redesigned ride page (tap any ride)
+- Same colored wait tile as the list at the top, next to the name, park, status and how many times you've ridden it. The Must-Do star sits top-right.
+- Four big buttons right under it: Rode It!, My Day, Alert (shows your alert, e.g. "≤30 min", once set) and Return.
+- Ride info chips, then Lightning Lane / DAS-AAP, alerts, the wait stopwatch and predictions each sit in their own white card. The Dismiss button is gone (swipe down).
+- Check: each button opens the right sheet, the star toggles, and long pages scroll smoothly.
+
+My location button on the map
+- New location-arrow button top-right on Wait Times: centers the map on you (street level), and the park filter follows.
+- If location isn't allowed yet it asks; if you turned it off it offers to open Settings.

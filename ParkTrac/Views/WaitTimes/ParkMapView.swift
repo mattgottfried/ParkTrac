@@ -207,6 +207,10 @@ struct StyledMapUIView: UIViewRepresentable {
     /// Today's car spot at this resort, shown as a car pin
     var parkingSpot: ParkingSpot? = nil
     var onSelectParking: () -> Void = {}
+    /// Bumped by the "my location" button: center on the blue dot (MapKit's precise fix)
+    var recenterRequest: Int = 0
+    /// Called when the map has no fix yet, so the caller can fall back to its own location
+    var onRecenterWithoutFix: () -> Void = {}
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -218,6 +222,7 @@ struct StyledMapUIView: UIViewRepresentable {
         map.register(RideAnnotationView.self, forAnnotationViewWithReuseIdentifier: RideAnnotationView.reuseID)
         map.preferredConfiguration = Self.configuration(satellite: isSatellite)
         context.coordinator.isSatellite = isSatellite
+        context.coordinator.lastRecenterRequest = recenterRequest
         return map
     }
 
@@ -243,8 +248,24 @@ struct StyledMapUIView: UIViewRepresentable {
             map.preferredConfiguration = Self.configuration(satellite: isSatellite)
         }
 
+        // "My location" button: center on the blue dot at street level, then write the region
+        // back so the sync below doesn't snap it away
+        var recentered = false
+        if recenterRequest != context.coordinator.lastRecenterRequest {
+            context.coordinator.lastRecenterRequest = recenterRequest
+            if let fix = map.userLocation.location, CLLocationCoordinate2DIsValid(fix.coordinate) {
+                let r = MKCoordinateRegion(center: fix.coordinate,
+                                           span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006))
+                map.setRegion(r, animated: true)
+                DispatchQueue.main.async { self.region = r }
+                recentered = true
+            } else {
+                DispatchQueue.main.async { onRecenterWithoutFix() }
+            }
+        }
+
         // Region (only if significantly different to avoid fighting user pans)
-        if !context.coordinator.isUserInteracting {
+        if !recentered && !context.coordinator.isUserInteracting {
             let cur = map.region
             let deltaLat = abs(cur.center.latitude  - region.center.latitude)
             let deltaLon = abs(cur.center.longitude - region.center.longitude)
@@ -293,6 +314,7 @@ struct StyledMapUIView: UIViewRepresentable {
         var parent: StyledMapUIView
         var isSatellite = false
         var isUserInteracting = false
+        var lastRecenterRequest = 0
 
         init(_ parent: StyledMapUIView) { self.parent = parent }
 
@@ -363,6 +385,8 @@ struct ParkMapView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(WaitTimesViewModel.self) private var viewModel
     @State private var locationService = LocationService()
+    @State private var recenterRequest = 0
+    @State private var showLocationDenied = false
     @State private var region: MKCoordinateRegion = ParkGroup.disney.defaultRegion
     @State private var selectedRide: DisplayRide?
     @State private var panelExpanded: Bool = false
@@ -401,7 +425,9 @@ struct ParkMapView: View {
                 onSelectRide: { selectedRide = $0 },
                 makeMenu: { pinMenu(for: $0) },
                 parkingSpot: ParkingService.shared.spot(for: appState.selectedResort),
-                onSelectParking: { DeepLinkRouter.shared.open(.parking) }
+                onSelectParking: { DeepLinkRouter.shared.open(.parking) },
+                recenterRequest: recenterRequest,
+                onRecenterWithoutFix: recenterFromLocationService
             )
             .ignoresSafeArea()
 
@@ -440,6 +466,17 @@ struct ParkMapView: View {
                             .background(.regularMaterial, in: Circle())
                     }
                     .accessibilityLabel(parked ? "Find my car" : "Save parking spot")
+                    // Recenter on my location
+                    Button {
+                        recenterOnMe()
+                    } label: {
+                        Image(systemName: locationAllowed ? "location.fill" : "location")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(locationAllowed ? Color.blue : Color.primary)
+                            .padding(8)
+                            .background(.regularMaterial, in: Circle())
+                    }
+                    .accessibilityLabel("Show my location")
                 }
                 .padding(.horizontal)
 
@@ -599,6 +636,14 @@ struct ParkMapView: View {
             ParkingReminder.refresh(resort: viewModel.selectedGroup,
                                     schedule: viewModel.todaySchedule(forResort: viewModel.selectedGroup))
         }
+        .alert("Location Is Off", isPresented: $showLocationDenied) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Allow ThrillTrack to use your location in Settings to see where you are on the map.")
+        }
         .sheet(isPresented: $showTipBoard) {
             TipBoardView()
         }
@@ -700,6 +745,33 @@ struct ParkMapView: View {
     }
 
     // MARK: - GPS Auto-Zoom
+
+    private var locationAllowed: Bool {
+        locationService.authorizationStatus == .authorizedWhenInUse
+            || locationService.authorizationStatus == .authorizedAlways
+    }
+
+    /// "My location" button: asks for permission if needed (or opens Settings if it was
+    /// denied), otherwise centers the map on the blue dot.
+    private func recenterOnMe() {
+        switch locationService.authorizationStatus {
+        case .denied, .restricted:
+            showLocationDenied = true
+        case .notDetermined:
+            locationService.requestAndStart()
+        default:
+            recenterRequest += 1
+        }
+    }
+
+    /// The map has no fix yet — use the location service's (coarser) one if there is one.
+    private func recenterFromLocationService() {
+        guard let me = locationService.userCoordinate else { return }
+        withAnimation {
+            region = MKCoordinateRegion(center: me,
+                                        span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006))
+        }
+    }
 
     private func autoZoomIfInsidePark() {
         guard let nearest = locationService.nearestPark(from: viewModel.currentParks) else { return }

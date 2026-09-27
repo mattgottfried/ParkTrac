@@ -2,8 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct RideDetailSheet: View {
-    @ScaledMetric(relativeTo: .largeTitle) private var waitNumberSize: CGFloat = 72
-    @ScaledMetric(relativeTo: .largeTitle) private var statusIconSize: CGFloat = 52
+    @ScaledMetric(relativeTo: .largeTitle) private var tileSize: CGFloat = 84
+    @ScaledMetric(relativeTo: .largeTitle) private var tileNumberSize: CGFloat = 36
     let ride: DisplayRide
     let theme: ParkTheme
     let parkGroup: ParkGroup
@@ -64,11 +64,7 @@ struct RideDetailSheet: View {
                         let start = ReturnTimeLogger.logAccessPassNow(
                             pass, rideId: ride.id, rideName: ride.name, parkName: parkName,
                             resort: parkGroup, postedWait: ride.waitMinutes, context: context)
-                        toastMessage = "\(pass.label) logged — return \(start.formatted(date: .omitted, time: .shortened))"
-                        withAnimation { showToast = true }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                            withAnimation { showToast = false }
-                        }
+                        flashToast("\(pass.label) logged — return \(start.formatted(date: .omitted, time: .shortened))")
                     } label: {
                         Label("I Booked It", systemImage: "checkmark.circle.fill")
                             .font(.subheadline.weight(.semibold))
@@ -77,222 +73,75 @@ struct RideDetailSheet: View {
                     .buttonStyle(.borderedProminent)
                     .tint(.teal)
                 }
-                Text("Got a different time from the \(pass.bookingAppName)? Use Log Return Time below to enter it exactly.")
+                Text("Got a different time from the \(pass.bookingAppName)? Use Return above to enter it exactly.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
         }
     }
 
-    private var badgeColor: Color {
-        guard ride.isOperating else { return .gray }
-        guard let minutes = ride.waitMinutes else { return .blue }
-        if minutes < 30 { return .green }
-        if minutes < 60 { return Color(red: 1, green: 0.75, blue: 0) }
-        return .red
-    }
+    private var isMustDo: Bool { appState.wishList.contains(ride.id) }
+    private var activeAlert: RideAlert? { allAlerts.first { $0.rideId == ride.id && $0.isActive } }
+    private var goodTime: GoodTimeToRide.Deal? { GoodTimeService.shared.deal(for: ride.id) }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                Capsule()
-                    .fill(.secondary.opacity(0.4))
-                    .frame(width: 36, height: 4)
-                    .padding(.top, 8)
+            VStack(spacing: 16) {
+                header
+                actionRow
 
-                // Ride name + status
-                VStack(spacing: 6) {
-                    Text(ride.name)
-                        .font(.title2.bold())
-                        .multilineTextAlignment(.center)
-                    Text(ride.statusDisplay)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-
-                // Wait time display
-                if ride.isOperating, let minutes = ride.waitMinutes {
-                    VStack(spacing: 2) {
-                        Text("\(minutes)")
-                            .font(.system(size: waitNumberSize, weight: .bold, design: .rounded))
-                            .foregroundStyle(badgeColor)
-                        Text("minute wait")
-                            .font(.headline)
-                            .foregroundStyle(badgeColor.opacity(0.8))
-                    }
-                } else {
-                    Image(systemName: ride.status == "DOWN"
-                          ? "exclamationmark.triangle.fill"
-                          : "xmark.circle.fill")
-                        .font(.system(size: statusIconSize))
-                        .foregroundStyle(ride.status == "DOWN" ? .orange : .gray)
-                }
-
-                Divider()
-
-                // Ride info (height, thrill, type)
+                // Ride info chips (height, thrill, type, Lightning Lane)
                 if let info = RideMetadata.info(for: ride.name, resort: parkGroup) {
                     rideInfoSection(info)
-                        .padding(.horizontal)
-                    Divider()
                 }
-
-                // Predictions / closure info
-                RidePredictionView(ride: ride, parkGroup: parkGroup, parkName: parkName)
-                    .padding(.horizontal)
-
-                Divider()
-
-                // Rode It! + Wish List section
-                VStack(spacing: 10) {
-                    HStack(spacing: 12) {
-                        Button {
-                            showLogSheet = true
-                        } label: {
-                            Label("Rode It!", systemImage: "checkmark.circle.fill")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 4)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.green)
-
-                        Button {
-                            appState.toggleWish(ride.id)
-                        } label: {
-                            Image(systemName: appState.wishList.contains(ride.id) ? "star.fill" : "star")
-                                .font(.title3)
-                                .foregroundStyle(appState.wishList.contains(ride.id) ? .yellow : .secondary)
-                                .padding(10)
-                                .background(Color(.systemFill), in: Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(appState.wishList.contains(ride.id) ? "Remove from Must-Do" : "Add to Must-Do")
-                    }
-
-                    if rideCount > 0 {
-                        Text("You've ridden this \(rideCount) time\(rideCount == 1 ? "" : "s")")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.horizontal)
-
-                Divider()
-
-                // Lightning Lane: next returns + notify-only watch (Disney rides with LL)
-                if ride.multiPass != nil || ride.singlePass != nil {
-                    LightningLaneSection(ride: ride, parkName: parkName, resort: parkGroup)
-                        .padding(.horizontal)
-                    Divider()
-                }
-
-                // Wait Stopwatch section
-                WaitStopwatchSection(
-                    ride: ride,
-                    parkName: parkName,
-                    postedWait: ride.waitMinutes,
-                    onSave: { actualMins, posted in
-                        let log = RideLog(
-                            rideId: ride.id,
-                            rideName: ride.name,
-                            parkId: ride.parkId,
-                            parkName: parkName,
-                            resort: parkGroup.rawValue,
-                            riddenAt: .now,
-                            waitMinutes: posted == 0 ? nil : posted,
-                            actualWaitMinutes: actualMins,
-                            notes: ""
-                        )
-                        context.insert(log)
-                        toastMessage = "Saved! Posted: \(posted)m · Actual: \(actualMins)m"
-                        withAnimation { showToast = true }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                            withAnimation { showToast = false }
-                        }
-                    }
-                )
-                .padding(.horizontal)
-
-                Divider()
 
                 // DAS / AAP: book in the resort's app, then log the return here in one tap
                 if let pass = AccessPass.held(at: parkGroup), ride.isOperating {
-                    accessPassSection(pass)
-                        .padding(.horizontal)
+                    card { accessPassSection(pass) }
                 }
 
-                // Log Return Time section
-                Button {
-                    showBookReturnSheet = true
-                } label: {
-                    Label("Log Return Time", systemImage: "clock.badge.checkmark")
-                        .font(.subheadline.weight(.medium))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 4)
+                // Lightning Lane: next returns + notify-only watch
+                if ride.multiPass != nil || ride.singlePass != nil {
+                    card { LightningLaneSection(ride: ride, parkName: parkName, resort: parkGroup) }
                 }
-                .buttonStyle(.bordered)
-                .tint(.blue)
-                .padding(.horizontal)
 
-                Button {
-                    showAddToPlanSheet = true
-                } label: {
-                    Label("Add to My Day", systemImage: "calendar.badge.plus")
-                        .font(.subheadline.weight(.medium))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 4)
+                // Alerts that are set (wait alert / reopen watch), or the offer to watch a closed ride
+                if activeAlert != nil || !ride.isOperating || ReopenWatchService.shared.watch(for: ride.id) != nil {
+                    card { alertsSection }
                 }
-                .buttonStyle(.bordered)
-                .tint(.purple)
-                .padding(.horizontal)
 
-                Divider()
-
-                // Alert section
-                VStack(spacing: 10) {
-                    // Down or closed: offer a one-shot "tell me when it's back up"
-                    if !ride.isOperating || ReopenWatchService.shared.watch(for: ride.id) != nil {
-                        reopenWatchRow
-                    }
-                    let existingAlert = allAlerts.first(where: { $0.rideId == ride.id && $0.isActive })
-                    if let alert = existingAlert {
-                        HStack {
-                            Label("Alert: ≤\(alert.thresholdMinutes) min", systemImage: "bell.fill")
-                                .font(.subheadline)
-                                .foregroundStyle(.blue)
-                            Spacer()
-                            Button("Cancel") {
-                                alert.isActive = false
-                                try? context.save()
-                                InstantAlertsService.shared.watchesChanged()
-                            }
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                // Wait stopwatch
+                card {
+                    WaitStopwatchSection(
+                        ride: ride,
+                        parkName: parkName,
+                        postedWait: ride.waitMinutes,
+                        onSave: { actualMins, posted in
+                            let log = RideLog(
+                                rideId: ride.id,
+                                rideName: ride.name,
+                                parkId: ride.parkId,
+                                parkName: parkName,
+                                resort: parkGroup.rawValue,
+                                riddenAt: .now,
+                                waitMinutes: posted == 0 ? nil : posted,
+                                actualWaitMinutes: actualMins,
+                                notes: ""
+                            )
+                            context.insert(log)
+                            flashToast("Saved! Posted: \(posted)m · Actual: \(actualMins)m")
                         }
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
-                    } else {
-                        Button {
-                            showAlertSheet = true
-                        } label: {
-                            Label("Set Wait Alert", systemImage: "bell.badge")
-                                .font(.subheadline.weight(.medium))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 4)
-                        }
-                        .buttonStyle(.bordered)
-                    }
+                    )
                 }
-                .padding(.horizontal)
 
-                Button("Dismiss") { dismiss() }
-                    .buttonStyle(.borderedProminent)
-                    .tint(theme.accentColor)
-                    .padding(.top, 4)
+                // Predictions / closure info
+                card { RidePredictionView(ride: ride, parkGroup: parkGroup, parkName: parkName) }
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.top, 20)
+            .padding(.bottom, 24)
         }
+        .background(Color(.systemGroupedBackground))
         .overlay(alignment: .bottom) {
             if showToast {
                 Text(toastMessage)
@@ -306,9 +155,9 @@ struct RideDetailSheet: View {
             }
         }
         .presentationDetents([.fraction(0.6), .large])
-        .presentationDragIndicator(.hidden)
+        .presentationDragIndicator(.visible)
         .sensoryFeedback(.success, trigger: showToast) { _, shown in shown }
-        .sensoryFeedback(.selection, trigger: appState.wishList.contains(ride.id))
+        .sensoryFeedback(.selection, trigger: isMustDo)
         .sheet(isPresented: $showLogSheet) {
             LogRideSheet(
                 ride: ride,
@@ -331,6 +180,156 @@ struct RideDetailSheet: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+    }
+
+    private func flashToast(_ message: String) {
+        toastMessage = message
+        withAnimation { showToast = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            withAnimation { showToast = false }
+        }
+    }
+
+    // MARK: - Header
+
+    /// Wait tile (same as the ride card) + name, park, status line and the Must-Do star.
+    private var header: some View {
+        HStack(alignment: .top, spacing: 14) {
+            WaitTile(ride: ride, size: tileSize, numberSize: tileNumberSize, unit: "min wait")
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(ride.name)
+                    .font(.title2.bold())
+                    .fixedSize(horizontal: false, vertical: true)
+                if !parkName.isEmpty {
+                    Text(parkName)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                if let status = statusLine {
+                    Label(status.text, systemImage: status.icon)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(status.color)
+                }
+                if rideCount > 0 {
+                    Label("Ridden \(rideCount) time\(rideCount == 1 ? "" : "s")", systemImage: "checkmark.seal.fill")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.green)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                appState.toggleWish(ride.id)
+            } label: {
+                Image(systemName: isMustDo ? "star.fill" : "star")
+                    .font(.title3)
+                    .foregroundStyle(isMustDo ? .yellow : .secondary)
+                    .frame(width: 44, height: 44)
+                    .background(Color(.secondarySystemGroupedBackground), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isMustDo ? "Remove from Must-Do" : "Add to Must-Do")
+        }
+    }
+
+    /// Good-time deal, down, or closed — nothing extra for a normal operating ride.
+    private var statusLine: (text: String, icon: String, color: Color)? {
+        if let goodTime {
+            return (text: "Good time to ride · \(goodTime.shortText)", icon: "arrow.down.circle.fill", color: .green)
+        }
+        if ride.status == "DOWN" { return (text: "Temporarily down", icon: "wrench.and.screwdriver", color: .orange) }
+        if !ride.isOperating { return (text: ride.statusDisplay, icon: "moon.zzz", color: .secondary) }
+        return nil
+    }
+
+    // MARK: - Quick actions
+
+    /// Four big buttons, like Apple Maps: Rode It, Add to My Day, Wait Alert, Log Return.
+    private var actionRow: some View {
+        HStack(spacing: 10) {
+            actionButton("Rode It!", icon: "checkmark.circle.fill", tint: .green, prominent: true) {
+                showLogSheet = true
+            }
+            actionButton("My Day", icon: "calendar.badge.plus", tint: .purple) {
+                showAddToPlanSheet = true
+            }
+            actionButton(activeAlert.map { "≤\($0.thresholdMinutes) min" } ?? "Alert",
+                         icon: activeAlert == nil ? "bell.badge" : "bell.fill", tint: .blue) {
+                showAlertSheet = true
+            }
+            actionButton("Return", icon: "clock.badge.checkmark", tint: .teal) {
+                showBookReturnSheet = true
+            }
+        }
+    }
+
+    private func actionButton(_ title: String, icon: String, tint: Color, prominent: Bool = false,
+                              action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.title3)
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .foregroundStyle(prominent ? Color.white : tint)
+            .background(prominent ? tint : tint.opacity(0.12),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityTitle(title))
+    }
+
+    private func accessibilityTitle(_ title: String) -> String {
+        switch title {
+        case "My Day": return "Add to My Day"
+        case "Return": return "Log return time"
+        case "Alert": return "Set wait alert"
+        default: return title.hasPrefix("≤") ? "Wait alert set for \(title). Change it" : title
+        }
+    }
+
+    // MARK: - Alerts
+
+    @ViewBuilder
+    private var alertsSection: some View {
+        VStack(spacing: 10) {
+            // Down or closed: offer a one-shot "tell me when it's back up"
+            if !ride.isOperating || ReopenWatchService.shared.watch(for: ride.id) != nil {
+                reopenWatchRow
+            }
+            if let alert = activeAlert {
+                HStack {
+                    Label("Alert when the wait is ≤\(alert.thresholdMinutes) min", systemImage: "bell.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.blue)
+                    Spacer()
+                    Button("Cancel") {
+                        alert.isActive = false
+                        try? context.save()
+                        InstantAlertsService.shared.watchesChanged()
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 8)
+                .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+            }
+        }
+    }
+
+    /// A white rounded group on the grey sheet background.
+    private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(Color(.secondarySystemGroupedBackground),
+                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     // MARK: - Reopen watch
@@ -368,12 +367,8 @@ struct RideDetailSheet: View {
 
     @ViewBuilder
     private func rideInfoSection(_ info: RideInfo) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Ride Info")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            HStack(spacing: 10) {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
                 infoChip(
                     label: heightLabel(info),
                     systemImage: "ruler",
@@ -384,9 +379,6 @@ struct RideDetailSheet: View {
                     systemImage: info.thrill.systemImage,
                     color: info.thrill.color
                 )
-            }
-
-            HStack(spacing: 10) {
                 infoChip(
                     label: info.type.rawValue,
                     systemImage: info.type.systemImage,
