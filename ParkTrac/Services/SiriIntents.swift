@@ -136,7 +136,7 @@ struct SaveParkingSpotIntent: AppIntent {
 
 struct PlanMyDayIntent: AppIntent {
     static var title: LocalizedStringResource = "Plan My Day"
-    static var description = IntentDescription("Opens the Smart Planner with what you want to do — Apple Intelligence reads it and ThrillTrack builds the schedule.")
+    static var description = IntentDescription("Opens the Smart Planner with what you want to do, and ThrillTrack builds the schedule.")
     static var openAppWhenRun = true
 
     @Parameter(title: "What do you want to do?",

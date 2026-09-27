@@ -38,4 +38,6 @@ Car locator
 - Unmapped lots learn from saved spots (yours, plus everyone's with "Help Map This Lot" on). CityWalk garages aren't guessed.
 - Check: at a lot, open the car locator. The section and row should be filled in ("Guessed from the lot map"). Spin the wheel if the row is off, then save. Your first save in a section sets which way its rows count. Magic Kingdom, Animal Kingdom and Epic sections were drawn from the lot diagrams, so say if a section comes up wrong.
 
+Fixed: the upload was rejected because the Siri "Plan my day" description mentioned Apple (App Store rule 90626).
+
 Check overall: plan a day and tap through Next Up on the Lock Screen, open a few ride pages, add rides to My Day, and try the car locator.
