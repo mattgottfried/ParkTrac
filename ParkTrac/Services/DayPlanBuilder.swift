@@ -14,6 +14,8 @@ struct PlanRide: Equatable {
     let waitByHour: [Int: Int]
     /// Ride + exit time
     var rideMinutes: Int = 10
+    /// Mostly indoors (`RideMetadata.isIndoor`) — preferred during rain
+    var isIndoor: Bool = false
 
     var coordinate: CLLocationCoordinate2D? {
         guard let latitude, let longitude else { return nil }
@@ -123,6 +125,8 @@ enum DayPlanBuilder {
     static let defaultWalkMinutes = 8
     /// How much a ride's "it'll be shorter later" counts against doing it now
     static let laterPenalty = 0.5
+    /// Extra cost (minutes) of an outdoor ride in an hour when rain is likely
+    static let rainPenalty = 40.0
 
     static func walkMinutes(from: CLLocationCoordinate2D?, to: CLLocationCoordinate2D?) -> Int {
         guard let from, let to else { return defaultWalkMinutes }
@@ -130,8 +134,11 @@ enum DayPlanBuilder {
     }
 
     /// - Parameter location: where the guest is now (live re-planning) — the first walk counts from here
+    /// - Parameter wetHours: hours (0–23) when rain is likely (`RainForecastService`) — outdoor
+    ///   rides are pushed out of them so indoor rides fill the storm
     static func build(rides: [PlanRide], fixed: [FixedEvent], start: Date, end: Date?,
                       from location: CLLocationCoordinate2D? = nil,
+                      wetHours: Set<Int> = [],
                       calendar: Calendar = .current) -> DayPlan {
         var t = start
         var here: CLLocationCoordinate2D? = location
@@ -154,7 +161,9 @@ enum DayPlanBuilder {
                 let finish = arrive.addingTimeInterval(Double(wait + ride.rideMinutes) * 60)
                 if let limit, finish > limit { return nil }
                 let later = ride.bestWait(from: arrive, until: end, calendar: calendar)
+                let wet = !ride.isIndoor && wetHours.contains(calendar.component(.hour, from: arrive))
                 let score = Double(walk + wait) + laterPenalty * Double(max(0, wait - later))
+                    + (wet ? rainPenalty : 0)
                 return (index, walk, wait, finish, score)
             }
 

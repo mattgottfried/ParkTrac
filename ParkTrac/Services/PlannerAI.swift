@@ -30,6 +30,7 @@ enum PlannerAI {
             let name: String
             let waitsByHour: [Int: Int]
             let isMustDo: Bool
+            var isIndoor: Bool = false
         }
         struct Fixed {
             let title: String
@@ -42,6 +43,8 @@ enum PlannerAI {
         var end: Date?
         var notes: String
         var interests: [String] = []
+        /// Hours (0–23) when rain is likely today
+        var rainHours: [Int] = []
     }
 
     struct AIPlan: Equatable {
@@ -71,6 +74,7 @@ enum PlannerAI {
     in the day first. Must-Do rides matter most. Follow the guest's notes about timing (for example \
     "ride it right before close" means put it last). Leave room for the shows and dining — ThrillTrack keeps \
     those at their times and works out the exact times of the rides.
+    If rain is likely at some hours, put indoor rides (marked "indoor") in those hours and outdoor rides outside them.
     If the notes say what kinds of rides the party likes, list them in interests using only: thrill, coasters, \
     gentle, dark rides, water, simulators, shows.
     If the notes mention a meal or break at a time, add it to extraEvents with a 24-hour HH:mm time and a length \
@@ -96,7 +100,7 @@ enum PlannerAI {
 
         let rides = input.rides.map { ride -> String in
             let waits = hours.compactMap { h in ride.waitsByHour[h].map { "\(hourLabel(h)) \($0)" } }
-            return "- \(ride.name)\(ride.isMustDo ? " (Must-Do)" : ""): expected wait in minutes — "
+            return "- \(ride.name)\(ride.isMustDo ? " (Must-Do)" : "")\(ride.isIndoor ? " (indoor)" : ""): expected wait in minutes — "
                 + (waits.isEmpty ? "unknown" : waits.joined(separator: ", "))
         }
         let fixed = (input.shows.map { "- Show: \($0.title) at \(hhmm($0.time, calendar: calendar))" }
@@ -112,6 +116,7 @@ enum PlannerAI {
         Set times:
         \(fixed.isEmpty ? "none" : fixed.joined(separator: "\n"))
 
+        Rain likely: \(input.rainHours.isEmpty ? "no" : input.rainHours.sorted().map(hourLabel).joined(separator: ", ") + " — put indoor rides then")
         Interests: \(input.interests.isEmpty ? "none given" : input.interests.joined(separator: ", "))
         Guest's notes: \(notes.isEmpty ? "none" : notes)
         """

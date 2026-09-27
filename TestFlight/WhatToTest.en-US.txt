@@ -41,3 +41,19 @@ Community wait history (better forecasts for every ride)
 - Once it has a couple of days, each ride's Wait Forecast, the Smart Planner and the Tip Board use that ride's real typical waits for today's day of the week. Your own visits still count first.
 - The forecast says "Typical Friday" (etc.) in the corner when it's using this history.
 - Check: this builds up over the first days, and a ride's forecast should shift from "Estimated" to "Typical <day>" after a couple of days of the same weekday or two days of any data.
+
+Good Time to Ride works for every ride
+- Good Time badges, the green strip and Must-Do alerts used to need your own history for a ride. Now they also use everyone's recorded waits, so they work on your first visit.
+
+"You usually wait ~45 (posted 60)"
+- Once you've timed a ride twice with the stopwatch (or any 5 rides at the resort), its ride page shows how long you really wait versus the posted time.
+
+Rain plan
+- ThrillTrack checks the hourly rain chance. When rain is likely, the Smart Planner and Next Up put indoor rides (dark rides, simulators, shows, Space Mountain…) in those hours.
+- A blue "Rain likely 3–5 PM" note shows on Next Up and the planner, and a heads-up notification comes about half an hour before (Settings → Rain Heads-Up).
+
+New Add to My Day
+- Rides and shows are right on the screen. No more park → ride drill-down. Tap several rides to add them all at once.
+- Pick when: Anytime, Now, the ride's Best time today, a showtime, or a set time.
+- From a ride's page it opens small with that ride already picked.
+- Lightning Lane returns logged here now also start the Live Activity and reminder.
