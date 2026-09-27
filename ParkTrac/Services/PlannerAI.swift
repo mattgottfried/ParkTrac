@@ -75,7 +75,7 @@ enum PlannerAI {
     gentle, dark rides, water, simulators, shows.
     If the notes mention a meal or break at a time, add it to extraEvents with a 24-hour HH:mm time and a length \
     in minutes (meals 60–90, snacks or breaks 20–30 unless the guest says otherwise). If the notes don't mention \
-a meal or break, extraEvents must be empty. Never add dining the guest didn't ask for, and never add anything twice.
+    a meal or break, extraEvents must be empty. Never add dining the guest didn't ask for, and never add anything twice.
     Write summary as one or two friendly sentences explaining the plan.
     """
 
