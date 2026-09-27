@@ -67,6 +67,39 @@ final class NotificationService {
             UNNotificationRequest(identifier: "goodtime-\(rideId)", content: content, trigger: nil))
     }
 
+    /// A Must-Do ride just went down.
+    func fireMustDoDown(rideId: String, rideName: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "⚠️ \(rideName) is down"
+        content.body = "One of your Must-Dos just stopped running. ThrillTrack will tell you when it's back up."
+        content.sound = .default
+        content.threadIdentifier = "mustdo-\(rideId)"
+        content.userInfo = [
+            DeepLink.userInfoKey: DeepLink.ride(id: rideId).url.absoluteString,
+            NotificationKeys.rideId: rideId,
+            NotificationKeys.rideName: rideName,
+        ]
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: "mustdo-down-\(rideId)", content: content, trigger: nil))
+    }
+
+    /// A Must-Do ride that was down is running again.
+    func fireMustDoBackUp(rideId: String, rideName: String, wait: Int?) {
+        let content = UNMutableNotificationContent()
+        content.interruptionLevel = .timeSensitive
+        content.title = "✅ \(rideName) is back up"
+        content.body = wait.map { "Your Must-Do is running again — posted wait \($0) min." } ?? "Your Must-Do is running again."
+        content.sound = .default
+        content.threadIdentifier = "mustdo-\(rideId)"
+        content.userInfo = [
+            DeepLink.userInfoKey: DeepLink.ride(id: rideId).url.absoluteString,
+            NotificationKeys.rideId: rideId,
+            NotificationKeys.rideName: rideName,
+        ]
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: "mustdo-up-\(rideId)", content: content, trigger: nil))
+    }
+
     /// Rain is about to arrive at the resort (once a day) — plan indoor rides.
     func fireRainHeadsUp(resort: ParkGroup, headline: String) {
         let content = UNMutableNotificationContent()

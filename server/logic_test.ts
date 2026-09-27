@@ -1,6 +1,8 @@
 import { assert, assertEquals } from "@std/assert";
 import {
   accessReturnDelay,
+  downTransition,
+  type DownWatch,
   evaluate,
   type LiveEntry,
   type LLWatch,
@@ -118,4 +120,25 @@ Deno.test("parseSync validates and drops bad or expired watches", () => {
   assert(typeof ok !== "string");
   assertEquals(ok.token, token);
   assertEquals(ok.watches.map((w) => w.id), ["w-wait", "w-ll", "w-re"]);
+});
+
+const down: DownWatch = { ...base, id: "mustdo-r1", kind: "down" };
+
+Deno.test("down: must-do goes down, then back up, then down again", () => {
+  const d1 = evaluate(down, live(null, "DOWN"), {}, T, tz);
+  assertEquals(d1.push?.title, "⚠️ Soaring: Fantastic Flight is down");
+  assertEquals(d1.state.isDown, true);
+  // Still down → quiet
+  assertEquals(evaluate(down, live(null, "DOWN"), d1.state, T, tz).push, undefined);
+  const up = evaluate(down, live({ STANDBY: { waitTime: 40 } }), d1.state, T, tz);
+  assertEquals(up.push?.title, "✅ Soaring: Fantastic Flight is back up");
+  assert(up.push?.body.includes("40 min"));
+  assertEquals(up.state.isDown, false);
+  assertEquals(evaluate(down, live(null, "DOWN"), up.state, T, tz).push?.collapseId, "mustdo-down-r1");
+});
+
+Deno.test("down: closing for the night resets quietly", () => {
+  assertEquals(downTransition(true, "CLOSED"), { isDown: false });
+  assertEquals(downTransition(false, "OPERATING"), { isDown: false });
+  assertEquals(evaluate(down, live({ STANDBY: { waitTime: 5 } }), {}, T, tz).push, undefined);
 });

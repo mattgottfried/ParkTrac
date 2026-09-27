@@ -202,6 +202,9 @@ struct StatsView: View {
                                 NavigationLink("Visit History") { VisitHistoryView() }
                                     .font(.caption.weight(.medium))
                                 Text("·").foregroundStyle(.secondary)
+                                NavigationLink("Recaps") { DayRecapListView() }
+                                    .font(.caption.weight(.medium))
+                                Text("·").foregroundStyle(.secondary)
                                 NavigationLink("My Day") { DayPlannerView(embedded: true) }
                                     .font(.caption.weight(.medium))
                                 Spacer()

@@ -10,6 +10,7 @@ struct DayPlannerView: View {
     @Query(sort: \RideLog.riddenAt) private var rideLogs: [RideLog]
     @Query private var purchases: [PurchaseLog]
     @State private var showAddSheet = false
+    @State private var showRecap = false
     @State private var showGuestPicker = false
     @State private var showSmartPlanner = false
     @State private var showAreaEntry = false
@@ -282,10 +283,10 @@ struct DayPlannerView: View {
                         Image(systemName: "plus")
                     }
                     .accessibilityLabel("Add to plan")
-                    ShareLink(item: todaySummary) {
-                        Image(systemName: "square.and.arrow.up")
+                    Button { showRecap = true } label: {
+                        Image(systemName: "sparkles.rectangle.stack")
                     }
-                    .accessibilityLabel("Share today's summary")
+                    .accessibilityLabel("Today's recap")
                 }
             }
             ToolbarItem(placement: .navigationBarLeading) {
@@ -294,6 +295,14 @@ struct DayPlannerView: View {
         }
         .sheet(isPresented: $showAddSheet) {
             AddPlanItemView(resort: resort)
+        }
+        .sheet(isPresented: $showRecap) {
+            NavigationStack {
+                DayRecapView(date: .now, resort: appState.selectedResort)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) { Button("Done") { showRecap = false } }
+                    }
+            }
         }
         .sheet(isPresented: $showGuestPicker) {
             GuestPickerSheet()
