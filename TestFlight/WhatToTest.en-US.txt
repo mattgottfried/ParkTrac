@@ -57,3 +57,8 @@ New Add to My Day
 - Pick when: Anytime, Now, the ride's Best time today, a showtime, or a set time.
 - From a ride's page it opens small with that ride already picked.
 - Lightning Lane returns logged here now also start the Live Activity and reminder.
+
+No more pull-to-refresh on the ride list
+- Pulling down on the list sometimes cancelled the refresh and showed "Couldn't refresh wait times" over rides that were fine. Pull-to-refresh is gone; waits still update on their own every minute.
+- If waits are more than 5 minutes old, the orange "Wait times from N min ago" pill in the panel is now a button: tap it to refresh.
+- A failed refresh no longer hides the rides you already have.

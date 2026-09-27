@@ -403,7 +403,7 @@ struct ParkMapView: View {
     @AppStorage("maxWaitFilter") private var maxWait: Int = 0
     @State private var rideAction: RideMenuAction?
     @State private var showTipBoard = false
-    /// Bumped only by a user pull-to-refresh, so the success haptic doesn't fire on the 60s auto-refresh.
+    /// Bumped only when the user taps to refresh, so the success haptic doesn't fire on the 60s auto-refresh.
     @State private var userRefreshCount = 0
     /// Status per ride from the previous refresh, to spot rides that just went DOWN
     @State private var lastStatuses: [String: String] = [:]
@@ -816,12 +816,21 @@ struct ParkMapView: View {
                     TimelineView(.periodic(from: .now, by: 30)) { ctx in
                         let minutesOld = Int(ctx.date.timeIntervalSince(refreshed) / 60)
                         if minutesOld >= 5 {
-                            Label("Wait times from \(minutesOld) min ago — pull to refresh",
-                                  systemImage: "exclamationmark.triangle.fill")
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 8).padding(.vertical, 3)
-                                .background(Color.orange, in: Capsule())
+                            // Wait times refresh on their own every minute; this is the manual nudge
+                            Button {
+                                Task {
+                                    await viewModel.refresh()
+                                    userRefreshCount += 1
+                                }
+                            } label: {
+                                Label("Wait times from \(minutesOld) min ago — tap to refresh",
+                                      systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 8).padding(.vertical, 3)
+                                    .background(Color.orange, in: Capsule())
+                            }
+                            .buttonStyle(.plain)
                         } else {
                             Text("Updated \(refreshed, style: .relative) ago")
                                 .font(.caption2).foregroundStyle(.secondary)
@@ -1067,7 +1076,7 @@ struct ParkMapView: View {
                 ShowsListView(shows: viewModel.currentShows, theme: theme, timeZone: viewModel.selectedGroup.timeZone)
             } else if viewModel.isLoadingParks || (viewModel.isLoading && viewModel.allRides.isEmpty) {
                 ProgressView("Loading…").frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let errorMsg = viewModel.errorMessage {
+            } else if let errorMsg = viewModel.errorMessage, viewModel.allRides.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "wifi.exclamationmark").font(.largeTitle).foregroundStyle(.secondary)
                     Text(errorMsg).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
@@ -1118,10 +1127,6 @@ struct ParkMapView: View {
                             }
                         }
                         .padding(.horizontal).padding(.vertical, 8)
-                    }
-                    .refreshable {
-                        await viewModel.refresh()
-                        userRefreshCount += 1
                     }
                     .onChange(of: DeepLinkRouter.shared.waitTimesReselectCount) { _, _ in
                         if let first = displayedRides.first {
