@@ -52,6 +52,23 @@ struct SmartPlannerView: View {
     @State private var schedule: [ScheduledSlot] = []
     @State private var phase: Phase = .picking
 
+    // Changing the plan after it's made ("keep rides close together")
+    private struct Refinement: Identifiable {
+        let id = UUID()
+        let request: String
+        let reply: String
+    }
+    /// What the last plan was built from, so it can be re-timed in a new order
+    @State private var lastRides: [PlanRide] = []
+    @State private var lastFixed: [FixedEvent] = []
+    @State private var lastEnd: Date?
+    @State private var lastInput: PlannerAI.PlanInput?
+    @State private var refinements: [Refinement] = []
+    @State private var refineText = ""
+    @State private var isRefining = false
+    /// Minutes walked between stops in the current plan
+    @State private var walkTotal = 0
+
     private enum Phase { case picking, generating, result }
 
     private var parkName: String {
@@ -339,6 +356,8 @@ struct SmartPlannerView: View {
                 }
             }
 
+            changeSection
+
             if !unscheduled.isEmpty {
                 Section {
                     Text("Didn't fit before the park closes: \(unscheduled.joined(separator: ", "))")
@@ -491,13 +510,20 @@ struct SmartPlannerView: View {
         planNote = nil
         aiOrderIds = []
         aiExtras = []
+        lastRides = planRides
+        lastFixed = fixed
+        lastEnd = end
+        lastInput = nil
+        refinements = []
         var plan = DayPlanBuilder.build(rides: planRides, fixed: fixed, start: startTime, end: end, wetHours: wetHours)
 
         // Apple Intelligence orders the picks; ThrillTrack times them
         if PlannerAI.isAvailable {
+            let areas = PlanAreas.assign(planRides)
             let aiRides: [PlannerAI.PlanInput.Ride] = planRides.map {
                 PlannerAI.PlanInput.Ride(name: $0.name, waitsByHour: $0.waitByHour,
-                                         isMustDo: appState.wishList.contains($0.id), isIndoor: $0.isIndoor)
+                                         isMustDo: appState.wishList.contains($0.id), isIndoor: $0.isIndoor,
+                                         area: areas[$0.id])
             }
             let aiShows: [PlannerAI.PlanInput.Fixed] = fixed.filter { $0.kind == "show" }.map {
                 PlannerAI.PlanInput.Fixed(title: $0.title, time: $0.start)
@@ -509,6 +535,7 @@ struct SmartPlannerView: View {
                                             start: startTime, end: end, notes: notes,
                                             interests: Interest.allCases.filter { interests.contains($0) }.map(\.label),
                                             rainHours: Array(wetHours))
+            lastInput = input
             do {
                 let ai = try await PlannerAI.plan(input)
                 let extras = PlannerAI.groundedExtras(ai.extraEvents, notes: notes).compactMap { e -> FixedEvent? in
@@ -526,13 +553,157 @@ struct SmartPlannerView: View {
                 planNote = "Apple Intelligence couldn't plan this one, so ThrillTrack's planner did."
             }
         }
+        show(plan)
+        phase = .result
+    }
+
+    private func show(_ plan: DayPlan) {
         schedule = plan.stops.map { stop in
             ScheduledSlot(title: stop.title, kind: stop.kind, rideId: stop.rideId, parkName: stop.parkName,
                           startTime: stop.start, estimatedWaitMinutes: stop.waitMinutes,
                           totalDurationMinutes: stop.totalMinutes)
         }
         unscheduled = plan.unscheduled
-        phase = .result
+        walkTotal = plan.stops.dropFirst().reduce(0) { $0 + $1.walkMinutes }
+    }
+
+    // MARK: - Change the plan
+
+    /// The rides in the order they're planned now (ones that didn't fit last)
+    private var currentOrder: [PlanRide] {
+        let planned = schedule.compactMap(\.rideId)
+        let byId = Dictionary(lastRides.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let inPlan = planned.compactMap { byId[$0] }
+        return inPlan + lastRides.filter { !planned.contains($0.id) }
+    }
+
+    /// Re-time the picks in a new order and keep it as the plan's order
+    private func apply(_ order: [PlanRide], extras: [FixedEvent]) {
+        let plan = DayPlanBuilder.build(ordered: order, fixed: lastFixed + extras, start: startTime, end: lastEnd)
+        aiOrderIds = order.map(\.id)
+        aiExtras = extras.map { DayItinerary.Extra(title: $0.title, kind: $0.kind, start: $0.start, minutes: $0.minutes) }
+        show(plan)
+    }
+
+    private var currentExtras: [FixedEvent] {
+        aiExtras.map { FixedEvent(title: $0.title, kind: $0.kind, start: $0.start, minutes: $0.minutes, parkName: parkName) }
+    }
+
+    private func quickChange(_ label: String, _ reorder: ([PlanRide]) -> [PlanRide]) {
+        let before = walkTotal
+        apply(reorder(currentOrder), extras: currentExtras)
+        refinements.append(Refinement(request: label, reply: walkReply(before: before)))
+    }
+
+    private func walkReply(before: Int) -> String {
+        if walkTotal < before { return "Walking cut from about \(before) to \(walkTotal) min." }
+        if walkTotal > before { return "Walking is now about \(walkTotal) min (was \(before))." }
+        return "Walking stays about \(walkTotal) min."
+    }
+
+    /// "Shortest Waits": let the wait-driven planner order them
+    private func shortestWaitsOrder(_ order: [PlanRide]) -> [PlanRide] {
+        let greedy = DayPlanBuilder.build(rides: order, fixed: lastFixed + currentExtras, start: startTime, end: lastEnd)
+        let ids = greedy.stops.compactMap(\.rideId)
+        let byId = Dictionary(order.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        return ids.compactMap { byId[$0] } + order.filter { !ids.contains($0.id) }
+    }
+
+    /// Apple Intelligence rewrites the order from what the guest typed
+    @MainActor
+    private func refine() async {
+        let request = refineText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !request.isEmpty, let input = lastInput else { return }
+        isRefining = true
+        defer { isRefining = false }
+        let before = walkTotal
+        let requests = refinements.map(\.request) + [request]
+        do {
+            let ai = try await PlannerAI.refine(input, currentOrder: currentOrder.map(\.name),
+                                                walkMinutes: walkTotal, requests: requests)
+            var order = PlannerAI.resolveOrder(ai.order, rides: lastRides)
+            // The model can't measure walks — when walking is the ask, tidy the route it chose
+            if PlanOrdering.wantsLessWalking(request) { order = PlanOrdering.lessWalking(order) }
+            let extras = PlannerAI.groundedExtras(ai.extraEvents,
+                                                  notes: ([notes] + requests).joined(separator: ". "))
+                .compactMap { e -> FixedEvent? in
+                    guard let at = PlanConstraints.date(e.time, on: startTime) else { return nil }
+                    return FixedEvent(title: e.title, kind: PlanConstraints.eventKind(for: e.title),
+                                      start: at, minutes: e.minutes, parkName: parkName)
+                }
+            apply(order, extras: extras.isEmpty ? currentExtras : extras)
+            if !ai.summary.isEmpty { aiSummary = ai.summary }
+            refinements.append(Refinement(request: request,
+                                          reply: [ai.summary, walkReply(before: before)]
+                                              .filter { !$0.isEmpty }.joined(separator: " ")))
+            refineText = ""
+        } catch {
+            refinements.append(Refinement(request: request,
+                                          reply: "Apple Intelligence couldn't change the plan this time — try rewording it."))
+        }
+    }
+
+    private var changeSection: some View {
+        Section {
+            if walkTotal > 0 {
+                Label("About \(walkTotal) min of walking between stops", systemImage: "figure.walk")
+                    .font(.subheadline)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    Button {
+                        quickChange("Less walking") { PlanOrdering.lessWalking($0) }
+                    } label: {
+                        Label("Less Walking", systemImage: "figure.walk")
+                    }
+                    Button {
+                        quickChange("Must-Dos first") { PlanOrdering.mustDosFirst($0, mustDo: appState.wishList) }
+                    } label: {
+                        Label("Must-Dos First", systemImage: "star.fill")
+                    }
+                    Button {
+                        quickChange("Shortest waits") { shortestWaitsOrder($0) }
+                    } label: {
+                        Label("Shortest Waits", systemImage: "clock")
+                    }
+                }
+                .font(.caption.weight(.semibold))
+                .buttonStyle(.bordered)
+                .disabled(isRefining || lastRides.isEmpty)
+            }
+            ForEach(refinements) { r in
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(r.request).font(.subheadline.weight(.semibold))
+                    Text(r.reply).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            if lastInput != nil {
+                HStack(alignment: .bottom, spacing: 8) {
+                    TextField("Tell Apple Intelligence what to change…", text: $refineText, axis: .vertical)
+                        .lineLimit(1...4)
+                        .submitLabel(.send)
+                        .onSubmit { Task { await refine() } }
+                    if isRefining {
+                        ProgressView()
+                    } else {
+                        Button {
+                            Task { await refine() }
+                        } label: {
+                            Image(systemName: "arrow.up.circle.fill").font(.title2)
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(refineText.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .accessibilityLabel("Send to Apple Intelligence")
+                    }
+                }
+            }
+        } header: {
+            Text("Change the Plan")
+        } footer: {
+            if lastInput != nil {
+                Text("e.g. \u{201C}keep rides close together\u{201D}, \u{201C}TRON last\u{201D}, \u{201C}lunch at noon\u{201D}. Times re-work automatically.")
+            }
+        }
     }
 
     // MARK: - Start the live plan (Genie-style)

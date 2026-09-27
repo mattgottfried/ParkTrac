@@ -31,6 +31,8 @@ enum PlannerAI {
             let waitsByHour: [Int: Int]
             let isMustDo: Bool
             var isIndoor: Bool = false
+            /// Rides with the same area letter are a short walk apart (`PlanAreas`)
+            var area: String? = nil
         }
         struct Fixed {
             let title: String
@@ -58,7 +60,7 @@ enum PlannerAI {
     static func plan(_ input: PlanInput) async throws -> AIPlan {
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *), SystemLanguageModel.default.isAvailable {
-            return try await Model.plan(input)
+            return try await Model.run(PlannerAI.prompt(input))
         }
         #endif
         throw Failure.unavailable
@@ -74,6 +76,8 @@ enum PlannerAI {
     in the day first. Must-Do rides matter most. Follow the guest's notes about timing (for example \
     "ride it right before close" means put it last). Leave room for the shows and dining — ThrillTrack keeps \
     those at their times and works out the exact times of the rides.
+    Each ride has an area letter; rides in the same area are a short walk apart. Unless the waits clearly \
+    say otherwise, do the rides in one area before walking to another, and don't go back and forth across the park.
     If rain is likely at some hours, put indoor rides (marked "indoor") in those hours and outdoor rides outside them.
     If the notes say what kinds of rides the party likes, list them in interests using only: thrill, coasters, \
     gentle, dark rides, water, simulators, shows.
@@ -100,7 +104,7 @@ enum PlannerAI {
 
         let rides = input.rides.map { ride -> String in
             let waits = hours.compactMap { h in ride.waitsByHour[h].map { "\(hourLabel(h)) \($0)" } }
-            return "- \(ride.name)\(ride.isMustDo ? " (Must-Do)" : "")\(ride.isIndoor ? " (indoor)" : ""): expected wait in minutes — "
+            return "- \(ride.name)\(ride.isMustDo ? " (Must-Do)" : "")\(ride.isIndoor ? " (indoor)" : "")\(ride.area.map { " [area \($0)]" } ?? ""): expected wait in minutes — "
                 + (waits.isEmpty ? "unknown" : waits.joined(separator: ", "))
         }
         let fixed = (input.shows.map { "- Show: \($0.title) at \(hhmm($0.time, calendar: calendar))" }
@@ -160,6 +164,35 @@ enum PlannerAI {
         return sa < sb + b.minutes && sb < sa + a.minutes
     }
 
+    /// Asking for changes to a plan it made: the same facts, the plan as it stands, and every
+    /// change the guest has asked for so far (latest last).
+    static func refinePrompt(_ input: PlanInput, currentOrder: [String], walkMinutes: Int,
+                             requests: [String], calendar: Calendar = .current) -> String {
+        let order = currentOrder.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n")
+        let asks = requests.map { "- \($0)" }.joined(separator: "\n")
+        return prompt(input, calendar: calendar) + """
+
+
+        The current plan, in order (about \(walkMinutes) minutes of walking between rides):
+        \(order)
+
+        The guest wants these changes to the plan (latest last). Keep every picked ride, change the order to do \
+        what they ask, and explain the new plan in summary:
+        \(asks)
+        """
+    }
+
+    static func refine(_ input: PlanInput, currentOrder: [String], walkMinutes: Int,
+                       requests: [String]) async throws -> AIPlan {
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *), SystemLanguageModel.default.isAvailable {
+            return try await Model.run(refinePrompt(input, currentOrder: currentOrder, walkMinutes: walkMinutes,
+                                                    requests: requests))
+        }
+        #endif
+        throw Failure.unavailable
+    }
+
     /// The model's order → rides: names matched loosely, each ride once, and any picked ride the
     /// model left out goes at the end (the guest's picks are always planned).
     static func resolveOrder(_ names: [String], rides: [PlanRide]) -> [PlanRide] {
@@ -202,9 +235,9 @@ private enum Model {
         var minutes: Int
     }
 
-    static func plan(_ input: PlannerAI.PlanInput) async throws -> PlannerAI.AIPlan {
+    static func run(_ prompt: String) async throws -> PlannerAI.AIPlan {
         let session = LanguageModelSession(instructions: PlannerAI.instructions)
-        let response = try await session.respond(to: PlannerAI.prompt(input), generating: Response.self)
+        let response = try await session.respond(to: prompt, generating: Response.self)
         let r = response.content
         return PlannerAI.AIPlan(
             order: r.order,
