@@ -24,6 +24,14 @@ struct SmartPlannerView: View {
     @Environment(WaitTimesViewModel.self) private var viewModel
     /// From Siri ("Plan my day in ThrillTrack") or a deep link — run once the rides load
     var initialRequest: String? = nil
+    /// Start on another day (My Day → "Plan a Future Day")
+    var initialDay: Date? = nil
+
+    /// The day being planned (today, or up to 60 days ahead)
+    @State private var planDay: Date = Calendar.current.startOfDay(for: .now)
+    private var isFuture: Bool { !Calendar.current.isDateInToday(planDay) }
+    private var dayTitle: String { FutureDay.title(planDay) }
+    private var planWeekday: Int { Calendar.current.component(.weekday, from: planDay) }
 
     /// Optional extras for Apple Intelligence ("dinner at 6:30, snack break at 3")
     @State private var notes = ""
@@ -52,22 +60,35 @@ struct SmartPlannerView: View {
 
     private var parkOpenTime: Date? {
         guard let park = viewModel.filterPark ?? viewModel.currentParks.first else { return nil }
-        return viewModel.todaySchedule(for: park)
+        return viewModel.schedule(for: park, on: FutureDay.noon(planDay))
             .first { !$0.isExtraHours && !$0.isTicketedEvent }?
             .openingDate
     }
 
     private func effectiveStartTime() -> Date {
-        let open = parkOpenTime ?? Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: .now) ?? .now
-        return max(open, .now)
+        let open = parkOpenTime ?? Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: planDay) ?? planDay
+        return isFuture ? open : max(open, .now)
     }
 
+    /// Today: rides running now. Another day: every ride in the park (tonight they may all be closed).
     private var availableRides: [DisplayRide] {
-        viewModel.filteredRides.filter { $0.isOperating && $0.waitMinutes != nil }
+        isFuture
+            ? viewModel.filteredRides.filter { $0.status != "REFURBISHMENT" }
+            : viewModel.filteredRides.filter { $0.isOperating && $0.waitMinutes != nil }
     }
 
     private var availableShows: [DisplayShow] {
-        viewModel.currentShows.filter { $0.nextShowtime != nil }
+        isFuture ? viewModel.currentShows.filter { !$0.showtimes.isEmpty } : viewModel.currentShows.filter { $0.nextShowtime != nil }
+    }
+
+    /// When a show plays on the planned day: today its next showing; another day, today's
+    /// schedule moved onto that day (show schedules repeat day to day), first one after the start.
+    private func showTime(_ show: DisplayShow) -> Date? {
+        guard isFuture else { return show.nextShowtime }
+        return show.showtimes.compactMap(\.startDate)
+            .compactMap { FutureDay.moving($0, to: planDay) }
+            .filter { $0 >= startTime }
+            .min()
     }
 
     var body: some View {
@@ -87,7 +108,7 @@ struct SmartPlannerView: View {
                 }
                 if phase == .result {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Start Plan") { startPlan() }
+                        Button(isFuture ? "Save" : "Start Plan") { startPlan() }
                             .fontWeight(.semibold)
                     }
                 }
@@ -96,6 +117,7 @@ struct SmartPlannerView: View {
         .task {
             viewModel.selectedGroup = appState.selectedResort
             await viewModel.loadAllParks()
+            if let initialDay { planDay = Calendar.current.startOfDay(for: initialDay) }
             startTime = effectiveStartTime()
             let savedInterests = (UserDefaults.standard.stringArray(forKey: Self.interestsKey) ?? []).compactMap(Interest.init(rawValue:))
             interests = Set(ItineraryService.shared.active(for: appState.selectedResort)?.interests ?? savedInterests)
@@ -112,6 +134,10 @@ struct SmartPlannerView: View {
         .onChange(of: viewModel.filterPark?.id) { _, _ in
             startTime = effectiveStartTime()
         }
+        .onChange(of: planDay) { _, _ in
+            startTime = effectiveStartTime()
+            selectedShowIds = []
+        }
     }
 
     // MARK: - Picking phase
@@ -119,7 +145,18 @@ struct SmartPlannerView: View {
     private var pickingView: some View {
         List {
             Section {
-                DatePicker("Start time", selection: $startTime, in: Date()..., displayedComponents: .hourAndMinute)
+                DatePicker("Day", selection: $planDay,
+                           in: Calendar.current.startOfDay(for: .now)...(Calendar.current.date(byAdding: .day, value: 60, to: .now) ?? .now),
+                           displayedComponents: .date)
+                if isFuture {
+                    DatePicker("Start time", selection: $startTime, displayedComponents: .hourAndMinute)
+                } else {
+                    DatePicker("Start time", selection: $startTime, in: Date()..., displayedComponents: .hourAndMinute)
+                }
+            } footer: {
+                if isFuture {
+                    Text("Planning \(dayTitle): waits are estimated from typical \(planDay.formatted(.dateTime.weekday(.wide)))s — your visits and everyone's recorded waits. Show times are copied from today's schedule. On the day, Next Up takes over and re-plans live.")
+                }
             }
 
             // Park chip picker
@@ -163,7 +200,7 @@ struct SmartPlannerView: View {
                                 .font(.title3)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(ride.name).font(.subheadline)
-                                if let m = ride.waitMinutes {
+                                if !isFuture, let m = ride.waitMinutes {
                                     Text("\(m) min wait now").font(.caption).foregroundStyle(.secondary)
                                 }
                             }
@@ -195,7 +232,7 @@ struct SmartPlannerView: View {
                                 .font(.title3)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(show.name).font(.subheadline)
-                                if let next = show.nextShowtime {
+                                if let next = showTime(show) {
                                     Text(next, style: .time).font(.caption).foregroundStyle(.secondary)
                                 }
                             }
@@ -244,7 +281,7 @@ struct SmartPlannerView: View {
                 } header: {
                     Text("Anything Else? (Optional)")
                 } footer: {
-                    Text("Apple Intelligence plans your picks around these, today's dining reservations and the shows you chose — all on this iPhone.")
+                    Text("Apple Intelligence plans your picks around these, that day's dining reservations and the shows you chose — all on this iPhone.")
                 }
             }
 
@@ -280,6 +317,12 @@ struct SmartPlannerView: View {
 
     private var resultView: some View {
         List {
+            if isFuture {
+                Section {
+                    Label("Plan for \(planDay.formatted(.dateTime.weekday(.wide).month(.wide).day()))", systemImage: "calendar")
+                        .font(.headline)
+                }
+            }
             Section {
                 if let aiSummary {
                     Label(aiSummary, systemImage: "apple.intelligence")
@@ -291,7 +334,7 @@ struct SmartPlannerView: View {
                 if let planNote {
                     Text(planNote).font(.caption).foregroundStyle(.orange)
                 }
-                if let rain = RainForecastService.shared.headline(for: appState.selectedResort) {
+                if !isFuture, let rain = RainForecastService.shared.headline(for: appState.selectedResort) {
                     RainHeadsUp(text: rain)
                 }
             }
@@ -341,7 +384,8 @@ struct SmartPlannerView: View {
                 Button {
                     startPlan()
                 } label: {
-                    Label("Start Plan — Updates Live", systemImage: "sparkles")
+                    Label(isFuture ? "Save Plan for \(dayTitle)" : "Start Plan — Updates Live",
+                          systemImage: isFuture ? "calendar.badge.checkmark" : "sparkles")
                         .frame(maxWidth: .infinity)
                         .font(.headline)
                 }
@@ -349,7 +393,9 @@ struct SmartPlannerView: View {
                 .tint(appState.selectedResort.theme.primaryColor)
                 .listRowBackground(Color.clear)
             } footer: {
-                Text("Next Up re-plans all day from where you are and live waits; rides you log drop off.")
+                Text(isFuture
+                     ? "Saved in My Day → Coming Up. On \(dayTitle), Next Up starts it and re-plans from live waits."
+                     : "Next Up re-plans all day from where you are and live waits; rides you log drop off.")
             }
 
             Section {
@@ -388,6 +434,10 @@ struct SmartPlannerView: View {
     @MainActor
     private func generate() async {
         phase = .generating
+        // Another day: everyone's typical waits for that weekday
+        if isFuture {
+            await CommunityHistoryService.shared.load(parkIds: viewModel.currentParks.map(\.id), weekday: planWeekday)
+        }
 
         let rides = availableRides.filter { selectedRideIds.contains($0.id) }
         let shows = availableShows.filter { selectedShowIds.contains($0.id) }
@@ -412,21 +462,26 @@ struct SmartPlannerView: View {
                             latitude: ride.coordinate?.latitude, longitude: ride.coordinate?.longitude,
                             waitByHour: RideProfile.waitsByHour(samples: history[ride.id] ?? [],
                                                                 currentWait: ride.waitMinutes, parkCurve: curve,
-                                                                community: CommunityHistoryService.shared.waitsByHour(
-                                                                    rideId: ride.id, parkId: ride.parkId)),
+                                                                community: isFuture
+                                                                    ? CommunityHistoryService.shared.waitsByHour(
+                                                                        rideId: ride.id, parkId: ride.parkId, weekday: planWeekday)
+                                                                    : CommunityHistoryService.shared.waitsByHour(
+                                                                        rideId: ride.id, parkId: ride.parkId),
+                                                                pinCurrentHour: !isFuture),
                             isIndoor: RideMetadata.isIndoor(name: ride.name, resort: appState.selectedResort))
         }
         // Rain: outdoor rides move out of the wet hours
-        let wetHours = RainForecastService.shared.wetHours(for: appState.selectedResort)
+        let wetHours: Set<Int> = isFuture ? [] : RainForecastService.shared.wetHours(for: appState.selectedResort)
 
         // Fixed: chosen shows, today's dining reservations, meals/breaks from the request
         var fixed = shows.compactMap { show -> FixedEvent? in
-            show.nextShowtime.map { FixedEvent(title: show.name, kind: "show", start: $0, minutes: 25, parkName: parkName) }
+            showTime(show).map { FixedEvent(title: show.name, kind: "show", start: $0, minutes: 25, parkName: parkName) }
         }
         let resortRaw = appState.selectedResort.rawValue
         let dining = (try? modelContext.fetch(FetchDescriptor<DiningReservation>())) ?? []
         fixed += dining
-            .filter { $0.resort == resortRaw && !$0.isCompleted && Calendar.current.isDateInToday($0.date) && $0.date > startTime }
+            .filter { $0.resort == resortRaw && !$0.isCompleted && Calendar.current.isDate($0.date, inSameDayAs: planDay)
+                && $0.date > startTime }
             .map { FixedEvent(title: "Dining: \($0.restaurantName)", kind: "dining", start: $0.date, minutes: 75, parkName: parkName) }
 
         let end = parkCloseTime
@@ -487,10 +542,17 @@ struct SmartPlannerView: View {
             .map { DayItinerary.Pick(id: $0.id, name: $0.name, parkId: $0.parkId) }
         let chosen = Interest.allCases.filter { interests.contains($0) }
         UserDefaults.standard.set(chosen.map(\.rawValue), forKey: Self.interestsKey)
-        ItineraryService.shared.start(DayItinerary(
-            day: Calendar.current.startOfDay(for: .now), resortRaw: appState.selectedResort.rawValue,
+        let plan = DayItinerary(
+            day: Calendar.current.startOfDay(for: planDay), resortRaw: appState.selectedResort.rawValue,
             rides: rides, shows: shows, interests: chosen, notes: notes,
-            aiOrder: aiOrderIds, aiSummary: aiSummary, extras: aiExtras))
+            aiOrder: aiOrderIds, aiSummary: aiSummary, extras: aiExtras)
+        // Another day: keep it until then (My Day → Coming Up)
+        if isFuture {
+            ItineraryService.shared.saveUpcoming(plan)
+            dismiss()
+            return
+        }
+        ItineraryService.shared.start(plan)
         ItineraryService.shared.replan(viewModel: viewModel, resort: appState.selectedResort,
                                        location: nil, context: modelContext)
         dismiss()
@@ -502,6 +564,7 @@ struct SmartPlannerView: View {
         let maxOrder = (try? modelContext.fetch(FetchDescriptor<PlanItem>()))?.map(\.sortOrder).max() ?? 0
         for (i, slot) in schedule.enumerated() {
             let item = PlanItem(
+                date: Calendar.current.startOfDay(for: planDay),
                 scheduledTime: slot.startTime,
                 title: slot.title,
                 kind: slot.kind,

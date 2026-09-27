@@ -88,6 +88,7 @@ enum RideProfile {
     /// and the current hour is always the live wait.
     static func waitsByHour(samples: [(date: Date, wait: Int)], currentWait: Int?, now: Date = .now,
                             parkCurve: [Int: Double], community: [Int: Int] = [:],
+                            pinCurrentHour: Bool = true,
                             calendar: Calendar = .current) -> [Int: Int] {
         let cutoff = now.addingTimeInterval(-Double(historyDays) * 86_400)
         var byHour: [Int: [Int]] = [:]
@@ -111,7 +112,9 @@ enum RideProfile {
                 }
             }
         }
-        if let currentWait { result[nowHour] = currentWait }
+        // Today the current hour is what's posted now; for a future day the live wait is only a
+        // reference for scaling the park curve
+        if pinCurrentHour, let currentWait { result[nowHour] = currentWait }
         return result
     }
 }

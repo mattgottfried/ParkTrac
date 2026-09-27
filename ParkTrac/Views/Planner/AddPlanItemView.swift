@@ -28,6 +28,9 @@ struct AddPlanItemView: View {
     private let prefillRide: DisplayRide?
     private let prefillShow: DisplayShow?
     private let fallbackPark: String
+    /// The day the items are for (start of day); a future day hides Now / Best and Lightning Lane
+    private let planDate: Date
+    private var isFutureDay: Bool { !Calendar.current.isDateInToday(planDate) }
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
@@ -82,11 +85,14 @@ struct AddPlanItemView: View {
     @State private var notes = ""
     @State private var showLocationPicker = false
 
-    init(resort: String, prefillRide: DisplayRide? = nil, prefillPark: String = "", prefillShow: DisplayShow? = nil) {
+    init(resort: String, prefillRide: DisplayRide? = nil, prefillPark: String = "", prefillShow: DisplayShow? = nil,
+         day: Date? = nil) {
         self.resort = resort
         self.prefillRide = prefillRide
         self.prefillShow = prefillShow
         self.fallbackPark = prefillPark
+        let planDate = Calendar.current.startOfDay(for: day ?? .now)
+        self.planDate = planDate
         _kind = State(initialValue: prefillShow != nil ? .show : .ride)
         _selectedRideIds = State(initialValue: prefillRide.map { [$0.id] } ?? [])
         _selectedShowId = State(initialValue: prefillShow?.id)
@@ -94,7 +100,9 @@ struct AddPlanItemView: View {
         let nextShow = prefillShow?.nextShowtime
         _showtime = State(initialValue: nextShow)
         _when = State(initialValue: nextShow != nil ? .showtime : .anytime)
-        let halfHour = AddPlanDefaults.nextSlot(after: .now, step: 30)
+        let halfHour = Calendar.current.isDateInToday(planDate)
+            ? AddPlanDefaults.nextSlot(after: .now, step: 30)
+            : (Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: planDate) ?? planDate)
         _customTime = State(initialValue: halfHour)
         _diningTime = State(initialValue: halfHour)
         let fiveMinutes = AddPlanDefaults.nextSlot(after: .now, step: 5)
@@ -173,7 +181,7 @@ struct AddPlanItemView: View {
             }
             .background(Color(.systemGroupedBackground))
             .safeAreaInset(edge: .bottom) { addButton }
-            .navigationTitle(kind == .ll ? "Log \(passName)" : "Add to My Day")
+            .navigationTitle(kind == .ll ? "Log \(passName)" : (isFutureDay ? "Add to \(FutureDay.title(planDate))" : "Add to My Day"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -197,7 +205,7 @@ struct AddPlanItemView: View {
 
     private var kindPicker: some View {
         HStack(spacing: 8) {
-            ForEach(Kind.allCases) { k in
+            ForEach(Kind.allCases.filter { !(isFutureDay && $0 == .ll) }) { k in
                 Button {
                     withAnimation(.spring(response: 0.25)) { switchKind(to: k) }
                 } label: {
@@ -331,8 +339,10 @@ struct AddPlanItemView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     chip("Anytime", selected: when == .anytime) { when = .anytime }
-                    chip("Now", selected: when == .now) { when = .now }
-                    if let bestHour, let bestWait, selectedRideIds.count == 1 {
+                    if !isFutureDay {
+                        chip("Now", selected: when == .now) { when = .now }
+                    }
+                    if !isFutureDay, let bestHour, let bestWait, selectedRideIds.count == 1 {
                         chip("Best ~\(RainForecast.hourText(bestHour)) · ~\(bestWait)m", icon: "star.fill",
                              selected: when == .best) { when = .best }
                     }
@@ -406,14 +416,15 @@ struct AddPlanItemView: View {
         let selected = selectedShowId == show.id
         return Button {
             selectedShowId = show.id
-            showtime = show.nextShowtime
-            when = show.nextShowtime != nil ? .showtime : .custom
+            showtime = showtimes(for: show).first
+            when = showtime != nil ? .showtime : .custom
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(show.name).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
-                    Text(show.nextShowtime.map { "Next: \(timeText($0))" } ?? "No more showtimes today")
+                    Text(showtimes(for: show).first.map { "\(isFutureDay ? "First" : "Next"): \(timeText($0))" }
+                         ?? (isFutureDay ? "No showtimes listed" : "No more showtimes today"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
@@ -429,7 +440,7 @@ struct AddPlanItemView: View {
     }
 
     private func showtimeCard(_ show: DisplayShow) -> some View {
-        let upcoming = AddPlanDefaults.upcomingShowtimes(show.showtimes.compactMap(\.startDate))
+        let upcoming = showtimes(for: show)
         return card("Showtime") {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -565,7 +576,7 @@ struct AddPlanItemView: View {
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         var order = (planItems.map(\.sortOrder).max() ?? 0) + 1
         func insert(title: String, kind: String, rideId: String?, park: String, time: Date?) {
-            context.insert(PlanItem(scheduledTime: time, title: title, kind: kind, rideId: rideId,
+            context.insert(PlanItem(date: planDate, scheduledTime: time, title: title, kind: kind, rideId: rideId,
                                     parkName: park, resort: resort, notes: trimmedNotes, sortOrder: order))
             order += 1
         }
@@ -641,6 +652,14 @@ struct AddPlanItemView: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    /// The show's times on the day being planned: today's upcoming ones, or on a future day
+    /// today's schedule moved onto that day
+    private func showtimes(for show: DisplayShow) -> [Date] {
+        let times = show.showtimes.compactMap(\.startDate)
+        guard isFutureDay else { return AddPlanDefaults.upcomingShowtimes(times) }
+        return times.compactMap { FutureDay.moving($0, to: planDate) }.sorted()
     }
 
     private func timeText(_ date: Date) -> String {

@@ -94,3 +94,10 @@ Live Activities, round two
 - Next Up is now a timeline of your next three stops (time, name, wait), with the next one highlighted.
 - Buttons, no need to open the app: Next Up has Done / Skip, the stopwatch has "I'm On — Log It" (logs the ride with your real wait), and returns have "Used It" (ticks it off in My Day and ends the countdown).
 - Check: tap each button on the Lock Screen and in the expanded Dynamic Island and confirm My Day / Ride Counter update.
+
+Plan a future day
+- Smart Planner has a Day picker (up to 60 days ahead). Pick rides and shows, and it plans that day using that day's park hours and typical waits for that weekday (your visits + everyone's recorded waits). Show times are copied from today's schedule.
+- "Save Plan for Sat, Oct 10" keeps it in My Day → Coming Up. On the morning of that day it becomes your live Next Up plan automatically and re-plans from live waits.
+- "Add to My Day as a Fixed List" puts the timed list on that day instead. Coming Up shows each future day; tap one to see, add or delete items. Add to My Day there skips Now/Best/Lightning Lane.
+- My Day → Coming Up → Plan a Future Day opens the planner on tomorrow.
+- Check: plan tomorrow, save it, see it under Coming Up; the next morning it should appear as Next Up.

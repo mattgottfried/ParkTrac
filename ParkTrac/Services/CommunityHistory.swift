@@ -54,6 +54,28 @@ final class CommunityHistoryService {
         return cached.summary.waitsByHour(rideId: rideId)
     }
 
+    /// Other weekdays, for planning a future day ("<parkId>|<weekday>"), this session only
+    private var weekdayCache: [String: CommunityHistorySummary] = [:]
+
+    /// Typical waits for a ride on a given weekday (1 = Sunday) — call `load(parkIds:weekday:)` first.
+    func waitsByHour(rideId: String, parkId: String, weekday: Int) -> [Int: Int] {
+        weekdayCache["\(parkId)|\(weekday)"]?.waitsByHour(rideId: rideId) ?? [:]
+    }
+
+    /// Fetches the parks' typical waits for a weekday (used when planning a future day).
+    func load(parkIds: [String], weekday: Int) async {
+        for parkId in parkIds where weekdayCache["\(parkId)|\(weekday)"] == nil {
+            guard let url = ThrillTrackServer.url("v1/history", query: [
+                URLQueryItem(name: "parkId", value: parkId),
+                URLQueryItem(name: "weekday", value: String(weekday)),
+            ]) else { continue }
+            let result = try? await URLSession.shared.data(from: url)
+            guard let result, (result.1 as? HTTPURLResponse)?.statusCode == 200,
+                  let summary = Self.decode(result.0) else { continue }
+            weekdayCache["\(parkId)|\(weekday)"] = summary
+        }
+    }
+
     /// Days of history behind today's numbers for a park (0 when none).
     func days(parkId: String) -> Int { cache[parkId]?.summary.days ?? 0 }
 
