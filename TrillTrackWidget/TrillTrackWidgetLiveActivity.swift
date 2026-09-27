@@ -414,7 +414,7 @@ private struct ProgressBar: View {
         let s = context.state
         let a = context.attributes
         if a.mode == .returnTime, !isAccessPass(a), let start = s.windowStart, let end = s.countdownEnd,
-           start < end, end > .now {
+           end > start, end > Date.now {
             ProgressView(timerInterval: start...end, countsDown: false) { EmptyView() } currentValueLabel: { EmptyView() }
                 .tint(tint)
         } else if a.mode == .waitTimer, let start = s.startedAt, let posted = s.postedMinutes, posted > 0 {
