@@ -4,9 +4,8 @@ Shipped work is tracked in `docs/usability-plan.md` and the merged PRs. This fil
 
 ## Ideas
 
-### Next up (asked for)
-- Smart Planner uses each ride's recorded history (best hour per ride, same data as Good Time to Ride).
-- Siri: App Intents ("what should I ride next?", waits, parking) and, on iOS 26 Apple Intelligence phones, an on-device Foundation Models planner.
+### Shipped: smarter Smart Planner, Apple Intelligence planning, Siri commands
+Verify on device: Apple Intelligence "Tell Me Your Plan", "Hey Siri, what should I ride next in ThrillTrack", "Plan my day in ThrillTrack".
 
 ### Shipped: Good Time to Ride, Trip Planner (Japan kit)
 

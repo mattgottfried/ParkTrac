@@ -22,6 +22,16 @@ struct SmartPlannerView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Environment(WaitTimesViewModel.self) private var viewModel
+    /// From Siri ("Plan my day in ThrillTrack") or a deep link — run once the rides load
+    var initialRequest: String? = nil
+
+    @State private var request = ""
+    @State private var isInterpreting = false
+    @State private var requestNote: String?
+    /// Meals / breaks at a set time from the request
+    @State private var requestedEvents: [FixedEvent] = []
+    @State private var endTime: Date?
+    @State private var unscheduled: [String] = []
     @State private var selectedRideIds: Set<String> = []
     @State private var selectedShowIds: Set<String> = []
     @State private var startTime: Date = .now
@@ -84,6 +94,10 @@ struct SmartPlannerView: View {
             for ride in availableRides where appState.wishList.contains(ride.id) {
                 selectedRideIds.insert(ride.id)
             }
+            if let initialRequest, !initialRequest.trimmingCharacters(in: .whitespaces).isEmpty {
+                request = initialRequest
+                await planFromRequest(autoBuild: true)
+            }
         }
         .onChange(of: viewModel.filterPark?.id) { _, _ in
             startTime = effectiveStartTime()
@@ -95,7 +109,52 @@ struct SmartPlannerView: View {
     private var pickingView: some View {
         List {
             Section {
+                TextField(PlannerAI.isAvailable
+                          ? "e.g. Dinner at 6:30, want Seven Dwarfs and Space Mountain, no water rides"
+                          : "Type the rides you want, e.g. Seven Dwarfs, Space Mountain",
+                          text: $request, axis: .vertical)
+                    .lineLimit(1...4)
+                Button {
+                    Task { await planFromRequest(autoBuild: true) }
+                } label: {
+                    HStack {
+                        Label(isInterpreting ? "Thinking…" : "Plan It", systemImage: PlannerAI.isAvailable ? "apple.intelligence" : "wand.and.stars")
+                        Spacer()
+                        if isInterpreting { ProgressView() }
+                    }
+                }
+                .disabled(isInterpreting || request.trimmingCharacters(in: .whitespaces).isEmpty)
+                if let requestNote {
+                    Text(requestNote).font(.caption).foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Tell Me Your Plan")
+            } footer: {
+                Text(PlannerAI.isAvailable
+                     ? "Apple Intelligence reads your request on this iPhone; ThrillTrack then builds the schedule from live and past waits."
+                     : "Or pick rides and shows below.")
+            }
+
+            Section {
                 DatePicker("Start time", selection: $startTime, in: Date()..., displayedComponents: .hourAndMinute)
+                if let endTime {
+                    HStack {
+                        Text("Finish by")
+                        Spacer()
+                        Text(endTime, style: .time).foregroundStyle(.secondary)
+                        Button { self.endTime = nil } label: { Image(systemName: "xmark.circle.fill") }
+                            .buttonStyle(.plain).foregroundStyle(.secondary)
+                            .accessibilityLabel("Remove finish time")
+                    }
+                }
+                ForEach(Array(requestedEvents.enumerated()), id: \.offset) { index, event in
+                    HStack {
+                        Label(event.title, systemImage: event.kind == "dining" ? "fork.knife" : "cup.and.saucer")
+                        Spacer()
+                        Text(event.start, style: .time).foregroundStyle(.secondary)
+                    }
+                    .swipeActions { Button("Remove", role: .destructive) { requestedEvents.remove(at: index) } }
+                }
             }
 
             // Park chip picker
@@ -219,8 +278,15 @@ struct SmartPlannerView: View {
     private var resultView: some View {
         List {
             Section {
-                Text("Rides are ordered to minimize predicted wait time. Shows are locked at their scheduled time.")
+                Text("Rides are placed when they're usually shortest (from your past visits and live waits), with walking time between them. Shows, dining reservations and meals stay at their set times.")
                     .font(.caption).foregroundStyle(.secondary)
+            }
+
+            if !unscheduled.isEmpty {
+                Section {
+                    Text("Didn't fit before the park closes: \(unscheduled.joined(separator: ", "))")
+                        .font(.caption).foregroundStyle(.orange)
+                }
             }
 
             ForEach(schedule) { slot in
@@ -268,7 +334,65 @@ struct SmartPlannerView: View {
         }
     }
 
+    // MARK: - Request (Apple Intelligence or plain text)
+
+    @MainActor
+    private func planFromRequest(autoBuild: Bool) async {
+        let text = request.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        let rideNames = availableRides.map(\.name)
+        let showNames = availableShows.map(\.name)
+        var constraints: PlanConstraints
+        if PlannerAI.isAvailable {
+            isInterpreting = true
+            defer { isInterpreting = false }
+            do {
+                constraints = try await PlannerAI.interpret(text, rideNames: rideNames, showNames: showNames)
+            } catch {
+                constraints = PlanConstraints.fromPlainText(text, rideNames: rideNames, showNames: showNames)
+                requestNote = "Apple Intelligence couldn't read that, so I matched ride names instead."
+            }
+        } else {
+            constraints = PlanConstraints.fromPlainText(text, rideNames: rideNames, showNames: showNames)
+        }
+        apply(constraints)
+        if autoBuild, !selectedRideIds.isEmpty || !selectedShowIds.isEmpty {
+            await generate()
+        }
+    }
+
+    @MainActor
+    private func apply(_ c: PlanConstraints) {
+        let rides = availableRides.map { (id: $0.id, name: $0.name,
+                                          info: RideMetadata.info(for: $0.name, resort: appState.selectedResort)) }
+        selectedRideIds = c.selectRides(from: rides, fallback: selectedRideIds)
+        for show in availableShows where c.includeShows.contains(where: { PlanConstraints.matches($0, show.name) }) {
+            selectedShowIds.insert(show.id)
+        }
+        if let start = PlanConstraints.date(c.startTime, on: .now), start > .now { startTime = start }
+        endTime = PlanConstraints.date(c.endTime, on: .now)
+        requestedEvents = c.fixedEvents.compactMap { e in
+            guard let at = PlanConstraints.date(e.time, on: .now) else { return nil }
+            let isMeal = ["dinner", "lunch", "breakfast", "dining", "meal", "eat"].contains { e.title.lowercased().contains($0) }
+            return FixedEvent(title: e.title, kind: isMeal ? "dining" : "break", start: at, minutes: e.minutes, parkName: parkName)
+        }
+        let picked = selectedRideIds.count
+        if requestNote == nil || !PlannerAI.isAvailable {
+            requestNote = picked == 0
+                ? "I didn't recognize any ride names — pick rides below."
+                : "Planning \(picked) ride\(picked == 1 ? "" : "s")" + (requestedEvents.isEmpty ? "." : " around \(requestedEvents.count) set time\(requestedEvents.count == 1 ? "" : "s").")
+        }
+    }
+
     // MARK: - Algorithm
+
+    /// Latest regular closing time today for the park being planned
+    private var parkCloseTime: Date? {
+        guard let park = viewModel.filterPark ?? viewModel.currentParks.first else { return nil }
+        return viewModel.todaySchedule(for: park)
+            .filter { !$0.isTicketedEvent }
+            .compactMap(\.closingDate).max()
+    }
 
     @MainActor
     private func generate() async {
@@ -277,133 +401,47 @@ struct SmartPlannerView: View {
         let rides = availableRides.filter { selectedRideIds.contains($0.id) }
         let shows = availableShows.filter { selectedShowIds.contains($0.id) }
 
-        // Predict best hour for each ride
-        struct RideCandidate {
-            let ride: DisplayRide
-            let bestHour: Int
-            let estWait: Int
+        // Each ride's expected wait by hour: this phone's history, else live wait × park curve
+        let since = Date.now.addingTimeInterval(-Double(RideProfile.historyDays) * 86_400)
+        let ids = Set(rides.map(\.id))
+        let records = ((try? modelContext.fetch(FetchDescriptor<WaitTimeRecord>(
+            predicate: #Predicate { $0.recordedAt >= since }))) ?? []).filter { ids.contains($0.rideId) }
+        var history: [String: [(date: Date, wait: Int)]] = [:]
+        for r in records {
+            if let w = r.waitMinutes { history[r.rideId, default: []].append((r.recordedAt, w)) }
         }
 
-        var candidates: [RideCandidate] = []
-        for ride in rides {
-            let result = WaitTimePredictionService.predict(
-                rideId: ride.id,
-                parkGroup: appState.selectedResort,
-                parkName: parkName,
-                currentStatus: ride.status,
-                context: modelContext
-            )
-            let startHour = Calendar.current.component(.hour, from: startTime)
-            let relevant = result.hourlyAverages.filter { $0.hour >= startHour }
-            let best = relevant.min { $0.averageWait < $1.averageWait }
-            let bestHour = best?.hour ?? startHour
-            let estWait = Int((best?.averageWait ?? Double(ride.waitMinutes ?? 30)).rounded())
-            candidates.append(RideCandidate(ride: ride, bestHour: bestHour, estWait: estWait))
-        }
-
-        // Sort candidates by their best hour
-        candidates.sort { $0.bestHour < $1.bestHour }
-
-        // Build fixed show slots
-        struct ShowSlot {
-            let show: DisplayShow
-            let time: Date
-        }
-        let showSlots = shows
-            .compactMap { show -> ShowSlot? in
-                guard let t = show.nextShowtime else { return nil }
-                return ShowSlot(show: show, time: t)
+        let planRides = rides.map { ride -> PlanRide in
+            let park = viewModel.currentParks.first { $0.id == ride.parkId }?.name ?? parkName
+            var curve: [Int: Double] = [:]
+            for hour in RideProfile.dayHours {
+                curve[hour] = CommunityBaselineService.shared.adjustedHourlyAvg(for: park, hour: hour)
             }
-            .sorted { $0.time < $1.time }
-
-        // Greedy scheduling
-        var result: [ScheduledSlot] = []
-        var currentTime = startTime
-        var remaining = candidates
-        var showQueue = showSlots
-
-        while !remaining.isEmpty || !showQueue.isEmpty {
-            // Check if next show is coming up within 60 min
-            if let nextShow = showQueue.first {
-                let minsUntilShow = nextShow.time.timeIntervalSince(currentTime) / 60
-                if minsUntilShow <= 5 {
-                    // Lock in the show
-                    result.append(ScheduledSlot(
-                        title: nextShow.show.name,
-                        kind: "show",
-                        rideId: nil,
-                        parkName: parkName,
-                        startTime: nextShow.time,
-                        estimatedWaitMinutes: 0,
-                        totalDurationMinutes: 25
-                    ))
-                    let showDur = 25.0
-                    currentTime = nextShow.time.addingTimeInterval(showDur * 60)
-                    showQueue.removeFirst()
-                    continue
-                }
-            }
-
-            guard !remaining.isEmpty else {
-                // Only shows left — fast-forward to next show
-                if let nextShow = showQueue.first {
-                    currentTime = nextShow.time
-                }
-                break
-            }
-
-            // Pick the best ride for the current hour
-            let currentHour = Calendar.current.component(.hour, from: currentTime)
-            let idx = remaining.indices.min { a, b in
-                let waitA = remaining[a].estWait + abs(remaining[a].bestHour - currentHour)
-                let waitB = remaining[b].estWait + abs(remaining[b].bestHour - currentHour)
-                return waitA < waitB
-            } ?? 0
-
-            let candidate = remaining[idx]
-            remaining.remove(at: idx)
-
-            let wait = candidate.estWait
-            let rideDuration = 15   // typical ride duration + walk
-            let total = wait + rideDuration
-
-            // Check if show will conflict
-            if let nextShow = showQueue.first {
-                let minsUntilShow = nextShow.time.timeIntervalSince(currentTime) / 60
-                if minsUntilShow < Double(total) && minsUntilShow > 5 {
-                    // Skip this ride for now and wait for show
-                    remaining.insert(candidate, at: 0)
-                    currentTime = nextShow.time
-                    continue
-                }
-            }
-
-            result.append(ScheduledSlot(
-                title: candidate.ride.name,
-                kind: "ride",
-                rideId: candidate.ride.id,
-                parkName: viewModel.currentParks.first { $0.id == candidate.ride.parkId }?.name ?? parkName,
-                startTime: currentTime,
-                estimatedWaitMinutes: wait,
-                totalDurationMinutes: total
-            ))
-            currentTime = currentTime.addingTimeInterval(Double(total) * 60)
+            return PlanRide(id: ride.id, name: ride.name, parkName: park,
+                            latitude: ride.coordinate?.latitude, longitude: ride.coordinate?.longitude,
+                            waitByHour: RideProfile.waitsByHour(samples: history[ride.id] ?? [],
+                                                                currentWait: ride.waitMinutes, parkCurve: curve))
         }
 
-        // Append any remaining shows that didn't get placed
-        for show in showQueue {
-            result.append(ScheduledSlot(
-                title: show.show.name,
-                kind: "show",
-                rideId: nil,
-                parkName: parkName,
-                startTime: show.time,
-                estimatedWaitMinutes: 0,
-                totalDurationMinutes: 25
-            ))
+        // Fixed: chosen shows, today's dining reservations, meals/breaks from the request
+        var fixed = shows.compactMap { show -> FixedEvent? in
+            show.nextShowtime.map { FixedEvent(title: show.name, kind: "show", start: $0, minutes: 25, parkName: parkName) }
         }
+        let resortRaw = appState.selectedResort.rawValue
+        let dining = (try? modelContext.fetch(FetchDescriptor<DiningReservation>())) ?? []
+        fixed += dining
+            .filter { $0.resort == resortRaw && !$0.isCompleted && Calendar.current.isDateInToday($0.date) && $0.date > startTime }
+            .map { FixedEvent(title: "Dining: \($0.restaurantName)", kind: "dining", start: $0.date, minutes: 75, parkName: parkName) }
+        fixed += requestedEvents
 
-        schedule = result.sorted { $0.startTime < $1.startTime }
+        let plan = DayPlanBuilder.build(rides: planRides, fixed: fixed, start: startTime,
+                                        end: endTime ?? parkCloseTime)
+        schedule = plan.stops.map { stop in
+            ScheduledSlot(title: stop.title, kind: stop.kind, rideId: stop.rideId, parkName: stop.parkName,
+                          startTime: stop.start, estimatedWaitMinutes: stop.waitMinutes,
+                          totalDurationMinutes: stop.totalMinutes)
+        }
+        unscheduled = plan.unscheduled
         phase = .result
     }
 

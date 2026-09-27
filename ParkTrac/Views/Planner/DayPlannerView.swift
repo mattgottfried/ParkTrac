@@ -13,6 +13,8 @@ struct DayPlannerView: View {
     @State private var showGuestPicker = false
     @State private var showSmartPlanner = false
     @State private var showAreaEntry = false
+    /// Siri's "plan my day" request, passed to the Smart Planner once
+    @State private var plannerRequest: String?
 
     /// True when pushed onto another NavigationStack (e.g. from Stats) — skips wrapping in our own.
     private let embedded: Bool
@@ -245,8 +247,16 @@ struct DayPlannerView: View {
         .sheet(isPresented: $showGuestPicker) {
             GuestPickerSheet()
         }
-        .sheet(isPresented: $showSmartPlanner) {
-            SmartPlannerView()
+        .sheet(isPresented: $showSmartPlanner, onDismiss: { plannerRequest = nil }) {
+            SmartPlannerView(initialRequest: plannerRequest)
+        }
+        // Siri / thrilltrack://planner
+        .onChange(of: DeepLinkRouter.shared.showSmartPlanner, initial: true) { _, show in
+            guard show else { return }
+            plannerRequest = DeepLinkRouter.shared.plannerRequest
+            DeepLinkRouter.shared.plannerRequest = nil
+            DeepLinkRouter.shared.showSmartPlanner = false
+            showSmartPlanner = true
         }
         .sheet(isPresented: $showAreaEntry) {
             AreaEntrySheet(resort: appState.selectedResort)

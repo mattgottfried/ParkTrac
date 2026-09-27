@@ -9,7 +9,7 @@ import UserNotifications
 ///
 /// URL forms: `thrilltrack://waittimes`, `thrilltrack://ride/<rideId>`,
 /// `thrilltrack://timer`, `thrilltrack://plan`, `thrilltrack://dining`, `thrilltrack://settings`,
-/// `thrilltrack://bucketlist`, `thrilltrack://parking`
+/// `thrilltrack://bucketlist`, `thrilltrack://parking`, `thrilltrack://planner`
 enum DeepLink: Equatable {
     case waitTimes
     case ride(id: String)
@@ -21,6 +21,8 @@ enum DeepLink: Equatable {
     case bucketList
     /// Save / find the car (sheet over whatever tab is showing)
     case parking
+    /// Smart Planner (My Day), optionally with `DeepLinkRouter.plannerRequest` from Siri
+    case planner
 
     static let scheme = "thrilltrack"
 
@@ -38,6 +40,7 @@ enum DeepLink: Equatable {
         case "settings":  self = .settings
         case "bucketlist": self = .bucketList
         case "parking":   self = .parking
+        case "planner":   self = .planner
         default:          return nil
         }
     }
@@ -54,6 +57,7 @@ enum DeepLink: Equatable {
         case .settings:        return URL(string: "\(Self.scheme)://settings")!
         case .bucketList:      return URL(string: "\(Self.scheme)://bucketlist")!
         case .parking:         return URL(string: "\(Self.scheme)://parking")!
+        case .planner:         return URL(string: "\(Self.scheme)://planner")!
         }
     }
 
@@ -77,6 +81,10 @@ final class DeepLinkRouter {
     var showDining = false
     /// ContentView presents the parking sheet while true
     var showParking = false
+    /// DayPlannerView presents the Smart Planner while true
+    var showSmartPlanner = false
+    /// "Plan my day…" text from Siri, handed to the Smart Planner once
+    var plannerRequest: String?
     /// Bumped when the Wait Times tab is tapped while already selected.
     var waitTimesReselectCount = 0
 
