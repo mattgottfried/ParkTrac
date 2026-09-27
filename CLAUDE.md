@@ -145,7 +145,7 @@ Pure struct (no persistence). Returns `PredictionResult` containing:
 - Personal history average (from `WaitTimeRecord`, requires ≥5 data points)
 - Closure duration estimate (from `DowntimeRecord`, requires ≥3 completed records)
 
-Displayed in `RidePredictionView` (Swift Charts) inside `RideDetailSheet`.
+Displayed in `RidePredictionView` (Swift Charts) inside `RideDetailSheet` — for operating rides it's the **Wait Forecast**: bars from `RideProfile.waitsByHour` (same numbers as the Smart Planner/Tip Board) over today's open hours, with `WaitForecast.call` (go now vs. wait until a later hour that saves ≥10 min), `WaitForecast.trend` (next hour) and usual-for-now (`GoodTimeToRide.usual`); touch the chart to read any hour. Down rides keep the closure progress view.
 
 ### Naming Conventions
 

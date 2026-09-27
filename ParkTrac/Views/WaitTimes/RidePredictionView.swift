@@ -10,7 +10,14 @@ struct RidePredictionView: View {
     let parkName: String
     @Environment(\.modelContext) private var modelContext
 
+    @Environment(WaitTimesViewModel.self) private var viewModel
+
     @State private var prediction: PredictionResult?
+    /// This ride's expected wait per hour today (same numbers as the Smart Planner / Tip Board)
+    @State private var profile: [Int: Int] = [:]
+    @State private var usualNow: Int?
+    /// Hour the guest is touching on the chart
+    @State private var selectedHour: Int?
     private let currentHour = Calendar.current.component(.hour, from: Date())
 
     init(ride: DisplayRide, parkGroup: ParkGroup, parkName: String = "") {
@@ -35,110 +42,208 @@ struct RidePredictionView: View {
                 currentStatus: ride.status,
                 context: modelContext
             )
+            let parks = viewModel.parksByGroup[parkGroup] ?? []
+            profile = PlanInputs.planRides([ride], parks: parks, fallbackParkName: parkName, context: modelContext)
+                .first?.waitByHour ?? [:]
+            let history = PlanInputs.history(for: [ride.id], days: 14, context: modelContext)
+            usualNow = GoodTimeToRide.usual(samples: history[ride.id] ?? [])?.minutes
         }
+    }
+
+    // MARK: - Park hours
+
+    private var todaysHours: [ParkScheduleDay] {
+        guard let park = (viewModel.parksByGroup[parkGroup] ?? []).first(where: { $0.id == ride.parkId }) else { return [] }
+        return viewModel.todaySchedule(for: park)
+    }
+
+    private var openHour: Int? {
+        todaysHours.filter { !$0.isTicketedEvent && !$0.isExtraHours }
+            .compactMap(\.openingDate).min()
+            .map { Calendar.current.component(.hour, from: $0) }
+    }
+
+    private var lastHour: Int {
+        WaitForecast.lastHour(closing: todaysHours.filter { !$0.isTicketedEvent }.compactMap(\.closingDate).max()) ?? 21
+    }
+
+    private var bars: [WaitForecast.Bar] {
+        WaitForecast.bars(profile: profile, openHour: openHour, lastHour: lastHour)
     }
 
     // MARK: - Operating Ride Predictions
 
     private var operatingPredictions: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Predictions", systemImage: "chart.line.uptrend.xyaxis")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+            HStack {
+                Label("Wait Forecast", systemImage: "chart.bar.fill")
+                    .font(.headline)
+                Spacer()
+                if let prediction { dataSourceLabel(prediction.dataSource) }
+            }
 
-            if let prediction {
-                if prediction.hourlyAverages.count >= 3 {
-                    waitChart(prediction.hourlyAverages)
-                        .frame(height: 90)
-                        .padding(.vertical, 4)
+            if let call = WaitForecast.call(profile: profile, nowHour: currentHour,
+                                            currentWait: ride.waitMinutes, lastHour: lastHour) {
+                callRow(call)
+            }
 
-                    dataSourceLabel(prediction.dataSource)
-                }
+            if bars.count >= 3 {
+                selectionCaption
+                waitChart(bars)
+                    .frame(height: 130)
+            } else if let prediction {
+                // Too little data for a chart — the general rule of thumb for this resort
+                tipRow(icon: "lightbulb.fill", color: .yellow, text: prediction.bestTimeAdvice)
+            }
 
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "lightbulb.fill")
-                        .foregroundStyle(.yellow)
-                    Text(prediction.bestTimeAdvice)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                if let avg = prediction.historicalAverage {
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .foregroundStyle(.blue)
-                        Text("Historically ~\(avg) min at this time (\(prediction.historicalSampleCount) data points)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                } else if case .none = prediction.dataSource {
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .foregroundStyle(.secondary)
-                        Text("Visit more often to build personal wait time history")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+            if let trend = WaitForecast.trend(profile: profile, nowHour: currentHour,
+                                              currentWait: ride.waitMinutes, lastHour: lastHour) {
+                switch trend {
+                case .rising(let hour, let wait):
+                    tipRow(icon: "arrow.up.right", color: .red,
+                           text: "Getting longer — about \(wait) min by \(hourLabel(hour))")
+                case .falling(let hour, let wait):
+                    tipRow(icon: "arrow.down.right", color: .green,
+                           text: "Getting shorter — about \(wait) min by \(hourLabel(hour))")
                 }
             }
+
+            if let usualNow, let wait = ride.waitMinutes {
+                let diff = wait - usualNow
+                tipRow(icon: "clock.arrow.circlepath", color: .blue,
+                       text: abs(diff) < 5
+                        ? "About normal for this time (usually ~\(usualNow) min)"
+                        : "\(abs(diff)) min \(diff < 0 ? "shorter" : "longer") than usual for this time (~\(usualNow) min)")
+            } else if let prediction, case .none = prediction.dataSource {
+                tipRow(icon: "clock.arrow.circlepath", color: .secondary,
+                       text: "The forecast gets personal as ThrillTrack records waits on your visits")
+            }
         }
+    }
+
+    /// The headline: go now, or wait for a better hour.
+    @ViewBuilder
+    private func callRow(_ call: WaitForecast.Call) -> some View {
+        let style = callStyle(call)
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: style.icon)
+                .font(.title3)
+                .foregroundStyle(style.color)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(style.title).font(.subheadline.weight(.semibold))
+                Text(style.detail).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .background(style.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+
+    private func callStyle(_ call: WaitForecast.Call) -> (icon: String, color: Color, title: String, detail: String) {
+        switch call {
+        case .goNow(let wait):
+            return (icon: "checkmark.circle.fill", color: .green, title: "Good time to go now",
+                    detail: "~\(wait) min is about as short as it gets for the rest of today")
+        case .waitUntil(let hour, let wait, let saves):
+            return (icon: "clock.fill", color: .orange, title: "Shorter around \(hourLabel(hour))",
+                    detail: "~\(wait) min then — saves about \(saves) min")
+        }
+    }
+
+    private func tipRow(icon: String, color: Color, text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: icon)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(color)
+                .frame(width: 16)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// "Now · 45 min" normally; the touched hour while dragging across the chart.
+    private var selectionCaption: some View {
+        let hour = selectedHour ?? currentHour
+        let wait = profile[hour]
+        let label = hour == currentHour ? "Now" : hourLabel(hour)
+        return HStack(spacing: 4) {
+            Text(label).fontWeight(.semibold)
+            if let wait { Text("· ~\(wait) min") }
+            Spacer()
+            if selectedHour == nil {
+                Text("Touch the chart to see any hour")
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 
     // MARK: - Chart
 
     @ViewBuilder
-    private func waitChart(_ points: [HourlyAverage]) -> some View {
-        let historical = points.filter { !$0.isProjected }
-        let projected  = points.filter { $0.isProjected }
-
+    private func waitChart(_ bars: [WaitForecast.Bar]) -> some View {
+        let best = bars.filter { $0.hour > currentHour }.min { $0.wait < $1.wait }
         Chart {
-            ForEach(historical) { point in
-                AreaMark(
-                    x: .value("Hour", point.hour),
-                    y: .value("Wait", point.averageWait)
+            ForEach(bars) { bar in
+                BarMark(
+                    x: .value("Hour", bar.hour),
+                    y: .value("Wait", bar.wait),
+                    width: .ratio(0.7)
                 )
-                .foregroundStyle(.blue.opacity(0.12))
-                .interpolationMethod(.catmullRom)
-            }
-
-            ForEach(historical) { point in
-                LineMark(
-                    x: .value("Hour", point.hour),
-                    y: .value("Wait", point.averageWait)
-                )
-                .foregroundStyle(.blue)
-                .lineStyle(StrokeStyle(lineWidth: 2))
-                .interpolationMethod(.catmullRom)
-            }
-
-            ForEach(projected) { point in
-                LineMark(
-                    x: .value("Hour", point.hour),
-                    y: .value("Wait", point.averageWait)
-                )
-                .foregroundStyle(.blue.opacity(0.45))
-                .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-                .interpolationMethod(.catmullRom)
-            }
-
-            RuleMark(x: .value("Now", currentHour))
-                .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                .foregroundStyle(.secondary.opacity(0.6))
-                .annotation(position: .top, alignment: .center) {
-                    Text("Now")
-                        .font(.system(size: chartLabelSize, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-        }
-        .chartXAxis {
-            AxisMarks(values: [8, 12, 16, 20]) { value in
-                AxisValueLabel {
-                    if let h = value.as(Int.self) {
-                        Text(hourLabel(h))
+                .cornerRadius(3)
+                .foregroundStyle(barColor(bar))
+                .opacity(opacity(for: bar))
+                .annotation(position: .top, spacing: 2) {
+                    if bar.hour == currentHour {
+                        Text("Now")
+                            .font(.system(size: chartLabelSize + 1, weight: .bold))
+                            .foregroundStyle(.primary)
+                    } else if bar.hour == best?.hour, selectedHour == nil {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: chartLabelSize + 1))
+                            .foregroundStyle(.green)
                     }
                 }
             }
         }
+        .chartXScale(domain: (bars.first?.hour ?? 9) - 1 ... (bars.last?.hour ?? 21) + 1)
+        .chartXSelection(value: $selectedHour)
+        .chartXAxis {
+            AxisMarks(values: axisHours(bars)) { value in
+                AxisValueLabel {
+                    if let h = value.as(Int.self) { Text(hourLabel(h)) }
+                }
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
+                AxisGridLine()
+                AxisValueLabel {
+                    if let m = value.as(Int.self) { Text("\(m)") }
+                }
+            }
+        }
+        .accessibilityLabel("Expected wait by hour")
+        .accessibilityValue(bars.map { "\(hourLabel($0.hour)) \($0.wait) minutes" }.joined(separator: ", "))
+    }
+
+    private func barColor(_ bar: WaitForecast.Bar) -> Color {
+        waitTimeColor(minutes: bar.wait, isOperating: true, status: "OPERATING")
+    }
+
+    /// Past hours fade; the touched hour (or now) stands out.
+    private func opacity(for bar: WaitForecast.Bar) -> Double {
+        if let selectedHour { return bar.hour == selectedHour ? 1 : 0.35 }
+        return bar.hour < currentHour ? 0.3 : 1
+    }
+
+    /// Every 3 hours across the open day.
+    private func axisHours(_ bars: [WaitForecast.Bar]) -> [Int] {
+        guard let first = bars.first?.hour, let last = bars.last?.hour else { return [] }
+        return Array(stride(from: first, through: last, by: 3))
     }
 
     @ViewBuilder
@@ -147,14 +252,14 @@ struct RidePredictionView: View {
         case .personalHistory(let count):
             HStack(spacing: 4) {
                 Image(systemName: "person.fill").font(.caption2)
-                Text("Based on your \(count) visits")
+                Text("From your visits")
                     .font(.caption2)
             }
             .foregroundStyle(.blue.opacity(0.7))
         case .communityBaseline:
             HStack(spacing: 4) {
                 Image(systemName: "person.3").font(.caption2)
-                Text("Based on community data")
+                Text("Estimated")
                     .font(.caption2)
             }
             .foregroundStyle(.secondary)
