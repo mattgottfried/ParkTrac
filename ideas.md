@@ -4,6 +4,9 @@ Shipped work is tracked in `docs/usability-plan.md` and the merged PRs. This fil
 
 ## Ideas
 
+### Shipped: Genie-style live plan (Next Up, interests, Tip Board, Apple Intelligence order)
+Verify at the park: Next Up updates as you ride, Done/Skip, interest suggestions, Tip Board best times.
+
 ### Shipped: smarter Smart Planner, Apple Intelligence planning, Siri commands
 Verify on device: Apple Intelligence "Tell Me Your Plan", "Hey Siri, what should I ride next in ThrillTrack", "Plan my day in ThrillTrack".
 

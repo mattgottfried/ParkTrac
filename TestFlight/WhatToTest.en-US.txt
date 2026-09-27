@@ -1,31 +1,22 @@
-NEW since the last build (car locator roll-up): Smart Planner + Apple Intelligence, Siri, Good Time to Ride, Trip Planner, Time Sensitive alerts.
+NEW: Your own Genie
 
-Smarter Smart Planner + Apple Intelligence
-• My Day → Smart Planner → "Tell Me Your Plan": type something like "Dinner at 6:30, want Seven Dwarfs and Space Mountain, no water rides". Apple Intelligence reads it on your iPhone; ThrillTrack builds the schedule.
-• Each ride is now placed when it's usually shortest for that ride (from your past visits and live waits), with walking time between rides.
-• Today's dining reservations and shows stay at their times; rides that won't fit before close are listed.
+Plan it (My Day → Smart Planner)
+• Pick the rides and shows you want, plus your interests (thrill, coasters, slow & gentle, dark rides, water, simulators, shows). Optional notes like "dinner at 6:30, Rise right before close".
+• Tap "Plan with Apple Intelligence" — it orders your picks around each ride's usual waits, your shows and dining reservations, and explains the plan. ThrillTrack works out the times.
 
-Siri
-• "Hey Siri, what should I ride next in ThrillTrack" — suggests a short wait now (Must-Dos and unusually short rides first).
-• "Plan my day in ThrillTrack" — Siri asks what to include, then opens the planner with it.
-• "Where did I park in ThrillTrack" / "Save my parking spot in ThrillTrack".
+Live all day
+• "Start Plan" makes it live. A Next Up card at the top of Wait Times and My Day re-plans from where you are with live waits: "Get in line ~2:16 PM · ~35 min wait · 6 min walk".
+• Done / Skip on the card; rides you log with Rode It! drop off on their own. Heather's phone follows the same plan.
+• "Fits your interests" suggests short rides you'd like right now — tap + to add one.
+• My Day shows the whole plan with updated times ("Today's Plan · Updates Live"). End it from there.
 
-Good Time to Ride
-• Rides whose wait is well below usual get a green "Good time · usually ~70" tag, and a "Good Time to Ride" strip sits at the top of the ride list (Must-Dos first).
-• "Usual" comes from the waits ThrillTrack has recorded on this phone — the same time of day on earlier days, or earlier today. It needs a few visits' worth of data, so it gets better the more you use the app.
-• Must-Do rides send one heads-up per ride per day ("Slinky Dog Dash 35 min now — usually ~70 min at this time"). Turn it off in Settings → Good Time to Ride Alerts.
+Tip Board
+• The list-star button on the map (or My Day → Tip Board): your Must-Dos and picks with the wait now, what it usually is now, and today's best time. "Good Time Now" rides are at the top.
 
-Trip Planner (Stats → Trip Planner)
-• "Plan Japan Trip" sets up a trip with a countdown (also shown at the top of My Day), and a pre-trip checklist: passports, Visit Japan Web, Tokyo Disney / USJ tickets and apps, Suica, eSIM, yen and more. Edit, reorder, add or delete items; it syncs to Heather's phone.
-• Yen ↔ dollar: live rate (or set your own). At the Japan resorts, Spending shows ≈ $ beside every yen amount, and Add Purchase takes yen.
-
-Time Sensitive alerts
-• Ride alerts get through Focus modes (Sleep, Work, Driving). The first time, iOS asks — choose Allow.
+Easier to read
+• The Good Time to Ride strip has bigger cards with the wait in large green numbers; the tag on ride cards is a solid green label.
 
 Please check:
-• Smart Planner with a typed request builds a sensible day around your dinner time.
-• Each Siri phrase works (the first time, Siri may ask to allow ThrillTrack).
-• After a few park visits, a green "Good time" tag appears on a ride that's unusually short, and a Must-Do sends a heads-up.
-• Trip Planner: set dates, tick items on one phone, see them on the other.
-• Switch to Tokyo Disney → Stats → Spending → add ¥1,500 — it shows ≈ $10.
-• With Do Not Disturb on, a wait alert still comes through.
+• Pick 4–5 rides and a show, add "dinner at 6:30", and plan with Apple Intelligence — the order and summary make sense and dinner stays at 6:30.
+• Start the plan: Next Up updates as waits change; Done and Skip move to the next stop.
+• Tip Board rows show "Best today" after a few park visits.

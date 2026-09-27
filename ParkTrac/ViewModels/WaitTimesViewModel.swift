@@ -153,6 +153,12 @@ final class WaitTimesViewModel {
             .sorted { ($0.nextShowtime ?? .distantFuture) < ($1.nextShowtime ?? .distantFuture) }
     }
 
+    /// Every show at the current resort, ignoring the park filter (live plan)
+    var allShowsForPlanning: [DisplayShow] {
+        let currentParkIds = Set(currentParks.map(\.id))
+        return Array(showsByPark.filter { currentParkIds.contains($0.key) }.values.joined())
+    }
+
     /// Today's schedule for the currently selected park (operating hours only)
     func todaySchedule(for park: ParkEntity) -> [ParkScheduleDay] {
         guard let days = schedulesByPark[park.id] else { return [] }

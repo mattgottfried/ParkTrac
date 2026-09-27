@@ -327,6 +327,7 @@ struct ParkMapView: View {
     /// 0 = no limit
     @AppStorage("maxWaitFilter") private var maxWait: Int = 0
     @State private var rideAction: RideMenuAction?
+    @State private var showTipBoard = false
     /// Bumped only by a user pull-to-refresh, so the success haptic doesn't fire on the 60s auto-refresh.
     @State private var userRefreshCount = 0
     /// Status per ride from the previous refresh, to spot rides that just went DOWN
@@ -366,6 +367,16 @@ struct ParkMapView: View {
                     }
                     .accessibilityLabel(mapStyleIsHybrid ? "Show standard map" : "Show satellite map")
                     Spacer()
+                    // Tip Board: Must-Dos with best time today
+                    Button {
+                        showTipBoard = true
+                    } label: {
+                        Image(systemName: "list.star")
+                            .font(.body.weight(.medium))
+                            .padding(8)
+                            .background(.regularMaterial, in: Circle())
+                    }
+                    .accessibilityLabel("Tip Board")
                     // Car locator
                     let parked = ParkingService.shared.spot(for: appState.selectedResort) != nil
                     Button {
@@ -520,10 +531,16 @@ struct ParkMapView: View {
                                       uniquingKeysWith: { first, _ in first }))
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
             GoodTimeService.shared.update(rides: viewModel.allRides, mustDo: appState.wishList, context: modelContext)
+            // Today's plan re-plans from here and now
+            ItineraryService.shared.replan(viewModel: viewModel, resort: viewModel.selectedGroup,
+                                           location: locationService.userCoordinate, context: modelContext)
             syncRopeDropActivity()
             // Schedules may have just loaded — (re)arm the "parks close soon" car reminder
             ParkingReminder.refresh(resort: viewModel.selectedGroup,
                                     schedule: viewModel.todaySchedule(forResort: viewModel.selectedGroup))
+        }
+        .sheet(isPresented: $showTipBoard) {
+            TipBoardView()
         }
         .sheet(item: $rideAction) { action in
             switch action {
@@ -715,37 +732,55 @@ struct ParkMapView: View {
     private var goodTimeStrip: some View {
         let picks = GoodTimeService.shared.ranked(rides: displayedRides, mustDo: appState.wishList)
         if !picks.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                Label("Good Time to Ride", systemImage: "arrow.down.circle.fill")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.green)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.down.circle.fill").foregroundStyle(.green)
+                    Text("Good Time to Ride").foregroundStyle(.primary)
+                }
+                .font(.subheadline.weight(.bold))
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 10) {
                         ForEach(picks, id: \.ride.id) { pick in
                             Button { selectedRide = pick.ride } label: {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack(spacing: 4) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack(alignment: .top, spacing: 4) {
                                         if appState.wishList.contains(pick.ride.id) {
-                                            Image(systemName: "star.fill").foregroundStyle(.yellow)
+                                            Image(systemName: "star.fill").foregroundStyle(.yellow).font(.caption)
                                         }
-                                        Text(pick.ride.name).lineLimit(1)
+                                        Text(pick.ride.name)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundStyle(.primary)
+                                            .lineLimit(2)
+                                            .multilineTextAlignment(.leading)
+                                            .fixedSize(horizontal: false, vertical: true)
                                     }
-                                    .font(.caption.weight(.semibold))
-                                    Text("\(pick.deal.wait) min · \(pick.deal.shortText)")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                    Spacer(minLength: 0)
+                                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                        Text("\(pick.deal.wait) min")
+                                            .font(.title3.weight(.bold))
+                                            .foregroundStyle(.green)
+                                        Text("usually \(pick.deal.usual.minutes)")
+                                            .font(.caption.weight(.medium))
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
-                                .padding(.horizontal, 10).padding(.vertical, 6)
-                                .background(Color.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                                .frame(width: 160, alignment: .leading)
+                                .frame(minHeight: 78)
+                                .padding(12)
+                                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(Color.green.opacity(0.5), lineWidth: 1.5))
+                                .shadow(color: .black.opacity(0.08), radius: 3, y: 1)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("\(pick.ride.name), \(pick.deal.wait) minutes, \(pick.deal.longText)")
                         }
                     }
+                    .padding(.vertical, 2)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.bottom, 4)
+            .padding(.bottom, 6)
         }
     }
 
@@ -914,6 +949,7 @@ struct ParkMapView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 8) {
+                            NextUpCard(resort: viewModel.selectedGroup)
                             goodTimeStrip
                             ForEach(displayedRides) { ride in
                                 RideCardView(ride: ride, theme: theme, walkMinutes: walkMinutes(to: ride),

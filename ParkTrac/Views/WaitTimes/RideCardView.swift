@@ -44,8 +44,10 @@ struct RideCardView: View {
                         .lineLimit(2)
                     if let goodTime {
                         Label("Good time · \(goodTime.shortText)", systemImage: "arrow.down.circle.fill")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.green)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Color.green, in: Capsule())
                     }
                     HStack(spacing: 6) {
                         Text(ride.statusDisplay)

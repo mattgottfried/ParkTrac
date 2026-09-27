@@ -123,10 +123,12 @@ enum DayPlanBuilder {
         return WalkEstimate.minutes(from: from, to: to) ?? defaultWalkMinutes
     }
 
+    /// - Parameter location: where the guest is now (live re-planning) — the first walk counts from here
     static func build(rides: [PlanRide], fixed: [FixedEvent], start: Date, end: Date?,
+                      from location: CLLocationCoordinate2D? = nil,
                       calendar: Calendar = .current) -> DayPlan {
         var t = start
-        var here: CLLocationCoordinate2D? = nil
+        var here: CLLocationCoordinate2D? = location
         var remaining = rides
         var events = fixed.filter { $0.start.addingTimeInterval(Double($0.minutes) * 60) > start }
             .sorted { $0.start < $1.start }
@@ -171,6 +173,55 @@ enum DayPlanBuilder {
         }
 
         return DayPlan(stops: stops, unscheduled: remaining.map(\.name))
+    }
+}
+
+// MARK: - Ordered plan (Apple Intelligence picks the order)
+
+extension DayPlanBuilder {
+    /// Rides in the given order; times come from each ride's wait profile. Fixed events never move:
+    /// a ride that wouldn't finish before the next one goes after it. Rides past `end` are unscheduled.
+    static func build(ordered rides: [PlanRide], fixed: [FixedEvent], start: Date, end: Date?,
+                      from location: CLLocationCoordinate2D? = nil,
+                      calendar: Calendar = .current) -> DayPlan {
+        var t = start
+        var here: CLLocationCoordinate2D? = location
+        var events = fixed.filter { $0.start.addingTimeInterval(Double($0.minutes) * 60) > start }
+            .sorted { $0.start < $1.start }
+        var stops: [PlannedStop] = []
+        var unscheduled: [String] = []
+
+        func placeNextEvent() {
+            let event = events.removeFirst()
+            stops.append(PlannedStop(title: event.title, kind: event.kind, rideId: nil, parkName: event.parkName,
+                                     start: event.start, walkMinutes: 0, waitMinutes: 0, totalMinutes: event.minutes))
+            t = max(t, event.start.addingTimeInterval(Double(event.minutes) * 60))
+        }
+
+        for ride in rides {
+            while true {
+                let walk = here == nil ? 0 : walkMinutes(from: here, to: ride.coordinate)
+                let arrive = t.addingTimeInterval(Double(walk) * 60)
+                let wait = ride.wait(at: arrive, calendar: calendar)
+                let finish = arrive.addingTimeInterval(Double(wait + ride.rideMinutes) * 60)
+                if let next = events.first, finish > next.start {
+                    placeNextEvent()      // do the show / meal first, then try this ride again
+                    continue
+                }
+                if let end, finish > end {
+                    unscheduled.append(ride.name)
+                } else {
+                    stops.append(PlannedStop(title: ride.name, kind: "ride", rideId: ride.id, parkName: ride.parkName,
+                                             start: t, walkMinutes: walk, waitMinutes: wait,
+                                             totalMinutes: walk + wait + ride.rideMinutes))
+                    t = finish
+                    here = ride.coordinate ?? here
+                }
+                break
+            }
+        }
+        while !events.isEmpty { placeNextEvent() }
+        return DayPlan(stops: stops, unscheduled: unscheduled)
     }
 }
 
@@ -234,6 +285,13 @@ struct PlanConstraints: Equatable {
             }
             return false
         }
+    }
+
+    /// "Dinner at Be Our Guest" → dining; anything else (snack, break, rest) → break
+    static func eventKind(for title: String) -> String {
+        let t = title.lowercased()
+        return ["dinner", "lunch", "breakfast", "dining", "meal", "eat", "brunch"].contains { t.contains($0) }
+            ? "dining" : "break"
     }
 
     /// No Apple Intelligence: pick up any ride or show names typed in the request.

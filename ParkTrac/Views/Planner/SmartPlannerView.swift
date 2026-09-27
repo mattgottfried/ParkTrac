@@ -25,12 +25,18 @@ struct SmartPlannerView: View {
     /// From Siri ("Plan my day in ThrillTrack") or a deep link — run once the rides load
     var initialRequest: String? = nil
 
-    @State private var request = ""
-    @State private var isInterpreting = false
-    @State private var requestNote: String?
-    /// Meals / breaks at a set time from the request
-    @State private var requestedEvents: [FixedEvent] = []
-    @State private var endTime: Date?
+    /// Optional extras for Apple Intelligence ("dinner at 6:30, snack break at 3")
+    @State private var notes = ""
+    /// Apple Intelligence's explanation of the plan
+    @State private var aiSummary: String?
+    /// Shown when Apple Intelligence couldn't plan and ThrillTrack's planner did
+    @State private var planNote: String?
+    /// Genie-style interests (fill open time in the live plan)
+    @State private var interests: Set<Interest> = []
+    /// Apple Intelligence's ride order (ids) and the meals/breaks it read from the notes
+    @State private var aiOrderIds: [String] = []
+    @State private var aiExtras: [DayItinerary.Extra] = []
+    private static let interestsKey = "plannerInterests"
     @State private var unscheduled: [String] = []
     @State private var selectedRideIds: Set<String> = []
     @State private var selectedShowIds: Set<String> = []
@@ -81,7 +87,7 @@ struct SmartPlannerView: View {
                 }
                 if phase == .result {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Save to My Day") { saveToMyDay() }
+                        Button("Start Plan") { startPlan() }
                             .fontWeight(.semibold)
                     }
                 }
@@ -91,12 +97,16 @@ struct SmartPlannerView: View {
             viewModel.selectedGroup = appState.selectedResort
             await viewModel.loadAllParks()
             startTime = effectiveStartTime()
+            let savedInterests = (UserDefaults.standard.stringArray(forKey: Self.interestsKey) ?? []).compactMap(Interest.init(rawValue:))
+            interests = Set(ItineraryService.shared.active(for: appState.selectedResort)?.interests ?? savedInterests)
             for ride in availableRides where appState.wishList.contains(ride.id) {
                 selectedRideIds.insert(ride.id)
             }
+            // Siri: "Plan my day" — pick the rides/shows it names, then plan straight away
             if let initialRequest, !initialRequest.trimmingCharacters(in: .whitespaces).isEmpty {
-                request = initialRequest
-                await planFromRequest(autoBuild: true)
+                notes = initialRequest
+                addNamedPicks(from: initialRequest)
+                if !selectedRideIds.isEmpty || !selectedShowIds.isEmpty { await generate() }
             }
         }
         .onChange(of: viewModel.filterPark?.id) { _, _ in
@@ -109,52 +119,7 @@ struct SmartPlannerView: View {
     private var pickingView: some View {
         List {
             Section {
-                TextField(PlannerAI.isAvailable
-                          ? "e.g. Dinner at 6:30, want Seven Dwarfs and Space Mountain, no water rides"
-                          : "Type the rides you want, e.g. Seven Dwarfs, Space Mountain",
-                          text: $request, axis: .vertical)
-                    .lineLimit(1...4)
-                Button {
-                    Task { await planFromRequest(autoBuild: true) }
-                } label: {
-                    HStack {
-                        Label(isInterpreting ? "Thinking…" : "Plan It", systemImage: PlannerAI.isAvailable ? "apple.intelligence" : "wand.and.stars")
-                        Spacer()
-                        if isInterpreting { ProgressView() }
-                    }
-                }
-                .disabled(isInterpreting || request.trimmingCharacters(in: .whitespaces).isEmpty)
-                if let requestNote {
-                    Text(requestNote).font(.caption).foregroundStyle(.secondary)
-                }
-            } header: {
-                Text("Tell Me Your Plan")
-            } footer: {
-                Text(PlannerAI.isAvailable
-                     ? "Apple Intelligence reads your request on this iPhone; ThrillTrack then builds the schedule from live and past waits."
-                     : "Or pick rides and shows below.")
-            }
-
-            Section {
                 DatePicker("Start time", selection: $startTime, in: Date()..., displayedComponents: .hourAndMinute)
-                if let endTime {
-                    HStack {
-                        Text("Finish by")
-                        Spacer()
-                        Text(endTime, style: .time).foregroundStyle(.secondary)
-                        Button { self.endTime = nil } label: { Image(systemName: "xmark.circle.fill") }
-                            .buttonStyle(.plain).foregroundStyle(.secondary)
-                            .accessibilityLabel("Remove finish time")
-                    }
-                }
-                ForEach(Array(requestedEvents.enumerated()), id: \.offset) { index, event in
-                    HStack {
-                        Label(event.title, systemImage: event.kind == "dining" ? "fork.knife" : "cup.and.saucer")
-                        Spacer()
-                        Text(event.start, style: .time).foregroundStyle(.secondary)
-                    }
-                    .swipeActions { Button("Remove", role: .destructive) { requestedEvents.remove(at: index) } }
-                }
             }
 
             // Park chip picker
@@ -247,10 +212,48 @@ struct SmartPlannerView: View {
             }
 
             Section {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), spacing: 8)], alignment: .leading, spacing: 8) {
+                    ForEach(Interest.allCases) { interest in
+                        let on = interests.contains(interest)
+                        Button {
+                            if on { interests.remove(interest) } else { interests.insert(interest) }
+                        } label: {
+                            Label(interest.label, systemImage: interest.systemImage)
+                                .font(.caption.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(on ? appState.selectedResort.theme.primaryColor : Color(.systemFill),
+                                            in: Capsule())
+                                .foregroundStyle(on ? Color.white : Color.primary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(on ? .isSelected : [])
+                    }
+                }
+                .padding(.vertical, 4)
+            } header: {
+                Text("Interests")
+            } footer: {
+                Text("Your plan suggests rides like these when they're short.")
+            }
+
+            if PlannerAI.isAvailable {
+                Section {
+                    TextField("e.g. Dinner at 6:30, Rise right before close, we love coasters", text: $notes, axis: .vertical)
+                        .lineLimit(1...4)
+                } header: {
+                    Text("Anything Else? (Optional)")
+                } footer: {
+                    Text("Apple Intelligence plans your picks around these, today's dining reservations and the shows you chose — all on this iPhone.")
+                }
+            }
+
+            Section {
                 Button {
                     Task { await generate() }
                 } label: {
-                    Label("Build My Schedule", systemImage: "wand.and.stars")
+                    Label(PlannerAI.isAvailable ? "Plan with Apple Intelligence" : "Build My Schedule",
+                          systemImage: PlannerAI.isAvailable ? "apple.intelligence" : "wand.and.stars")
                         .frame(maxWidth: .infinity)
                         .font(.headline)
                 }
@@ -267,7 +270,7 @@ struct SmartPlannerView: View {
     private var generatingView: some View {
         VStack(spacing: 16) {
             ProgressView()
-            Text("Building your schedule…")
+            Text(PlannerAI.isAvailable ? "Apple Intelligence is planning your day…" : "Building your schedule…")
                 .font(.subheadline).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -278,8 +281,16 @@ struct SmartPlannerView: View {
     private var resultView: some View {
         List {
             Section {
-                Text("Rides are placed when they're usually shortest (from your past visits and live waits), with walking time between them. Shows, dining reservations and meals stay at their set times.")
-                    .font(.caption).foregroundStyle(.secondary)
+                if let aiSummary {
+                    Label(aiSummary, systemImage: "apple.intelligence")
+                        .font(.subheadline)
+                } else {
+                    Text("Rides are placed when they're usually shortest (from your past visits and live waits), with walking time between them. Shows, dining reservations and meals stay at their set times.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                if let planNote {
+                    Text(planNote).font(.caption).foregroundStyle(.orange)
+                }
             }
 
             if !unscheduled.isEmpty {
@@ -324,6 +335,23 @@ struct SmartPlannerView: View {
             }
 
             Section {
+                Button {
+                    startPlan()
+                } label: {
+                    Label("Start Plan — Updates Live", systemImage: "sparkles")
+                        .frame(maxWidth: .infinity)
+                        .font(.headline)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(appState.selectedResort.theme.primaryColor)
+                .listRowBackground(Color.clear)
+            } footer: {
+                Text("Next Up re-plans all day from where you are and live waits; rides you log drop off.")
+            }
+
+            Section {
+                Button("Add to My Day as a Fixed List") { saveToMyDay() }
+                    .frame(maxWidth: .infinity)
                 Button("Start Over") {
                     schedule = []
                     phase = .picking
@@ -334,54 +362,14 @@ struct SmartPlannerView: View {
         }
     }
 
-    // MARK: - Request (Apple Intelligence or plain text)
+    // MARK: - Names in Siri's request
 
-    @MainActor
-    private func planFromRequest(autoBuild: Bool) async {
-        let text = request.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        let rideNames = availableRides.map(\.name)
-        let showNames = availableShows.map(\.name)
-        var constraints: PlanConstraints
-        if PlannerAI.isAvailable {
-            isInterpreting = true
-            defer { isInterpreting = false }
-            do {
-                constraints = try await PlannerAI.interpret(text, rideNames: rideNames, showNames: showNames)
-            } catch {
-                constraints = PlanConstraints.fromPlainText(text, rideNames: rideNames, showNames: showNames)
-                requestNote = "Apple Intelligence couldn't read that, so I matched ride names instead."
-            }
-        } else {
-            constraints = PlanConstraints.fromPlainText(text, rideNames: rideNames, showNames: showNames)
-        }
-        apply(constraints)
-        if autoBuild, !selectedRideIds.isEmpty || !selectedShowIds.isEmpty {
-            await generate()
-        }
-    }
-
-    @MainActor
-    private func apply(_ c: PlanConstraints) {
-        let rides = availableRides.map { (id: $0.id, name: $0.name,
-                                          info: RideMetadata.info(for: $0.name, resort: appState.selectedResort)) }
-        selectedRideIds = c.selectRides(from: rides, fallback: selectedRideIds)
-        for show in availableShows where c.includeShows.contains(where: { PlanConstraints.matches($0, show.name) }) {
-            selectedShowIds.insert(show.id)
-        }
-        if let start = PlanConstraints.date(c.startTime, on: .now), start > .now { startTime = start }
-        endTime = PlanConstraints.date(c.endTime, on: .now)
-        requestedEvents = c.fixedEvents.compactMap { e in
-            guard let at = PlanConstraints.date(e.time, on: .now) else { return nil }
-            let isMeal = ["dinner", "lunch", "breakfast", "dining", "meal", "eat"].contains { e.title.lowercased().contains($0) }
-            return FixedEvent(title: e.title, kind: isMeal ? "dining" : "break", start: at, minutes: e.minutes, parkName: parkName)
-        }
-        let picked = selectedRideIds.count
-        if requestNote == nil || !PlannerAI.isAvailable {
-            requestNote = picked == 0
-                ? "I didn't recognize any ride names — pick rides below."
-                : "Planning \(picked) ride\(picked == 1 ? "" : "s")" + (requestedEvents.isEmpty ? "." : " around \(requestedEvents.count) set time\(requestedEvents.count == 1 ? "" : "s").")
-        }
+    /// Tick any ride or show named in the text (Siri's "plan my day …")
+    private func addNamedPicks(from text: String) {
+        let c = PlanConstraints.fromPlainText(text, rideNames: availableRides.map(\.name),
+                                              showNames: availableShows.map(\.name))
+        for ride in availableRides where c.mustRide.contains(ride.name) { selectedRideIds.insert(ride.id) }
+        for show in availableShows where c.includeShows.contains(show.name) { selectedShowIds.insert(show.id) }
     }
 
     // MARK: - Algorithm
@@ -432,10 +420,46 @@ struct SmartPlannerView: View {
         fixed += dining
             .filter { $0.resort == resortRaw && !$0.isCompleted && Calendar.current.isDateInToday($0.date) && $0.date > startTime }
             .map { FixedEvent(title: "Dining: \($0.restaurantName)", kind: "dining", start: $0.date, minutes: 75, parkName: parkName) }
-        fixed += requestedEvents
 
-        let plan = DayPlanBuilder.build(rides: planRides, fixed: fixed, start: startTime,
-                                        end: endTime ?? parkCloseTime)
+        let end = parkCloseTime
+        aiSummary = nil
+        planNote = nil
+        aiOrderIds = []
+        aiExtras = []
+        var plan = DayPlanBuilder.build(rides: planRides, fixed: fixed, start: startTime, end: end)
+
+        // Apple Intelligence orders the picks; ThrillTrack times them
+        if PlannerAI.isAvailable {
+            let aiRides: [PlannerAI.PlanInput.Ride] = planRides.map {
+                PlannerAI.PlanInput.Ride(name: $0.name, waitsByHour: $0.waitByHour,
+                                         isMustDo: appState.wishList.contains($0.id))
+            }
+            let aiShows: [PlannerAI.PlanInput.Fixed] = fixed.filter { $0.kind == "show" }.map {
+                PlannerAI.PlanInput.Fixed(title: $0.title, time: $0.start)
+            }
+            let aiDining: [PlannerAI.PlanInput.Fixed] = fixed.filter { $0.kind == "dining" }.map {
+                PlannerAI.PlanInput.Fixed(title: $0.title.replacingOccurrences(of: "Dining: ", with: ""), time: $0.start)
+            }
+            let input = PlannerAI.PlanInput(rides: aiRides, shows: aiShows, dining: aiDining,
+                                            start: startTime, end: end, notes: notes,
+                                            interests: Interest.allCases.filter { interests.contains($0) }.map(\.label))
+            do {
+                let ai = try await PlannerAI.plan(input)
+                let extras = ai.extraEvents.compactMap { e -> FixedEvent? in
+                    guard let at = PlanConstraints.date(e.time, on: startTime) else { return nil }
+                    return FixedEvent(title: e.title, kind: PlanConstraints.eventKind(for: e.title),
+                                      start: at, minutes: e.minutes, parkName: parkName)
+                }
+                let ordered = PlannerAI.resolveOrder(ai.order, rides: planRides)
+                plan = DayPlanBuilder.build(ordered: ordered, fixed: fixed + extras, start: startTime, end: end)
+                aiSummary = ai.summary.isEmpty ? nil : ai.summary
+                aiOrderIds = ordered.map(\.id)
+                aiExtras = extras.map { DayItinerary.Extra(title: $0.title, kind: $0.kind, start: $0.start, minutes: $0.minutes) }
+                interests.formUnion(Interest.from(ai.interests))
+            } catch {
+                planNote = "Apple Intelligence couldn't plan this one, so ThrillTrack's planner did."
+            }
+        }
         schedule = plan.stops.map { stop in
             ScheduledSlot(title: stop.title, kind: stop.kind, rideId: stop.rideId, parkName: stop.parkName,
                           startTime: stop.start, estimatedWaitMinutes: stop.waitMinutes,
@@ -443,6 +467,24 @@ struct SmartPlannerView: View {
         }
         unscheduled = plan.unscheduled
         phase = .result
+    }
+
+    // MARK: - Start the live plan (Genie-style)
+
+    private func startPlan() {
+        let rides = availableRides.filter { selectedRideIds.contains($0.id) }
+            .map { DayItinerary.Pick(id: $0.id, name: $0.name, parkId: $0.parkId) }
+        let shows = availableShows.filter { selectedShowIds.contains($0.id) }
+            .map { DayItinerary.Pick(id: $0.id, name: $0.name, parkId: $0.parkId) }
+        let chosen = Interest.allCases.filter { interests.contains($0) }
+        UserDefaults.standard.set(chosen.map(\.rawValue), forKey: Self.interestsKey)
+        ItineraryService.shared.start(DayItinerary(
+            day: Calendar.current.startOfDay(for: .now), resortRaw: appState.selectedResort.rawValue,
+            rides: rides, shows: shows, interests: chosen, notes: notes,
+            aiOrder: aiOrderIds, aiSummary: aiSummary, extras: aiExtras))
+        ItineraryService.shared.replan(viewModel: viewModel, resort: appState.selectedResort,
+                                       location: nil, context: modelContext)
+        dismiss()
     }
 
     // MARK: - Save to My Day
