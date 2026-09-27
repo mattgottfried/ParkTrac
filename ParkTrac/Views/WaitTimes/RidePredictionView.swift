@@ -16,6 +16,8 @@ struct RidePredictionView: View {
     /// This ride's expected wait per hour today (same numbers as the Smart Planner / Tip Board)
     @State private var profile: [Int: Int] = [:]
     @State private var usualNow: Int?
+    /// Server's typical waits for this ride on this weekday (empty until it has two days of data)
+    @State private var community: [Int: Int] = [:]
     /// Hour the guest is touching on the chart
     @State private var selectedHour: Int?
     private let currentHour = Calendar.current.component(.hour, from: Date())
@@ -46,7 +48,9 @@ struct RidePredictionView: View {
             profile = PlanInputs.planRides([ride], parks: parks, fallbackParkName: parkName, context: modelContext)
                 .first?.waitByHour ?? [:]
             let history = PlanInputs.history(for: [ride.id], days: 14, context: modelContext)
-            usualNow = GoodTimeToRide.usual(samples: history[ride.id] ?? [])?.minutes
+            community = CommunityHistoryService.shared.waitsByHour(rideId: ride.id, parkId: ride.parkId)
+            // This phone's own history first, else what the server has seen at this hour on this weekday
+            usualNow = GoodTimeToRide.usual(samples: history[ride.id] ?? [])?.minutes ?? community[currentHour]
         }
     }
 
@@ -79,7 +83,7 @@ struct RidePredictionView: View {
                 Label("Wait Forecast", systemImage: "chart.bar.fill")
                     .font(.headline)
                 Spacer()
-                if let prediction { dataSourceLabel(prediction.dataSource) }
+                if let prediction { sourceLabel(prediction.dataSource) }
             }
 
             if let call = WaitForecast.call(profile: profile, nowHour: currentHour,
@@ -244,6 +248,23 @@ struct RidePredictionView: View {
     private func axisHours(_ bars: [WaitForecast.Bar]) -> [Int] {
         guard let first = bars.first?.hour, let last = bars.last?.hour else { return [] }
         return Array(stride(from: first, through: last, by: 3))
+    }
+
+    /// Your own visits beat the community history, which beats the park-wide estimate.
+    @ViewBuilder
+    private func sourceLabel(_ source: PredictionDataSource) -> some View {
+        if case .personalHistory = source {
+            dataSourceLabel(source)
+        } else if !community.isEmpty {
+            HStack(spacing: 4) {
+                Image(systemName: "person.3.fill").font(.caption2)
+                Text("Typical \(Calendar.current.weekdaySymbols[Calendar.current.component(.weekday, from: .now) - 1])")
+                    .font(.caption2)
+            }
+            .foregroundStyle(.blue.opacity(0.8))
+        } else {
+            dataSourceLabel(source)
+        }
     }
 
     @ViewBuilder

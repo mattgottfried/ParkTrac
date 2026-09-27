@@ -81,10 +81,12 @@ enum RideProfile {
 
     /// Expected posted wait for each hour of the day, per ride:
     /// 1. this phone's recorded median for that hour (last 30 days),
-    /// 2. else the live wait scaled by the park's typical daily curve,
+    /// 2. else the server's community history for this ride on this weekday (`CommunityHistoryService`),
+    /// 3. else the live wait scaled by the park's typical daily curve,
     /// and the current hour is always the live wait.
     static func waitsByHour(samples: [(date: Date, wait: Int)], currentWait: Int?, now: Date = .now,
-                            parkCurve: [Int: Double], calendar: Calendar = .current) -> [Int: Int] {
+                            parkCurve: [Int: Double], community: [Int: Int] = [:],
+                            calendar: Calendar = .current) -> [Int: Int] {
         let cutoff = now.addingTimeInterval(-Double(historyDays) * 86_400)
         var byHour: [Int: [Int]] = [:]
         for s in samples where s.date >= cutoff {
@@ -93,6 +95,10 @@ enum RideProfile {
         var result: [Int: Int] = [:]
         for (hour, waits) in byHour where waits.count >= minSamplesPerHour {
             if let m = GoodTimeToRide.median(waits) { result[hour] = m }
+        }
+
+        for (hour, wait) in community where dayHours.contains(hour) && result[hour] == nil {
+            result[hour] = wait
         }
 
         let nowHour = calendar.component(.hour, from: now)

@@ -408,7 +408,9 @@ struct SmartPlannerView: View {
             return PlanRide(id: ride.id, name: ride.name, parkName: park,
                             latitude: ride.coordinate?.latitude, longitude: ride.coordinate?.longitude,
                             waitByHour: RideProfile.waitsByHour(samples: history[ride.id] ?? [],
-                                                                currentWait: ride.waitMinutes, parkCurve: curve))
+                                                                currentWait: ride.waitMinutes, parkCurve: curve,
+                                                                community: CommunityHistoryService.shared.waitsByHour(
+                                                                    rideId: ride.id, parkId: ride.parkId)))
         }
 
         // Fixed: chosen shows, today's dining reservations, meals/breaks from the request
