@@ -23,9 +23,9 @@ final class GoodTimeToRideTests: XCTestCase {
     func testUsualFromEarlierDaysAtThisTime() throws {
         // 3 samples on each of 2 earlier days around 2 PM
         let samples: [(date: Date, wait: Int)] = [
-            (at(daysAgo: 1, hour: 13, minute: 30), 60), (at(daysAgo: 1, hour: 14), 70), (at(daysAgo: 1, hour: 15), 80),
-            (at(daysAgo: 3, hour: 13), 65), (at(daysAgo: 3, hour: 14), 75), (at(daysAgo: 3, hour: 15), 70),
-            (at(daysAgo: 2, hour: 9), 5),   // morning — different time of day, ignored
+            (date: at(daysAgo: 1, hour: 13, minute: 30), wait: 60), (date: at(daysAgo: 1, hour: 14), wait: 70), (date: at(daysAgo: 1, hour: 15), wait: 80),
+            (date: at(daysAgo: 3, hour: 13), wait: 65), (date: at(daysAgo: 3, hour: 14), wait: 75), (date: at(daysAgo: 3, hour: 15), wait: 70),
+            (date: at(daysAgo: 2, hour: 9), wait: 5),   // morning — different time of day, ignored
         ]
         let usual = try XCTUnwrap(GoodTimeToRide.usual(samples: samples, now: now, calendar: calendar))
         XCTAssertEqual(usual.basis, .usualAtThisTime)
@@ -40,7 +40,7 @@ final class GoodTimeToRideTests: XCTestCase {
     func testFallsBackToEarlierToday() throws {
         // Six samples this morning; the last half hour is ignored so the current dip doesn't count
         var samples: [(date: Date, wait: Int)] = (0..<6).map { (date: at(daysAgo: 0, hour: 11, minute: $0 * 10), wait: 60) }
-        samples.append((at(daysAgo: 0, hour: 13, minute: 50), 10))
+        samples.append((date: at(daysAgo: 0, hour: 13, minute: 50), wait: 10))
         let usual = try XCTUnwrap(GoodTimeToRide.usual(samples: samples, now: now, calendar: calendar))
         XCTAssertEqual(usual.basis, .earlierToday)
         XCTAssertEqual(usual.minutes, 60)

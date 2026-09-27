@@ -125,7 +125,7 @@ final class GoodTimeService {
         var byRide: [String: [(date: Date, wait: Int)]] = [:]
         for r in records {
             guard let wait = r.waitMinutes, r.status == "OPERATING" || r.status.isEmpty else { continue }
-            byRide[r.rideId, default: []].append((r.recordedAt, wait))
+            byRide[r.rideId, default: []].append((date: r.recordedAt, wait: wait))
         }
 
         var next: [String: GoodTimeToRide.Deal] = [:]
@@ -148,7 +148,10 @@ final class GoodTimeService {
 
     /// Must-Do deals first (biggest saving first), then others — for the Wait Times strip.
     func ranked(rides: [DisplayRide], mustDo: Set<String>, limit: Int = 5) -> [(ride: DisplayRide, deal: GoodTimeToRide.Deal)] {
-        rides.compactMap { ride in deals[ride.id].map { (ride, $0) } }
+        rides.compactMap { ride -> (ride: DisplayRide, deal: GoodTimeToRide.Deal)? in
+            guard let deal = deals[ride.id] else { return nil }
+            return (ride: ride, deal: deal)
+        }
             .sorted {
                 let a = mustDo.contains($0.ride.id), b = mustDo.contains($1.ride.id)
                 if a != b { return a }

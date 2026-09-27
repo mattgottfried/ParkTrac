@@ -21,7 +21,7 @@ final class DayPlanBuilderTests: XCTestCase {
     // MARK: Profile
 
     func testProfilePrefersHistoryThenScalesLiveWait() {
-        let samples: [(date: Date, wait: Int)] = [(at(15), 80), (at(15, 20), 90), (at(15, 40), 70)]
+        let samples: [(date: Date, wait: Int)] = [(date: at(15), wait: 80), (date: at(15, 20), wait: 90), (date: at(15, 40), wait: 70)]
         let curve: [Int: Double] = [10: 20, 12: 40, 15: 60]
         let profile = RideProfile.waitsByHour(samples: samples, currentWait: 30, now: at(10), parkCurve: curve, calendar: cal)
         XCTAssertEqual(profile[10], 30, "current hour is the live wait")
@@ -88,9 +88,9 @@ final class DayPlanBuilderTests: XCTestCase {
         let splash = RideInfo(heightInches: 40, thrill: .moderate, type: .water, lightningLane: false)
         let coaster = RideInfo(heightInches: 38, thrill: .moderate, type: .coaster, lightningLane: true)
         let rides: [(id: String, name: String, info: RideInfo?)] = [
-            ("tiana", "Tiana's Bayou Adventure", splash),
-            ("7dmt", "Seven Dwarfs Mine Train", coaster),
-            ("hm", "Haunted Mansion", nil),
+            (id: "tiana", name: "Tiana's Bayou Adventure", info: splash),
+            (id: "7dmt", name: "Seven Dwarfs Mine Train", info: coaster),
+            (id: "hm", name: "Haunted Mansion", info: nil),
         ]
         var c = PlanConstraints()
         c.mustRide = ["Seven Dwarfs", "Tiana's Bayou Adventure"]
