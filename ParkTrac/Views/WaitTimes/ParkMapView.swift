@@ -21,6 +21,26 @@ final class ParkingPointAnnotation: MKPointAnnotation {}
 
 /// Zoomed out → all parks; zoomed in near a park → that park; in between → keep what's showing
 /// (so the list doesn't flicker while zooming). Pure, unit tested.
+/// Bottom panel drag: follows the finger, then snaps open/closed from where it was
+/// dropped or how hard it was flicked.
+enum PanelDrag {
+    /// A drag or flick of at least this many points switches state.
+    static let threshold: CGFloat = 60
+
+    static func shouldExpand(wasExpanded: Bool, translation: CGFloat, predicted: CGFloat) -> Bool {
+        let move = abs(predicted) > abs(translation) ? predicted : translation
+        if move <= -threshold { return true }
+        if move >= threshold { return false }
+        return wasExpanded
+    }
+
+    /// Panel height while dragging (dragging up = negative translation = taller), kept on screen.
+    static func height(expanded: Bool, drag: CGFloat, collapsed: CGFloat, full: CGFloat) -> CGFloat {
+        let base = expanded ? full : collapsed
+        return min(max(base - drag, collapsed * 0.6), full)
+    }
+}
+
 enum MapFocus: Equatable {
     case allParks
     case park(String)
@@ -346,6 +366,9 @@ struct ParkMapView: View {
     @State private var region: MKCoordinateRegion = ParkGroup.disney.defaultRegion
     @State private var selectedRide: DisplayRide?
     @State private var panelExpanded: Bool = false
+    /// Live finger offset while dragging the panel header (springs back to 0 on release)
+    @GestureState(resetTransaction: Transaction(animation: .spring(response: 0.35, dampingFraction: 0.8)))
+    private var panelDrag: CGFloat = 0
     @State private var mapStyleIsHybrid: Bool = false
     @State private var lastAutoZoomedParkId: String? = nil
     @AppStorage("waitTimesBottomTab") private var showTab: BottomTab = .rides
@@ -491,7 +514,8 @@ struct ParkMapView: View {
                 VStack(spacing: 0) {
                     Spacer()
                     rideListPanel
-                        .frame(height: panelExpanded ? geo.size.height * 0.82 : 320)
+                        .frame(height: PanelDrag.height(expanded: panelExpanded, drag: panelDrag,
+                                                        collapsed: 320, full: geo.size.height * 0.82))
                         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: panelExpanded)
                 }
             }
@@ -909,17 +933,29 @@ struct ParkMapView: View {
 
     private var rideListPanel: some View {
         VStack(spacing: 0) {
-            Capsule()
-                .fill(.secondary.opacity(0.4))
-                .frame(width: 36, height: 4)
-                .padding(.top, 8).padding(.bottom, 6)
-                .onTapGesture { panelExpanded.toggle() }
-                .gesture(DragGesture(minimumDistance: 20).onEnded { v in
-                    if v.translation.height < -30 { panelExpanded = true }
-                    else if v.translation.height > 30 { panelExpanded = false }
-                })
-
-            panelHeader
+            // The whole top of the panel (grabber + park name + crowd/updated line) drags or taps
+            // to expand/collapse — not just the little grabber bar
+            VStack(spacing: 0) {
+                Capsule()
+                    .fill(.secondary.opacity(0.5))
+                    .frame(width: 40, height: 5)
+                    .padding(.top, 8).padding(.bottom, 6)
+                panelHeader
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { panelExpanded.toggle() }
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 6, coordinateSpace: .global)
+                    .updating($panelDrag) { value, state, _ in state = value.translation.height }
+                    .onEnded { value in
+                        panelExpanded = PanelDrag.shouldExpand(wasExpanded: panelExpanded,
+                                                               translation: value.translation.height,
+                                                               predicted: value.predictedEndTranslation.height)
+                    }
+            )
+            .accessibilityAction(named: panelExpanded ? "Collapse list" : "Expand list") {
+                panelExpanded.toggle()
+            }
 
             // Park Hours Header
             // Only for a specific park — zoomed out to the whole resort there's no single park's hours
@@ -987,8 +1023,9 @@ struct ParkMapView: View {
                                              returnPassShort: viewModel.selectedGroup.returnPassNames.short,
                                              returnPassName: viewModel.selectedGroup.returnPassNames.free,
                                              resort: viewModel.selectedGroup,
-                                             goodTime: GoodTimeService.shared.deal(for: ride.id))
-                                    .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                             goodTime: GoodTimeService.shared.deal(for: ride.id),
+                                             isMustDo: appState.wishList.contains(ride.id))
+                                    .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14, style: .continuous))
                                     .onTapGesture { selectedRide = ride }
                                     .contextMenu { rideContextMenu(for: ride) }
                                     // Same shortcuts as the long-press menu, for VoiceOver's Actions rotor

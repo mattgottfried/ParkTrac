@@ -13,9 +13,13 @@ struct RideCardView: View {
     /// Wait well below this ride's usual (GoodTimeService)
     var goodTime: GoodTimeToRide.Deal? = nil
 
+    /// Starred as a Must-Do (shown as a star beside the name)
+    var isMustDo: Bool = false
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    /// Big wait number keeps its rounded look but grows with Dynamic Type.
-    @ScaledMetric(relativeTo: .title2) private var waitNumberSize: CGFloat = 28
+    /// The wait tile keeps its rounded look but grows with Dynamic Type.
+    @ScaledMetric(relativeTo: .title2) private var waitNumberSize: CGFloat = 24
+    @ScaledMetric(relativeTo: .title2) private var tileSize: CGFloat = 58
 
     private var badgeColor: Color {
         waitTimeColor(minutes: ride.waitMinutes, isOperating: ride.isOperating, status: ride.status)
@@ -23,101 +27,157 @@ struct RideCardView: View {
 
     private var meta: RideInfo? { RideMetadata.info(for: ride.name, resort: resort) }
     private var metric: Bool { RideMetadata.prefersMetric(resort) }
+    private var isDown: Bool { ride.status == "DOWN" }
+    private var isWatchingLL: Bool { LightningLaneWatchService.shared.watch(for: ride.id) != nil }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 0) {
-            // Left accent strip
-            Rectangle()
-                .fill(badgeColor)
-                .frame(width: 3)
-                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 12))
+        // At accessibility text sizes the tile sits above the text instead of beside it
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+        layout {
+            waitTile
 
-            // At accessibility text sizes the wait moves under the name instead of beside it
-            let layout = dynamicTypeSize.isAccessibilitySize
-                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
-                : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
-            layout {
-                VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(ride.name)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(ride.isOperating ? .primary : .secondary)
                         .lineLimit(2)
-                    if let goodTime {
-                        Label("Good time · \(goodTime.shortText)", systemImage: "arrow.down.circle.fill")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(Color.green, in: Capsule())
-                    }
-                    HStack(spacing: 6) {
-                        Text(ride.statusDisplay)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        if ride.isOperating, let ll = ride.multiPass {
-                            Text(ll.shortText(prefix: returnPassShort))
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(ll.isAvailable ? Color.orange : Color.secondary)
-                        }
-                        if let walk = walkMinutes {
-                            Label("\(walk) min", systemImage: "figure.walk")
-                                .labelStyle(.titleAndIcon)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        if LightningLaneWatchService.shared.watch(for: ride.id) != nil {
-                            Image(systemName: "bell.fill")
-                                .font(.caption2)
-                                .foregroundStyle(.orange)
-                        }
-                        if let info = meta {
-                            Circle()
-                                .fill(info.thrill.color)
-                                .frame(width: 6, height: 6)
-                            if let h = HeightFormat.short(info, metric: metric) {
-                                Text(h)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    if isMustDo {
+                        Image(systemName: "star.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.yellow)
                     }
                 }
-                if !dynamicTypeSize.isAccessibilitySize { Spacer() }
-                if ride.isOperating, let minutes = ride.waitMinutes {
-                    VStack(spacing: 0) {
-                        Text("\(minutes)")
-                            .font(.system(size: waitNumberSize, weight: .bold, design: .rounded))
-                            .foregroundStyle(badgeColor)
-                        Text("min")
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(badgeColor.opacity(0.8))
-                    }
-                } else if ride.status == "DOWN" {
-                    statusBadge(icon: "exclamationmark.triangle.fill", label: "Down", color: .orange)
-                } else if !ride.isOperating {
-                    statusBadge(icon: "xmark.circle.fill", label: ride.statusDisplay, color: .red)
-                } else {
-                    Text("—")
-                        .font(.caption.bold())
-                        .foregroundStyle(.gray)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.gray.opacity(0.15))
-                        .clipShape(Capsule())
+
+                if let subtitle {
+                    Label(subtitle.text, systemImage: subtitle.icon)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(subtitle.color)
+                        .lineLimit(1)
+                }
+
+                if hasDetails {
+                    detailRow
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay {
+            if goodTime != nil {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.green.opacity(0.6), lineWidth: 1.5)
+            }
+        }
         .shadow(color: .black.opacity(theme.cardShadowOpacity), radius: 6, x: 0, y: 2)
         // Down rides stay prominent so the caution state is noticed; closed dims
-        .opacity(ride.isOperating || ride.status == "DOWN" ? 1.0 : 0.6)
+        .opacity(ride.isOperating || isDown ? 1.0 : 0.6)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(ride.name)
         .accessibilityValue(accessibilityValue)
         .accessibilityHint("Shows wait predictions and details")
         .accessibilityAddTraits(.isButton)
+    }
+
+    // MARK: Wait tile
+
+    /// Leading square: the wait (colored by length), or Down / Closed.
+    private var waitTile: some View {
+        VStack(spacing: 0) {
+            if ride.isOperating, let minutes = ride.waitMinutes {
+                Text("\(minutes)")
+                    .font(.system(size: waitNumberSize, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.6)
+                Text("min")
+                    .font(.caption2.weight(.semibold))
+                    .opacity(0.8)
+            } else if isDown {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.title3)
+                Text("Down")
+                    .font(.caption2.weight(.bold))
+            } else if !ride.isOperating {
+                Image(systemName: "xmark")
+                    .font(.title3.weight(.bold))
+                Text(ride.status == "REFURBISHMENT" ? "Refurb" : "Closed")
+                    .font(.caption2.weight(.bold))
+            } else {
+                Text("Open")
+                    .font(.subheadline.weight(.bold))
+            }
+        }
+        .lineLimit(1)
+        .foregroundStyle(tileColor)
+        .frame(width: tileSize, height: tileSize)
+        .background(tileColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private var tileColor: Color {
+        if isDown { return .orange }
+        if !ride.isOperating { return .red }
+        return ride.waitMinutes == nil ? .gray : badgeColor
+    }
+
+    // MARK: Subtitle + details
+
+    /// One line under the name: a good-time deal, or why the ride isn't running.
+    private var subtitle: (text: String, icon: String, color: Color)? {
+        if let goodTime {
+            return (text: "Good time · \(goodTime.shortText)", icon: "arrow.down.circle.fill", color: .green)
+        }
+        if isDown { return (text: "Temporarily down", icon: "wrench.and.screwdriver", color: .orange) }
+        if !ride.isOperating { return (text: ride.statusDisplay, icon: "moon.zzz", color: .secondary) }
+        return nil
+    }
+
+    private var hasDetails: Bool {
+        (ride.isOperating && ride.multiPass != nil) || isWatchingLL || walkMinutes != nil
+            || meta != nil
+    }
+
+    /// Return pass, walk and height on one line, dot-separated.
+    private var detailRow: some View {
+        HStack(spacing: 6) {
+            if ride.isOperating, let ll = ride.multiPass {
+                Text(ll.shortText(prefix: returnPassShort))
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(ll.isAvailable ? Color.white : Color.secondary)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(ll.isAvailable ? Color.orange : Color.secondary.opacity(0.15), in: Capsule())
+            }
+            if isWatchingLL {
+                Image(systemName: "bell.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+            }
+            if let walk = walkMinutes {
+                Label("\(walk) min", systemImage: "figure.walk")
+                    .labelStyle(.titleAndIcon)
+            }
+            if let info = meta {
+                if walkMinutes != nil { Text("·") }
+                // Thrill-level dot, then the height requirement when there is one
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(info.thrill.color)
+                        .frame(width: 6, height: 6)
+                    if let h = HeightFormat.short(info, metric: metric) {
+                        Text(h)
+                    }
+                }
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
     }
 
     private var accessibilityValue: String {
@@ -136,19 +196,5 @@ struct RideCardView: View {
         if let walk = walkMinutes { parts.append("about \(walk) minute walk") }
         if let meta, let h = HeightFormat.spoken(meta, metric: metric) { parts.append("height requirement \(h)") }
         return parts.joined(separator: ", ")
-    }
-
-    private func statusBadge(icon: String, label: String, color: Color) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.caption2.bold())
-            Text(label)
-                .font(.caption.bold())
-        }
-        .foregroundStyle(color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(color.opacity(0.13))
-        .clipShape(Capsule())
     }
 }

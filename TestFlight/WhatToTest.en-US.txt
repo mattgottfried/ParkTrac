@@ -5,3 +5,15 @@ Smart Planner no longer adds a dinner you didn't pick
 - Now it only adds a meal or break when your notes ask for one (e.g. "dinner at 6:30"), and never the same one twice.
 - Check: pick a few rides with no notes → Plan with Apple Intelligence → only your rides and chosen shows appear, no extra dining.
 - Check: add "snack break at 3" in the notes → one snack break at 3.
+
+Redesigned ride cards (Wait Times list)
+- The wait now sits in a colored tile on the left of each card, so you can scan waits straight down the list. Down rides show an orange ⚠ tile, closed rides a red ✕.
+- Must-Do rides show a yellow star next to the name.
+- One line under the name for a Good Time deal (the card also gets a green outline) or why a ride isn't running.
+- Lightning Lane, walk time, thrill dot and height sit together on one tidy line. The word "Operating" is gone.
+- Check: the cards read cleanly, long names wrap, and tapping or long-pressing a card still works.
+
+Easier to expand and shrink the ride list
+- Drag or tap anywhere on the top of the panel (the park name and "Updated…" line), not just the little gray bar.
+- The panel follows your finger while you drag, and a quick flick up or down is enough.
+- Check: drag up to expand, drag down to shrink, tap the park name to toggle, and the Must-Do / filter buttons still work.
