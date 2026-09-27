@@ -8,6 +8,7 @@
 import { ApnsClient } from "./apns.ts";
 import { createApp, fetchLiveFromThemeParks } from "./app.ts";
 import { createHistory, fetchDestinationsFromThemeParks } from "./history.ts";
+import { createParking } from "./parking.ts";
 
 const kv = await Deno.openKv();
 const apns = ApnsClient.fromEnv();
@@ -35,9 +36,14 @@ Deno.cron("record wait history", "*/10 * * * *", async () => {
   if (parks > 0) console.log(`history: ${parks} parks, ${rides} rides`);
 });
 
+// Shared parking lot layouts (anonymous row positions)
+const parking = createParking({ kv });
+
 Deno.serve((req) => {
   const url = new URL(req.url);
   if (req.method === "GET" && url.pathname === "/v1/history") return history.handle(url);
   if (req.method === "GET" && url.pathname === "/v1/days") return history.handleDays(url);
+  if (req.method === "POST" && url.pathname === "/v1/parking/sample") return parking.add(req);
+  if (req.method === "GET" && url.pathname === "/v1/parking/samples") return parking.list(url);
   return app.handler(req);
 });

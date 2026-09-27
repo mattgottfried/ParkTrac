@@ -243,7 +243,7 @@ enum ThrillTrackServer {
         let root = (base.isEmpty ? InstantAlertsService.defaultServerURL : base)
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         var components = URLComponents(string: root + "/" + path)
-        components?.queryItems = query
+        components?.queryItems = query.isEmpty ? nil : query
         return components?.url
     }
 }
