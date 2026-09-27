@@ -114,6 +114,55 @@ struct DayItinerary: Codable, Equatable {
     }
 }
 
+// MARK: - Plans for future days (pure)
+
+/// Plans saved for a future day wait in a list; on the day, the first one due becomes the
+/// live plan (unless a plan is already running today). Past ones are dropped.
+enum ItineraryStore {
+    /// Adds `plan`, replacing any plan for the same day and resort; soonest first.
+    static func saving(_ plan: DayItinerary, into list: [DayItinerary],
+                       calendar: Calendar = .current) -> [DayItinerary] {
+        (list.filter { !(calendar.isDate($0.day, inSameDayAs: plan.day) && $0.resortRaw == plan.resortRaw) } + [plan])
+            .sorted { $0.day < $1.day }
+    }
+
+    static func promote(current: DayItinerary?, upcoming: [DayItinerary], now: Date = .now,
+                        calendar: Calendar = .current) -> (current: DayItinerary?, upcoming: [DayItinerary]) {
+        let today = calendar.startOfDay(for: now)
+        var rest = upcoming.filter { calendar.startOfDay(for: $0.day) >= today }
+        guard let due = rest.first(where: { calendar.isDate($0.day, inSameDayAs: now) }) else {
+            return (current: current, upcoming: rest)
+        }
+        if let current, current.isToday(now: now, calendar: calendar) {
+            return (current: current, upcoming: rest)
+        }
+        rest.removeAll { $0 == due }
+        return (current: due, upcoming: rest)
+    }
+}
+
+/// "Today" / "Tomorrow" / "Sat, Oct 10", and moving a time of day onto another day.
+enum FutureDay {
+    static func title(_ day: Date, now: Date = .now, calendar: Calendar = .current) -> String {
+        if calendar.isDate(day, inSameDayAs: now) { return "Today" }
+        if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now), calendar.isDate(day, inSameDayAs: tomorrow) {
+            return "Tomorrow"
+        }
+        return day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+    }
+
+    /// The same clock time on `day` (today's 8:30 PM fireworks → 8:30 PM that day)
+    static func moving(_ time: Date, to day: Date, calendar: Calendar = .current) -> Date? {
+        let c = calendar.dateComponents([.hour, .minute], from: time)
+        return calendar.date(bySettingHour: c.hour ?? 0, minute: c.minute ?? 0, second: 0, of: day)
+    }
+
+    /// Noon on `day` — a safe instant for looking the day up in another time zone
+    static func noon(_ day: Date, calendar: Calendar = .current) -> Date {
+        calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
+    }
+}
+
 // MARK: - Tip Board (pure)
 
 enum TipBoard {
@@ -238,11 +287,14 @@ final class ItineraryService {
     static let shared = ItineraryService()
 
     private static let storageKey = "dayItinerary"
+    private static let upcomingKey = "upcomingItineraries"
     private let icloud = NSUbiquitousKeyValueStore.default
     private let defaults = UserDefaults.standard
 
     /// The started plan (any day — check `active(for:)`)
     private(set) var itinerary: DayItinerary?
+    /// Plans saved for future days (shared with the other phone); the one due becomes `itinerary`
+    private(set) var upcoming: [DayItinerary] = []
     /// Current timed plan from now on
     private(set) var live: DayPlan?
     private(set) var liveUpdatedAt: Date?
@@ -253,6 +305,8 @@ final class ItineraryService {
 
     private init() {
         itinerary = Self.decode(icloud.data(forKey: Self.storageKey) ?? defaults.data(forKey: Self.storageKey))
+        upcoming = Self.decodeList(icloud.data(forKey: Self.upcomingKey) ?? defaults.data(forKey: Self.upcomingKey))
+        promoteIfDue()
         NotificationCenter.default.addObserver(
             forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
             object: NSUbiquitousKeyValueStore.default, queue: .main
@@ -260,6 +314,7 @@ final class ItineraryService {
             guard let self else { return }
             // The other phone started a plan or ticked something off
             self.itinerary = Self.decode(self.icloud.data(forKey: Self.storageKey))
+            self.upcoming = Self.decodeList(self.icloud.data(forKey: Self.upcomingKey))
         }
     }
 
@@ -271,6 +326,28 @@ final class ItineraryService {
 
     /// The next thing to do (ride or set-time event) in the live plan
     var nextStop: PlannedStop? { live?.stops.first }
+
+    /// Save a plan for a future day (replaces one already saved for that day and resort)
+    func saveUpcoming(_ plan: DayItinerary) {
+        upcoming = ItineraryStore.saving(plan, into: upcoming)
+        persistUpcoming()
+    }
+
+    func removeUpcoming(_ plan: DayItinerary) {
+        upcoming.removeAll { $0 == plan }
+        persistUpcoming()
+    }
+
+    /// On the day, a saved plan becomes the live one
+    func promoteIfDue(now: Date = .now) {
+        let result = ItineraryStore.promote(current: itinerary, upcoming: upcoming, now: now)
+        guard result.current != itinerary || result.upcoming != upcoming else { return }
+        let started = result.current != itinerary
+        itinerary = result.current
+        upcoming = result.upcoming
+        if started { live = nil; persist() }
+        persistUpcoming()
+    }
 
     func start(_ plan: DayItinerary) {
         itinerary = plan
@@ -316,6 +393,7 @@ final class ItineraryService {
                 context: ModelContext) {
         if let currentLocation { lastLocation = currentLocation }
         let location = currentLocation ?? lastLocation
+        promoteIfDue()
         guard var it = active(for: resort) else {
             live = nil
             suggestions = []
@@ -390,6 +468,17 @@ final class ItineraryService {
             icloud.removeObject(forKey: Self.storageKey)
             defaults.removeObject(forKey: Self.storageKey)
         }
+    }
+
+    private func persistUpcoming() {
+        if let data = try? JSONEncoder().encode(upcoming) {
+            icloud.set(data, forKey: Self.upcomingKey)
+            defaults.set(data, forKey: Self.upcomingKey)
+        }
+    }
+
+    static func decodeList(_ data: Data?) -> [DayItinerary] {
+        data.flatMap { try? JSONDecoder().decode([DayItinerary].self, from: $0) } ?? []
     }
 
     static func decode(_ data: Data?) -> DayItinerary? {

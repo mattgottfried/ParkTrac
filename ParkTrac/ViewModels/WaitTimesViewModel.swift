@@ -161,12 +161,18 @@ final class WaitTimesViewModel {
 
     /// Today's schedule for the currently selected park (operating hours only)
     func todaySchedule(for park: ParkEntity) -> [ParkScheduleDay] {
+        schedule(for: park, on: .now)
+    }
+
+    /// A day's schedule entries (the API publishes about a month ahead). Pass a time inside
+    /// the day — `FutureDay.noon` — so the park-time-zone day matches the calendar day.
+    func schedule(for park: ParkEntity, on date: Date) -> [ParkScheduleDay] {
         guard let days = schedulesByPark[park.id] else { return [] }
-        // "Today" in the park's time zone — ISO8601DateFormatter defaults to UTC, which
+        // The day in the park's time zone — ISO8601DateFormatter defaults to UTC, which
         // picked yesterday's schedule for parks east of UTC (Japan) before 9 AM local.
         let group = parksByGroup.first { $0.value.contains { $0.id == park.id } }?.key ?? selectedGroup
-        let todayStr = Self.dayString(.now, in: group.timeZone)
-        return days.filter { $0.date.hasPrefix(todayStr) }
+        let dayStr = Self.dayString(date, in: group.timeZone)
+        return days.filter { $0.date.hasPrefix(dayStr) }
     }
 
     /// Today's schedule entries for every loaded park at a resort (parking reminder uses the latest close)

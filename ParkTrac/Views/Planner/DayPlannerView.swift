@@ -18,6 +18,8 @@ struct DayPlannerView: View {
     @State private var showEndPlan = false
     /// Siri's "plan my day" request, passed to the Smart Planner once
     @State private var plannerRequest: String?
+    /// Smart Planner opened for a future day (Coming Up → Plan a Future Day)
+    @State private var plannerDay: Date?
 
     /// True when pushed onto another NavigationStack (e.g. from Stats) — skips wrapping in our own.
     private let embedded: Bool
@@ -27,6 +29,70 @@ struct DayPlannerView: View {
     }
 
     private var today: Date { Calendar.current.startOfDay(for: .now) }
+
+    /// Plans saved for future days at this resort
+    private var upcomingPlans: [DayItinerary] {
+        ItineraryService.shared.upcoming.filter { $0.resortRaw == resort && $0.day >= today }
+    }
+
+    /// Future days that have My Day items (added by hand or as a fixed list from the planner)
+    private var futureItemDays: [(day: Date, count: Int)] {
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+        let future = allItems.filter { $0.resort == resort && $0.date >= tomorrow && !UndoDeleteCenter.shared.isHidden($0) }
+        let byDay = Dictionary(grouping: future) { Calendar.current.startOfDay(for: $0.date) }
+        return byDay.map { (day: $0.key, count: $0.value.count) }.sorted { $0.day < $1.day }
+    }
+
+    /// Plans and items for days ahead, plus a way to plan one
+    @ViewBuilder
+    private var comingUpSection: some View {
+        Section {
+            ForEach(upcomingPlans, id: \.day) { plan in
+                VStack(alignment: .leading, spacing: 3) {
+                    Label(FutureDay.title(plan.day), systemImage: "sparkles")
+                        .font(.subheadline.weight(.semibold))
+                    Text(upcomingSummary(plan))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .swipeActions(edge: .trailing) {
+                    Button("Delete", role: .destructive) { ItineraryService.shared.removeUpcoming(plan) }
+                }
+            }
+            ForEach(futureItemDays, id: \.day) { entry in
+                NavigationLink {
+                    FutureDayView(day: entry.day, resort: resort)
+                } label: {
+                    HStack {
+                        Label(FutureDay.title(entry.day), systemImage: "calendar")
+                        Spacer()
+                        Text("\(entry.count) item\(entry.count == 1 ? "" : "s")")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            Button {
+                plannerDay = Calendar.current.date(byAdding: .day, value: 1, to: today)
+                showSmartPlanner = true
+            } label: {
+                Label("Plan a Future Day", systemImage: "calendar.badge.plus")
+            }
+        } header: {
+            Text("Coming Up")
+        } footer: {
+            if !upcomingPlans.isEmpty {
+                Text("A saved plan becomes Next Up on its day and re-plans from live waits.")
+            }
+        }
+    }
+
+    /// "8 rides · 2 shows · starts at park open"
+    private func upcomingSummary(_ plan: DayItinerary) -> String {
+        var parts = ["\(plan.rides.count) ride\(plan.rides.count == 1 ? "" : "s")"]
+        if !plan.shows.isEmpty { parts.append("\(plan.shows.count) show\(plan.shows.count == 1 ? "" : "s")") }
+        parts.append(plan.aiSummary == nil ? "Smart plan" : "Planned with Apple Intelligence")
+        return parts.joined(separator: " · ")
+    }
     private var resort: String { appState.selectedResort.rawValue }
 
     private var todayItems: [PlanItem] {
@@ -268,6 +334,8 @@ struct DayPlannerView: View {
                     .onMove { from, to in movePlanItems(planItems, from: from, to: to) }
                 }
             }
+
+            comingUpSection
         }
         // A pass leaves the list when marked Done (swipe or button)
         .sensoryFeedback(.success, trigger: llPasses.count) { old, new in new < old }
@@ -307,8 +375,8 @@ struct DayPlannerView: View {
         .sheet(isPresented: $showGuestPicker) {
             GuestPickerSheet()
         }
-        .sheet(isPresented: $showSmartPlanner, onDismiss: { plannerRequest = nil }) {
-            SmartPlannerView(initialRequest: plannerRequest)
+        .sheet(isPresented: $showSmartPlanner, onDismiss: { plannerRequest = nil; plannerDay = nil }) {
+            SmartPlannerView(initialRequest: plannerRequest, initialDay: plannerDay)
         }
         // Siri / thrilltrack://planner
         .onChange(of: DeepLinkRouter.shared.showSmartPlanner, initial: true) { _, show in
@@ -515,5 +583,60 @@ private struct LLPassRow: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+    }
+}
+
+// MARK: - A future day's items
+
+/// My Day items saved for a later day — review, delete, or add more.
+struct FutureDayView: View {
+    let day: Date
+    let resort: String
+
+    @Environment(\.modelContext) private var context
+    @Query(sort: \PlanItem.sortOrder) private var allItems: [PlanItem]
+    @State private var showAdd = false
+
+    private var items: [PlanItem] {
+        allItems
+            .filter { $0.resort == resort && Calendar.current.isDate($0.date, inSameDayAs: day) }
+            .sorted { ($0.scheduledTime ?? .distantFuture) < ($1.scheduledTime ?? .distantFuture) }
+    }
+
+    var body: some View {
+        List {
+            if items.isEmpty {
+                ContentUnavailableView("Nothing Planned", systemImage: "calendar",
+                                       description: Text("Add rides, shows or dining for this day."))
+            }
+            ForEach(items) { item in
+                HStack(spacing: 12) {
+                    Text(item.scheduledTime.map { $0.formatted(date: .omitted, time: .shortened) } ?? "Anytime")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .frame(width: 64, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.title).font(.subheadline)
+                        if !item.parkName.isEmpty {
+                            Text(item.parkName).font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .onDelete { offsets in
+                for i in offsets { context.delete(items[i]) }
+                try? context.save()
+            }
+        }
+        .navigationTitle(FutureDay.title(day))
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { showAdd = true } label: { Image(systemName: "plus") }
+                    .accessibilityLabel("Add to this day")
+            }
+        }
+        .sheet(isPresented: $showAdd) {
+            AddPlanItemView(resort: resort, day: day)
+        }
     }
 }
