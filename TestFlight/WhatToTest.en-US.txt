@@ -1,117 +1,41 @@
-Fixed since the last build
+New since the last build (short version: TestFlight allows 4,000 characters)
 
-Smart Planner no longer adds a dinner you didn't pick
-- Apple Intelligence was sometimes inventing a "Dinner at Be Our Guest" (even twice), which pushed your rides past park close.
-- Now it only adds a meal or break when your notes ask for one (e.g. "dinner at 6:30"), and never the same one twice.
-- Check: pick a few rides with no notes → Plan with Apple Intelligence → only your rides and chosen shows appear, no extra dining.
-- Check: add "snack break at 3" in the notes → one snack break at 3.
+Smart Planner
+- No more invented dinners: meals/breaks only when your notes ask ("snack break at 3").
+- Plan a future day: Day picker (60 days ahead) uses that day's hours and typical waits. Save Plan → My Day → Coming Up; that morning it becomes your live Next Up plan.
+- Change the Plan: shows total walking; one tap for Less Walking, Must-Dos First, Shortest Waits; with Apple Intelligence type requests ("keep rides close together").
+- Rain plan: when rain is likely, indoor rides go in the wet hours, a "Rain likely 3–5 PM" note shows, and a heads-up comes ~30 min before.
 
-Redesigned ride cards (Wait Times list)
-- The wait now sits in a colored tile on the left of each card, so you can scan waits straight down the list. Down rides show an orange ⚠ tile, closed rides a red ✕.
-- Must-Do rides show a yellow star next to the name.
-- One line under the name for a Good Time deal (the card also gets a green outline) or why a ride isn't running.
-- Lightning Lane, walk time, thrill dot and height sit together on one tidy line. The word "Operating" is gone.
-- Check: the cards read cleanly, long names wrap, and tapping or long-pressing a card still works.
+Wait Times
+- New ride cards: colored wait tile on the left, Must-Do star, one tidy info line.
+- Drag or tap anywhere on the panel header to expand/shrink the list.
+- My-location button top-right on the map.
+- Pull-to-refresh is gone (it caused false errors); tap the orange "N min ago" pill to refresh.
+- Shows open a show page: showtimes, 15-min reminders, Add to My Day.
 
-Easier to expand and shrink the ride list
-- Drag or tap anywhere on the top of the panel (the park name and "Updated…" line), not just the little gray bar.
-- The panel follows your finger while you drag, and a quick flick up or down is enough.
-- Check: drag up to expand, drag down to shrink, tap the park name to toggle, and the Must-Do / filter buttons still work.
+Ride page
+- New layout: wait tile header, four buttons (Rode It!, My Day, Alert, Return), cards.
+- Wait Forecast replaces Predictions: "Good time to go now" or "Shorter around 8pm", hourly bars (touch to read), best hour ★.
+- "You usually wait ~45 (posted 60)" after you've timed a ride twice.
+- Forecasts, Good Time badges and the Tip Board now use everyone's recorded waits (server history), so they work on day one.
 
-Redesigned ride page (tap any ride)
-- Same colored wait tile as the list at the top, next to the name, park, status and how many times you've ridden it. The Must-Do star sits top-right.
-- Four big buttons right under it: Rode It!, My Day, Alert (shows your alert, e.g. "≤30 min", once set) and Return.
-- Ride info chips, then Lightning Lane / DAS-AAP, alerts, the wait stopwatch and predictions each sit in their own white card. The Dismiss button is gone (swipe down).
-- Check: each button opens the right sheet, the star toggles, and long pages scroll smoothly.
+Add to My Day
+- One screen: pick several rides or a show, then Anytime / Now / Best time / showtime / set time. Lightning Lane returns start the Live Activity.
 
-My location button on the map
-- New location-arrow button top-right on Wait Times: centers the map on you (street level), and the park filter follows.
-- If location isn't allowed yet it asks; if you turned it off it offers to open Settings.
+Live Activities
+- Resort colors, big countdowns, progress bars for return windows and the stopwatch.
+- Next Up on the Lock Screen while a plan runs: timeline of the next 3 stops.
+- Buttons: Done / Skip, "I'm On — Log It", "Used It". Settings → Next Up on Lock Screen.
 
-New Wait Forecast on the ride page (replaces "Predictions")
-- A clear call at the top: "Good time to go now", or "Shorter around 8pm — saves about 25 min".
-- Color-coded bars for each hour the park is open today. "Now" is labeled, past hours fade, and a green ★ marks the best hour left.
-- Touch or drag across the chart to see any hour's expected wait.
-- Lines underneath: whether it's getting longer or shorter next hour, and how today compares with the usual for this time.
-- It uses the same per-ride numbers as the Smart Planner and Tip Board, so they all agree.
-- Check: open a few rides at different times of day. The call and the chart should make sense, and the bars should stop at park close.
+Alerts and stats
+- Must-Do down alerts: "is down" / "is back up" (Settings → Must-Do Down Alerts).
+- Crowd Calendar uses measured waits for past days and predicts the next two weeks.
+- Day recap (My Day → ✨): rides, time in line, steps, spending; share as image or text. Past days: Stats → Recaps. Asks for Motion & Fitness.
 
-Community wait history (better forecasts for every ride)
-- The ThrillTrack server now records every ride's wait every 10 minutes at all four resorts, all day, even when nobody has the app open.
-- Once it has a couple of days, each ride's Wait Forecast, the Smart Planner and the Tip Board use that ride's real typical waits for today's day of the week. Your own visits still count first.
-- The forecast says "Typical Friday" (etc.) in the corner when it's using this history.
-- Check: this builds up over the first days, and a ride's forecast should shift from "Estimated" to "Typical <day>" after a couple of days of the same weekday or two days of any data.
+Car locator
+- Sections and rows match the Disney/Universal apps; rows are a scroll wheel.
+- It guesses your section and row from GPS when you open it. Lot maps now cover Magic Kingdom (all 12 sections), Animal Kingdom (Peacock, Butterfly, Unicorn, Dinosaur, Giraffe, Yeti), EPCOT (all 8), Hollywood Studios (5 of 6) and Epic Universe (Explorer, Monster, Viking, Dragon, Hero — Hero is new: rows 501–511).
+- Unmapped lots learn from saved spots (yours, plus everyone's with "Help Map This Lot" on). CityWalk garages aren't guessed.
+- Check: at a lot, open the car locator. The section and row should be filled in ("Guessed from the lot map"). Spin the wheel if the row is off, then save. Your first save in a section sets which way its rows count. Magic Kingdom, Animal Kingdom and Epic sections were drawn from the lot diagrams, so say if a section comes up wrong.
 
-Good Time to Ride works for every ride
-- Good Time badges, the green strip and Must-Do alerts used to need your own history for a ride. Now they also use everyone's recorded waits, so they work on your first visit.
-
-"You usually wait ~45 (posted 60)"
-- Once you've timed a ride twice with the stopwatch (or any 5 rides at the resort), its ride page shows how long you really wait versus the posted time.
-
-Rain plan
-- ThrillTrack checks the hourly rain chance. When rain is likely, the Smart Planner and Next Up put indoor rides (dark rides, simulators, shows, Space Mountain…) in those hours.
-- A blue "Rain likely 3–5 PM" note shows on Next Up and the planner, and a heads-up notification comes about half an hour before (Settings → Rain Heads-Up).
-
-New Add to My Day
-- Rides and shows are right on the screen. No more park → ride drill-down. Tap several rides to add them all at once.
-- Pick when: Anytime, Now, the ride's Best time today, a showtime, or a set time.
-- From a ride's page it opens small with that ride already picked.
-- Lightning Lane returns logged here now also start the Live Activity and reminder.
-
-No more pull-to-refresh on the ride list
-- Pulling down on the list sometimes cancelled the refresh and showed "Couldn't refresh wait times" over rides that were fine. Pull-to-refresh is gone; waits still update on their own every minute.
-- If waits are more than 5 minutes old, the orange "Wait times from N min ago" pill in the panel is now a button: tap it to refresh.
-- A failed refresh no longer hides the rides you already have.
-
-Tap a show
-- Shows in the Wait Times list now open a show page: today's showtimes (the next one highlighted), a 🔔 on each future showing for a reminder 15 minutes before, and Add to My Day (opens with the show and its next showtime picked).
-
-Redesigned Live Activities + new "Next Up" on the Lock Screen
-- New look for every Live Activity: a colored icon for each type, a bigger countdown, and cleaner Dynamic Island views.
-- Lightning Lane / Express returns show a progress bar across the return window ("Window open · closes in 42:10", 2:15 – 3:15 PM).
-- The wait stopwatch fills a bar toward the posted wait, so you can see if the line is beating the sign.
-- NEW: while a Smart Planner plan is running, a "Next Up" Live Activity shows your next ride with its wait tile, when to get in line, the walk, what's after it, "4 of 9 done" and any rain heads-up. It updates whenever the app refreshes wait times and ends when you end the plan. Turn it off in Settings → Next Up on Lock Screen.
-- Check: start a plan → lock the phone → Next Up is there; long-press the Dynamic Island; log a Lightning Lane return and watch the bar.
-
-Must-Do down alerts
-- When one of your Must-Do (⭐) rides goes down you get "⚠️ … is down", and "✅ … is back up" with the posted wait when it's running again. It works all day, every time.
-- With Instant Alerts on, these come from the alert server within about a minute even when ThrillTrack is closed; otherwise they arrive when the app refreshes.
-- Settings → Must-Do Down Alerts turns them off.
-
-Real crowd calendar
-- The Crowd Calendar now uses ThrillTrack's recorded waits. Past days show the measured average wait (tap a day: "Measured: average wait ~38 min" with each park's number).
-- The next two weeks are predicted from the same weekday over recent weeks ("Predicted from the last 3 Saturdays"). Further out it falls back to the seasonal estimate.
-- This fills in as the server collects data. Check after a few days that past days show "Measured".
-
-Day recap
-- My Day → ✨ button (top right): today's recap card with rides, time in line, how much you beat the posted waits, your best-timed ride, repeat rides, steps and distance walked, and money spent.
-- Share it as an image card or as text. Past days: Stats → Recaps.
-- ThrillTrack asks for Motion & Fitness permission for the step count (the phone keeps about a week).
-
-Live Activities, round two
-- Resort colors: Disney is navy/blue with gold, Universal charcoal/teal with lime, Tokyo Disney navy/rose, USJ black/red.
-- Big numbers: countdowns and the stopwatch are large and easy to read at a glance, with one line under them.
-- Next Up is now a timeline of your next three stops (time, name, wait), with the next one highlighted.
-- Buttons, no need to open the app: Next Up has Done / Skip, the stopwatch has "I'm On — Log It" (logs the ride with your real wait), and returns have "Used It" (ticks it off in My Day and ends the countdown).
-- Check: tap each button on the Lock Screen and in the expanded Dynamic Island and confirm My Day / Ride Counter update.
-
-Plan a future day
-- Smart Planner has a Day picker (up to 60 days ahead). Pick rides and shows, and it plans that day using that day's park hours and typical waits for that weekday (your visits + everyone's recorded waits). Show times are copied from today's schedule.
-- "Save Plan for Sat, Oct 10" keeps it in My Day → Coming Up. On the morning of that day it becomes your live Next Up plan automatically and re-plans from live waits.
-- "Add to My Day as a Fixed List" puts the timed list on that day instead. Coming Up shows each future day; tap one to see, add or delete items. Add to My Day there skips Now/Best/Lightning Lane.
-- My Day → Coming Up → Plan a Future Day opens the planner on tomorrow.
-- Check: plan tomorrow, save it, see it under Coming Up; the next morning it should appear as Next Up.
-- Fixed: planning a future day said every ride "didn't fit before the park closes" (it was using today's closing time). It now uses that day's hours, or 9 PM if they aren't published yet.
-
-Change the plan after it's made
-- The Smart Planner result now shows how much walking the plan has ("About 42 min of walking between stops") and a "Change the Plan" section.
-- One-tap fixes: Less Walking (finishes one part of the park before crossing to the next), Must-Dos First, Shortest Waits. Each says what changed ("Walking cut from about 42 to 18 min").
-- With Apple Intelligence, type what you want ("keep rides close together", "TRON last", "lunch at noon") and send. It rewrites the order and ThrillTrack re-times it; you can keep asking. Walking requests also get a route clean-up, since the model can't measure distances itself.
-- Apple Intelligence now also knows which rides are near each other (areas) from the first plan.
-
-Car locator: row wheel + guessing
-- Sections and rows now match the Disney and Universal apps (thanks for the lists): new Medical, BB-8, Dragon, Monster and Valet sections; Blizzard Beach and Typhoon Lagoon (incl. "Peak").
-- Rows are a scroll wheel like the Disney app — no typing.
-- Opening the car locator takes a GPS fix and guesses: at EPCOT (all 8 sections), Hollywood Studios (Minnie, Jessie, Mickey, Buzz, Olaf) and Epic Universe's Explorer it finds your section from the lot map and your row from the mapped row lines. Elsewhere (Magic Kingdom, Animal Kingdom…) it learns from spots saved there before — yours and, with "Help Map This Lot" on, everyone's (anonymous: section, row and GPS point only).
-- CityWalk garages aren't guessed (GPS can't tell the level).
-- Check: at a lot, open the car locator — section and row should be filled in with "Guessed from…"; spin the wheel if it's off and save. The first save in a mapped section also fixes which way its rows are numbered.
+Check overall: plan a day and tap through Next Up on the Lock Screen, open a few ride pages, add rides to My Day, and try the car locator.

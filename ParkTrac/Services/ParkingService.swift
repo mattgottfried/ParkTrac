@@ -180,6 +180,7 @@ enum ParkingLots {
     ]
 
     static let universal: [ParkingLot] = [
+        // Sections in walking order, the first nearest the central security hub
         ParkingLot(name: "CityWalk Garages", groups: [
             .init(name: nil, sections: [s("Valet", [])]),
             .init(name: "North Garage", sections: [
@@ -196,7 +197,7 @@ enum ParkingLots {
         ParkingLot(name: "Epic Universe", groups: [
             .init(name: nil, sections: [
                 s("Valet", []), s("Explorer", r(101...107)), s("Monster", r(201...211)),
-                s("Viking", r(301...311)), s("Dragon", r(401...410, 501...511)),
+                s("Viking", r(301...311)), s("Dragon", r(401...410)), s("Hero", r(501...511)),
             ]),
         ]),
     ]
