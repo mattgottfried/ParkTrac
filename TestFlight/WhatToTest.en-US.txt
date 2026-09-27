@@ -27,3 +27,11 @@ Redesigned ride page (tap any ride)
 My location button on the map
 - New location-arrow button top-right on Wait Times: centers the map on you (street level), and the park filter follows.
 - If location isn't allowed yet it asks; if you turned it off it offers to open Settings.
+
+New Wait Forecast on the ride page (replaces "Predictions")
+- A clear call at the top: "Good time to go now", or "Shorter around 8pm — saves about 25 min".
+- Color-coded bars for each hour the park is open today. "Now" is labeled, past hours fade, and a green ★ marks the best hour left.
+- Touch or drag across the chart to see any hour's expected wait.
+- Lines underneath: whether it's getting longer or shorter next hour, and how today compares with the usual for this time.
+- It uses the same per-ride numbers as the Smart Planner and Tip Board, so they all agree.
+- Check: open a few rides at different times of day. The call and the chart should make sense, and the bars should stop at park close.

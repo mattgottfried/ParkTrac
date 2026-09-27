@@ -202,3 +202,63 @@ struct WaitTimePredictionService {
         return (currentAvgWait - baselineAvg) / baselineAvg * 100
     }
 }
+
+// MARK: - Wait Forecast (ride sheet)
+
+/// The ride sheet's forecast: this ride's expected wait for each open hour today
+/// (`RideProfile.waitsByHour` — the same numbers the Smart Planner and Tip Board use)
+/// and one plain-language call: go now, or wait for a better hour.
+enum WaitForecast {
+    struct Bar: Equatable, Identifiable {
+        var id: Int { hour }
+        let hour: Int
+        let wait: Int
+    }
+
+    enum Call: Equatable {
+        /// Now is within 10 min of the best time left today
+        case goNow(wait: Int)
+        /// A later hour today saves at least 10 min
+        case waitUntil(hour: Int, wait: Int, saves: Int)
+    }
+
+    enum Trend: Equatable {
+        case rising(hour: Int, wait: Int)
+        case falling(hour: Int, wait: Int)
+    }
+
+    /// A later hour has to save this much to be worth waiting for
+    static let worthWaitingMinutes = 10
+
+    /// Last hour you can still get in line: closing at 10:00 → 9pm, at 10:30 → 10pm.
+    static func lastHour(closing: Date?, calendar: Calendar = .current) -> Int? {
+        guard let closing else { return nil }
+        let c = calendar.dateComponents([.hour, .minute], from: closing)
+        guard let hour = c.hour else { return nil }
+        return (c.minute ?? 0) > 0 ? hour : max(0, hour - 1)
+    }
+
+    /// Bars for the open hours (falls back to 9am–9pm when hours are unknown).
+    static func bars(profile: [Int: Int], openHour: Int?, lastHour: Int?) -> [Bar] {
+        let first = openHour ?? 9
+        let last = max(first, lastHour ?? 21)
+        return (first...last).compactMap { h in profile[h].map { Bar(hour: h, wait: $0) } }
+    }
+
+    static func call(profile: [Int: Int], nowHour: Int, currentWait: Int?, lastHour: Int) -> Call? {
+        guard let currentWait else { return nil }
+        if let best = TipBoard.best(profile: profile, fromHour: nowHour + 1, untilHour: lastHour),
+           currentWait - best.wait >= worthWaitingMinutes {
+            return .waitUntil(hour: best.hour, wait: best.wait, saves: currentWait - best.wait)
+        }
+        return .goNow(wait: currentWait)
+    }
+
+    /// Where the wait is heading next hour, when it moves by 10+ minutes.
+    static func trend(profile: [Int: Int], nowHour: Int, currentWait: Int?, lastHour: Int) -> Trend? {
+        guard let currentWait, nowHour + 1 <= lastHour, let next = profile[nowHour + 1] else { return nil }
+        if next - currentWait >= worthWaitingMinutes { return .rising(hour: nowHour + 1, wait: next) }
+        if currentWait - next >= worthWaitingMinutes { return .falling(hour: nowHour + 1, wait: next) }
+        return nil
+    }
+}
