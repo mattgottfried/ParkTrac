@@ -88,7 +88,7 @@ struct WhatToRideNextIntent: AppIntent {
             let records = (try? ModelContext(container).fetch(FetchDescriptor<WaitTimeRecord>(
                 predicate: #Predicate { $0.recordedAt >= since }))) ?? []
             for r in records {
-                if let w = r.waitMinutes { history[r.rideId, default: []].append((r.recordedAt, w)) }
+                if let w = r.waitMinutes { history[r.rideId, default: []].append((date: r.recordedAt, wait: w)) }
             }
         }
 

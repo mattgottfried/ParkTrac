@@ -408,7 +408,7 @@ struct SmartPlannerView: View {
             predicate: #Predicate { $0.recordedAt >= since }))) ?? []).filter { ids.contains($0.rideId) }
         var history: [String: [(date: Date, wait: Int)]] = [:]
         for r in records {
-            if let w = r.waitMinutes { history[r.rideId, default: []].append((r.recordedAt, w)) }
+            if let w = r.waitMinutes { history[r.rideId, default: []].append((date: r.recordedAt, wait: w)) }
         }
 
         let planRides = rides.map { ride -> PlanRide in
