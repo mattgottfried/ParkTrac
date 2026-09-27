@@ -106,12 +106,25 @@ final class ParkingGuessTests: XCTestCase {
     }
 
     func testPresetDataLoads() {
-        XCTAssertEqual(ParkingLayouts.presets.count, 14)
+        XCTAssertEqual(ParkingLayouts.presets.count, 36)
         for layout in ParkingLayouts.presets {
             let lot = ParkingLots.lot(named: layout.lot)
             XCTAssertNotNil(lot, layout.lot)
             XCTAssertFalse(lot?.rows(for: layout.section).isEmpty ?? true, "\(layout.lot) \(layout.section) has rows")
             XCTAssertGreaterThan(layout.rowLines.count, 1)
+            // Standing on the section's middle row finds that section, not a neighbour's
+            let middle = ParkingGeometry.midpoint(layout.rowLines[layout.rowLines.count / 2])
+            let found = ParkingLayouts.layout(containing: middle)
+            XCTAssertEqual(found?.section, layout.section, "\(layout.lot) \(layout.section)")
+        }
+    }
+
+    func testDiagramSectionsCoverEveryDiagramLot() {
+        for lot in ["Magic Kingdom", "Animal Kingdom", "Epic Universe"] {
+            let mapped = Set(ParkingLayouts.presets.filter { $0.lot == lot }.map(\.section))
+            let sections = ParkingLots.lot(named: lot)?.allSections ?? []
+            let missing = sections.filter { !mapped.contains($0) && !["Medical", "Valet"].contains($0) }
+            XCTAssertEqual(missing, [], lot)
         }
     }
 }
