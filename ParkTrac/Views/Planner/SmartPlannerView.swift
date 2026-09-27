@@ -423,12 +423,14 @@ struct SmartPlannerView: View {
 
     // MARK: - Algorithm
 
-    /// Latest regular closing time today for the park being planned
+    /// Latest regular closing time on the planned day for the park being planned
     private var parkCloseTime: Date? {
-        guard let park = viewModel.filterPark ?? viewModel.currentParks.first else { return nil }
-        return viewModel.todaySchedule(for: park)
-            .filter { !$0.isTicketedEvent }
-            .compactMap(\.closingDate).max()
+        let closings = (viewModel.filterPark ?? viewModel.currentParks.first).map { park in
+            viewModel.schedule(for: park, on: FutureDay.noon(planDay))
+                .filter { !$0.isTicketedEvent }
+                .compactMap(\.closingDate)
+        } ?? []
+        return FutureDay.closeTime(closings: closings, day: planDay, start: startTime)
     }
 
     @MainActor

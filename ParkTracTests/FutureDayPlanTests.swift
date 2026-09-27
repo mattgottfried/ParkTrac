@@ -71,4 +71,19 @@ final class FutureDayPlanTests: XCTestCase {
         XCTAssertEqual(future[10], 50, "another day: that weekday's typical wait")
         XCTAssertEqual(future[14], 60, "live wait only scales the curve")
     }
+
+    func testCloseTimeUsesThePlannedDay() {
+        let now = day(10, hour: 11)
+        let start = day(14, hour: 9)
+        let todayClose = day(10, hour: 21)
+        let saturdayClose = day(14, hour: 22)
+        // Today's close (before the start) is ignored; the planned day's close is used
+        XCTAssertEqual(FutureDay.closeTime(closings: [todayClose, saturdayClose], day: day(14), start: start,
+                                           now: now, calendar: cal), saturdayClose)
+        // No published hours for a future day → 9 PM that day
+        XCTAssertEqual(FutureDay.closeTime(closings: [todayClose], day: day(14), start: start, now: now, calendar: cal),
+                       day(14, hour: 21))
+        // Today with no hours: no end, as before
+        XCTAssertNil(FutureDay.closeTime(closings: [], day: day(10), start: now, now: now, calendar: cal))
+    }
 }

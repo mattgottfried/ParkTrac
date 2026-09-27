@@ -101,3 +101,4 @@ Plan a future day
 - "Add to My Day as a Fixed List" puts the timed list on that day instead. Coming Up shows each future day; tap one to see, add or delete items. Add to My Day there skips Now/Best/Lightning Lane.
 - My Day → Coming Up → Plan a Future Day opens the planner on tomorrow.
 - Check: plan tomorrow, save it, see it under Coming Up; the next morning it should appear as Next Up.
+- Fixed: planning a future day said every ride "didn't fit before the park closes" (it was using today's closing time). It now uses that day's hours, or 9 PM if they aren't published yet.

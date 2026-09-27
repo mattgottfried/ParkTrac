@@ -157,6 +157,16 @@ enum FutureDay {
         return calendar.date(bySettingHour: c.hour ?? 0, minute: c.minute ?? 0, second: 0, of: day)
     }
 
+    /// The park's close for the plan: the latest published closing after the start. When the
+    /// day's hours aren't published (or look wrong), a future day assumes 9 PM; today plans to
+    /// the end of the day as before (nil).
+    static func closeTime(closings: [Date], day: Date, start: Date, now: Date = .now,
+                          calendar: Calendar = .current) -> Date? {
+        if let close = closings.filter({ $0 > start }).max() { return close }
+        guard !calendar.isDate(day, inSameDayAs: now) else { return nil }
+        return calendar.date(bySettingHour: 21, minute: 0, second: 0, of: day)
+    }
+
     /// Noon on `day` — a safe instant for looking the day up in another time zone
     static func noon(_ day: Date, calendar: Calendar = .current) -> Date {
         calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
