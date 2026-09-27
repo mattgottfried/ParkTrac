@@ -628,6 +628,10 @@ struct ParkMapView: View {
                                       uniquingKeysWith: { first, _ in first }))
             WaitTimeRecorder.shared.record(rides: viewModel.allRides, context: modelContext)
             GoodTimeService.shared.update(rides: viewModel.allRides, mustDo: appState.wishList, context: modelContext)
+            // Community wait history (server) — once per park per day
+            let historyParks = viewModel.currentParks.map(\.id)
+            let historyZone = viewModel.selectedGroup.timeZone
+            Task { await CommunityHistoryService.shared.refreshIfNeeded(parkIds: historyParks, timeZone: historyZone) }
             // Today's plan re-plans from here and now
             ItineraryService.shared.replan(viewModel: viewModel, resort: viewModel.selectedGroup,
                                            location: locationService.userCoordinate, context: modelContext)

@@ -35,3 +35,9 @@ New Wait Forecast on the ride page (replaces "Predictions")
 - Lines underneath: whether it's getting longer or shorter next hour, and how today compares with the usual for this time.
 - It uses the same per-ride numbers as the Smart Planner and Tip Board, so they all agree.
 - Check: open a few rides at different times of day. The call and the chart should make sense, and the bars should stop at park close.
+
+Community wait history (better forecasts for every ride)
+- The ThrillTrack server now records every ride's wait every 10 minutes at all four resorts, all day, even when nobody has the app open.
+- Once it has a couple of days, each ride's Wait Forecast, the Smart Planner and the Tip Board use that ride's real typical waits for today's day of the week. Your own visits still count first.
+- The forecast says "Typical Friday" (etc.) in the corner when it's using this history.
+- Check: this builds up over the first days, and a ride's forecast should shift from "Estimated" to "Typical <day>" after a couple of days of the same weekday or two days of any data.

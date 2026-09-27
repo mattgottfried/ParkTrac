@@ -66,6 +66,7 @@
 		AA00000000000000000001A0 /* GoodTimeToRide.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A1 /* GoodTimeToRide.swift */; };
 		AA00000000000000000001A2 /* TripService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A3 /* TripService.swift */; };
 		AA00000000000000000001A6 /* DayPlanBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A7 /* DayPlanBuilder.swift */; };
+		AA00000000000000000001B2 /* CommunityHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001B3 /* CommunityHistory.swift */; };
 		AA00000000000000000001A8 /* PlannerAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A9 /* PlannerAI.swift */; };
 		AA00000000000000000001AA /* SiriIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001AB /* SiriIntents.swift */; };
 		AA00000000000000000001AC /* ItineraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001AD /* ItineraryService.swift */; };
@@ -208,6 +209,7 @@
 		AA00000000000000000001A1 /* GoodTimeToRide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoodTimeToRide.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A3 /* TripService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripService.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A7 /* DayPlanBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPlanBuilder.swift; sourceTree = "<group>"; };
+		AA00000000000000000001B3 /* CommunityHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityHistory.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A9 /* PlannerAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerAI.swift; sourceTree = "<group>"; };
 		AA00000000000000000001AB /* SiriIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriIntents.swift; sourceTree = "<group>"; };
 		AA00000000000000000001AD /* ItineraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryService.swift; sourceTree = "<group>"; };
@@ -384,6 +386,7 @@
 				AA00000000000000000001A1 /* GoodTimeToRide.swift */,
 				AA00000000000000000001A3 /* TripService.swift */,
 				AA00000000000000000001A7 /* DayPlanBuilder.swift */,
+				AA00000000000000000001B3 /* CommunityHistory.swift */,
 				AA00000000000000000001A9 /* PlannerAI.swift */,
 				AA00000000000000000001AB /* SiriIntents.swift */,
 				AA00000000000000000001AD /* ItineraryService.swift */,
@@ -744,6 +747,7 @@
 				AA00000000000000000001A0 /* GoodTimeToRide.swift in Sources */,
 				AA00000000000000000001A2 /* TripService.swift in Sources */,
 				AA00000000000000000001A6 /* DayPlanBuilder.swift in Sources */,
+				AA00000000000000000001B2 /* CommunityHistory.swift in Sources */,
 				AA00000000000000000001A8 /* PlannerAI.swift in Sources */,
 				AA00000000000000000001AA /* SiriIntents.swift in Sources */,
 				AA00000000000000000001AC /* ItineraryService.swift in Sources */,

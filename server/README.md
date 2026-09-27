@@ -14,6 +14,12 @@ The app stays in charge:
 - On the next sync, the app marks those alerts as handled.
 - If the server can't be reached, the app goes back to checking on the phone.
 
+It also keeps a **community wait history**:
+- Every 10 minutes it records every operating ride's posted wait at all four resorts (Walt Disney World, Universal Orlando, Tokyo Disney Resort, Universal Studios Japan), whether or not anyone has a watch.
+- It keeps 60 days of samples, one Deno KV entry per park per local hour.
+- `GET /v1/history?parkId=…&weekday=1…7` (1 = Sunday) returns each ride's typical wait by local hour. That's the median for that weekday once two of those days are recorded, otherwise the median over all days. The answer is cached for 6 hours.
+- The app downloads it once per park per day. It's used for hours your own phone has no history for, in the Wait Forecast, the Smart Planner and the Tip Board.
+
 The server stores only a random ID for each install, the push token, the phone's time zone and the watches. It stores no names or accounts.
 
 ## Files
@@ -23,6 +29,7 @@ The server stores only a random ID for each install, the push token, the phone's
 | `main.ts` | Deno Deploy entry point: runs the poll every minute and serves the HTTP API |
 | `app.ts` | Sync and unregister endpoints, and the poll loop (Deno KV storage) |
 | `logic.ts` | The alert rules. Pure functions that mirror the Swift rules; keep the two in step |
+| `history.ts` | Community wait history: the 10-minute recorder and `GET /v1/history` |
 | `apns.ts` | APNs client (ES256 provider token over HTTP/2) |
 | `*_test.ts` | Tests: `deno task test` |
 
@@ -74,5 +81,6 @@ deno task start   # http://localhost:8000 (no pushes unless APNS_* are set)
 ## Costs and limits
 
 - Each poll fetches one themeparks.wiki `/live` request per park that has an active watch, and only while watches exist.
+- The history recorder makes one `/live` request per park every 10 minutes (about 10 parks), plus `/destinations` once a day. That's roughly 1,500 KV writes a day, and storage stays under a few MB.
 - Two phones fit comfortably inside Deno Deploy's free tier.
 - The server caps usage at 60 watches per device and 200 devices.

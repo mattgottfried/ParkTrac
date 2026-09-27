@@ -210,7 +210,9 @@ enum PlanInputs {
             return PlanRide(id: ride.id, name: ride.name, parkName: park,
                             latitude: ride.coordinate?.latitude, longitude: ride.coordinate?.longitude,
                             waitByHour: RideProfile.waitsByHour(samples: history[ride.id] ?? [],
-                                                                currentWait: ride.waitMinutes, parkCurve: curve))
+                                                                currentWait: ride.waitMinutes, parkCurve: curve,
+                                                                community: CommunityHistoryService.shared.waitsByHour(
+                                                                    rideId: ride.id, parkId: ride.parkId)))
         }
     }
 
