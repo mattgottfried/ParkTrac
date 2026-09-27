@@ -23,6 +23,10 @@ struct NextUpCard: View {
                         .foregroundStyle(.secondary)
                 }
 
+                if let rain = RainForecastService.shared.headline(for: resort) {
+                    RainHeadsUp(text: rain)
+                }
+
                 if let stop = itineraries.nextStop {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(stop.title)
@@ -128,5 +132,19 @@ struct NextUpCard: View {
 
     private func replan() {
         itineraries.replan(viewModel: viewModel, resort: resort, location: nil, context: context)
+    }
+}
+
+/// "🌧 Rain likely 3–5 PM · indoor rides planned then" (Next Up, Smart Planner)
+struct RainHeadsUp: View {
+    let text: String
+
+    var body: some View {
+        Label("\(text) · indoor rides planned then", systemImage: "cloud.rain.fill")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.blue)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(Color.blue.opacity(0.12), in: Capsule())
+            .fixedSize(horizontal: false, vertical: true)
     }
 }

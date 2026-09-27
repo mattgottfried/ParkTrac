@@ -7,14 +7,7 @@ struct WeatherCardView: View {
     @State private var weather: WeatherSnapshot?
     @State private var isLoading = false
 
-    private var coordinate: (lat: Double, lon: Double) {
-        switch resort {
-        case .disney:    return (28.3772, -81.5707)
-        case .universal: return (28.4793, -81.4643)
-        case .tokyoDisney, .universalJapan:
-            return (resort.defaultCoordinate.latitude, resort.defaultCoordinate.longitude)
-        }
-    }
+    private var coordinate: (lat: Double, lon: Double) { resort.weatherCoordinate }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -100,6 +93,18 @@ struct WeatherSnapshot {
         case 80...82: return "Showers"
         case 95...99: return "Thunderstorm"
         default: return "Cloudy"
+        }
+    }
+}
+
+extension ParkGroup {
+    /// Where to ask for the weather (Stats card, rain plan)
+    var weatherCoordinate: (lat: Double, lon: Double) {
+        switch self {
+        case .disney:    return (lat: 28.3772, lon: -81.5707)
+        case .universal: return (lat: 28.4793, lon: -81.4643)
+        case .tokyoDisney, .universalJapan:
+            return (lat: defaultCoordinate.latitude, lon: defaultCoordinate.longitude)
         }
     }
 }

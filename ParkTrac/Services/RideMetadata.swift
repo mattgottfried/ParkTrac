@@ -53,6 +53,11 @@ enum RideType: String {
     }
 }
 
+extension RideInfo {
+    /// Dark rides, simulators and shows are indoors
+    var isIndoorByType: Bool { type == .darkRide || type == .simulator || type == .showOrLive }
+}
+
 struct RideInfo {
     let heightInches: Int?     // nil = no requirement (Orlando rides are published in inches)
     let heightCm: Int?         // Japan rides are published in centimetres
@@ -137,6 +142,29 @@ enum RideMetadata {
         case .tokyoDisney:        return tokyoDisneyRideMetadata
         case .universalJapan:     return universalJapanRideMetadata
         }
+    }
+
+    /// Rides you stay dry on even though their type isn't a dark ride / simulator / show
+    /// (indoor coasters, indoor boats and trams). Compared normalized, across all resorts.
+    static let indoorOverrides: Set<String> = Set([
+        "Space Mountain",
+        "Guardians of the Galaxy: Cosmic Rewind",
+        "Rock 'n' Roller Coaster Starring Aerosmith",
+        "Rock 'n' Roller Coaster",
+        "Soarin' Around the World",
+        "Soaring: Fantastic Flight",
+        "Revenge of the Mummy",
+        "Monsters Unchained: The Frankenstein Experiment",
+        "Living with the Land",
+    ].map { RideMetadata.normalize($0) })
+
+    /// Mostly indoors, so it keeps running (and you stay dry) in the rain.
+    static func isIndoor(name: String, resort: ParkGroup) -> Bool {
+        let key = normalize(name)
+        if indoorOverrides.contains(key) || indoorOverrides.contains(where: { $0.count >= 10 && key.contains($0) }) {
+            return true
+        }
+        return info(for: name, resort: resort)?.isIndoorByType ?? false
     }
 
     /// Japan resorts publish heights in cm; Orlando in inches.

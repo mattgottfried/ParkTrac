@@ -46,6 +46,28 @@ final class GoodTimeToRideTests: XCTestCase {
         XCTAssertEqual(usual.minutes, 60)
     }
 
+    func testCommunityHistoryWhenThisPhoneHasNone() throws {
+        let usual = try XCTUnwrap(GoodTimeToRide.usual(samples: [], community: 70, now: now, calendar: calendar))
+        XCTAssertEqual(usual, GoodTimeToRide.Usual(minutes: 70, basis: .typicalForDay))
+        let deal = try XCTUnwrap(GoodTimeToRide.deal(rideId: "r", wait: 30, isOperating: true, usual: usual))
+        XCTAssertEqual(deal.shortText, "usually ~70")
+    }
+
+    func testOwnHistoryBeatsCommunityWhichBeatsEarlierToday() throws {
+        let own: [(date: Date, wait: Int)] = [
+            (date: at(daysAgo: 1, hour: 14), wait: 50), (date: at(daysAgo: 1, hour: 14, minute: 10), wait: 50),
+            (date: at(daysAgo: 1, hour: 14, minute: 20), wait: 50),
+            (date: at(daysAgo: 2, hour: 14), wait: 50), (date: at(daysAgo: 2, hour: 14, minute: 10), wait: 50),
+            (date: at(daysAgo: 2, hour: 14, minute: 20), wait: 50),
+        ]
+        XCTAssertEqual(try XCTUnwrap(GoodTimeToRide.usual(samples: own, community: 90, now: now, calendar: calendar)).basis,
+                       .usualAtThisTime)
+
+        let today: [(date: Date, wait: Int)] = (0..<6).map { (date: at(daysAgo: 0, hour: 11, minute: $0 * 10), wait: 60) }
+        XCTAssertEqual(try XCTUnwrap(GoodTimeToRide.usual(samples: today, community: 90, now: now, calendar: calendar)),
+                       GoodTimeToRide.Usual(minutes: 90, basis: .typicalForDay))
+    }
+
     func testDealRules() {
         let usual = GoodTimeToRide.Usual(minutes: 70, basis: .usualAtThisTime)
         XCTAssertEqual(GoodTimeToRide.deal(rideId: "r", wait: 35, isOperating: true, usual: usual)?.savedMinutes, 35)

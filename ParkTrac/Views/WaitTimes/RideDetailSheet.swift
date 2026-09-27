@@ -84,6 +84,20 @@ struct RideDetailSheet: View {
     private var activeAlert: RideAlert? { allAlerts.first { $0.rideId == ride.id && $0.isActive } }
     private var goodTime: GoodTimeToRide.Deal? { GoodTimeService.shared.deal(for: ride.id) }
 
+    /// How long you really wait vs the posted time, from your Rode It! stopwatch logs at this resort
+    private var realWait: (minutes: Int, source: String)? {
+        guard ride.isOperating, let posted = ride.waitMinutes, posted > 0 else { return nil }
+        let timed = allRideLogs
+            .filter { $0.resort == parkGroup.rawValue }
+            .compactMap { log -> WaitReality.Timed? in
+                guard let p = log.waitMinutes, let a = log.actualWaitMinutes else { return nil }
+                return WaitReality.Timed(rideId: log.rideId, posted: p, actual: a)
+            }
+        guard let adjustment = WaitReality.adjustment(for: ride.id, timed: timed),
+              adjustment.isWorthShowing(posted: posted) else { return nil }
+        return (minutes: adjustment.actual(posted: posted), source: adjustment.sourceText)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -135,7 +149,7 @@ struct RideDetailSheet: View {
                 }
 
                 // Predictions / closure info
-                card { RidePredictionView(ride: ride, parkGroup: parkGroup, parkName: parkName) }
+                card { RidePredictionView(ride: ride, parkGroup: parkGroup, parkName: parkName, realWait: realWait?.minutes) }
             }
             .padding(.horizontal)
             .padding(.top, 20)
@@ -177,8 +191,6 @@ struct RideDetailSheet: View {
         }
         .sheet(isPresented: $showAddToPlanSheet) {
             AddPlanItemView(resort: parkGroup.rawValue, prefillRide: ride, prefillPark: parkName)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
         }
     }
 
@@ -210,6 +222,13 @@ struct RideDetailSheet: View {
                     Label(status.text, systemImage: status.icon)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(status.color)
+                }
+                if let real = realWait {
+                    Label("You usually wait ~\(real.minutes) (posted \(ride.waitMinutes ?? 0)) · \(real.source)",
+                          systemImage: "stopwatch")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.teal)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if rideCount > 0 {
                     Label("Ridden \(rideCount) time\(rideCount == 1 ? "" : "s")", systemImage: "checkmark.seal.fill")

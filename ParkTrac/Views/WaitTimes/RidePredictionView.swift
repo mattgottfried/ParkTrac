@@ -22,10 +22,14 @@ struct RidePredictionView: View {
     @State private var selectedHour: Int?
     private let currentHour = Calendar.current.component(.hour, from: Date())
 
-    init(ride: DisplayRide, parkGroup: ParkGroup, parkName: String = "") {
+    /// What you really wait right now, from your stopwatch logs (`WaitReality`), when it differs
+    let realWait: Int?
+
+    init(ride: DisplayRide, parkGroup: ParkGroup, parkName: String = "", realWait: Int? = nil) {
         self.ride = ride
         self.parkGroup = parkGroup
         self.parkName = parkName
+        self.realWait = realWait
     }
 
     var body: some View {
@@ -50,7 +54,7 @@ struct RidePredictionView: View {
             let history = PlanInputs.history(for: [ride.id], days: 14, context: modelContext)
             community = CommunityHistoryService.shared.waitsByHour(rideId: ride.id, parkId: ride.parkId)
             // This phone's own history first, else what the server has seen at this hour on this weekday
-            usualNow = GoodTimeToRide.usual(samples: history[ride.id] ?? [])?.minutes ?? community[currentHour]
+            usualNow = GoodTimeToRide.usual(samples: history[ride.id] ?? [], community: community[currentHour])?.minutes
         }
     }
 
@@ -136,6 +140,11 @@ struct RidePredictionView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(style.title).font(.subheadline.weight(.semibold))
                 Text(style.detail).font(.caption).foregroundStyle(.secondary)
+                if let realWait, case .goNow = call {
+                    Text("You usually wait ~\(realWait) min in this line")
+                        .font(.caption)
+                        .foregroundStyle(.teal)
+                }
             }
             Spacer(minLength: 0)
         }

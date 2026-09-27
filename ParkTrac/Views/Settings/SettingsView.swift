@@ -9,6 +9,7 @@ struct SettingsView: View {
     @Query private var allRideLogs: [RideLog]
     @Query private var allPurchases: [PurchaseLog]
     @AppStorage(GoodTimeService.alertsEnabledKey) private var goodTimeAlerts = true
+    @AppStorage(RainForecastService.alertsEnabledKey) private var rainAlerts = true
     @AppStorage(LaunchResort.askKey) private var askResortOnLaunch = true
     @AppStorage(BookingApp.disney.useShortcutKey) private var disneyViaShortcut = false
     @AppStorage(BookingApp.universal.useShortcutKey) private var universalViaShortcut = false
@@ -130,8 +131,11 @@ struct SettingsView: View {
                     Toggle(isOn: $goodTimeAlerts) {
                         Label("Good Time to Ride Alerts", systemImage: "arrow.down.circle")
                     }
+                    Toggle(isOn: $rainAlerts) {
+                        Label("Rain Heads-Up", systemImage: "cloud.rain")
+                    }
                 } footer: {
-                    Text("Once a day per ride, a heads-up when a Must-Do's wait is well below what it usually is at that time — based on the waits ThrillTrack has recorded on this phone. The more you use the app, the better it gets.")
+                    Text("Good Time: once a day per ride, a heads-up when a Must-Do's wait is well below what it usually is at that time — from your own visits, or everyone's recorded waits. Rain: once a day, about half an hour before rain is likely at the resort; the planner already moves indoor rides into those hours.")
                 }
 
                 // MARK: Booking Apps

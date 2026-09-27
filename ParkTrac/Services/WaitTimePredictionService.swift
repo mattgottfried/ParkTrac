@@ -262,3 +262,62 @@ enum WaitForecast {
         return nil
     }
 }
+
+// MARK: - Real vs posted wait (from Rode It! stopwatch logs)
+
+/// "Posted 60 · you usually wait ~45": how long this party really waits compared with the
+/// posted time, from `RideLog`s that have both. This ride's own timed rides first, else every
+/// timed ride at the resort.
+enum WaitReality {
+    struct Timed: Equatable {
+        let rideId: String
+        let posted: Int
+        let actual: Int
+    }
+
+    enum Basis: Equatable {
+        case thisRide(Int)
+        case allRides(Int)
+    }
+
+    struct Adjustment: Equatable {
+        /// actual ÷ posted
+        let ratio: Double
+        let basis: Basis
+
+        func actual(posted: Int) -> Int { Int((Double(posted) * ratio).rounded()) }
+
+        /// Only worth a line when it changes the wait by 5+ minutes
+        func isWorthShowing(posted: Int) -> Bool { abs(actual(posted: posted) - posted) >= 5 }
+
+        /// "from 4 of your rides on it" / "from your 12 timed rides"
+        var sourceText: String {
+            switch basis {
+            case .thisRide(let n): return "from \(n) of your rides on it"
+            case .allRides(let n): return "from your \(n) timed rides"
+            }
+        }
+    }
+
+    static let minThisRide = 2
+    static let minAllRides = 5
+
+    static func adjustment(for rideId: String, timed: [Timed]) -> Adjustment? {
+        let usable = timed.filter { $0.posted > 0 && $0.actual >= 0 }
+        let mine = usable.filter { $0.rideId == rideId }
+        if mine.count >= minThisRide, let r = medianRatio(mine) {
+            return Adjustment(ratio: r, basis: .thisRide(mine.count))
+        }
+        if usable.count >= minAllRides, let r = medianRatio(usable) {
+            return Adjustment(ratio: r, basis: .allRides(usable.count))
+        }
+        return nil
+    }
+
+    private static func medianRatio(_ rows: [Timed]) -> Double? {
+        let ratios = rows.map { Double($0.actual) / Double($0.posted) }.sorted()
+        guard !ratios.isEmpty else { return nil }
+        let mid = ratios.count / 2
+        return ratios.count.isMultiple(of: 2) ? (ratios[mid - 1] + ratios[mid]) / 2 : ratios[mid]
+    }
+}

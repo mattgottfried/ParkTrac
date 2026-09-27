@@ -67,6 +67,18 @@ final class NotificationService {
             UNNotificationRequest(identifier: "goodtime-\(rideId)", content: content, trigger: nil))
     }
 
+    /// Rain is about to arrive at the resort (once a day) — plan indoor rides.
+    func fireRainHeadsUp(resort: ParkGroup, headline: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "🌧 \(headline)"
+        content.body = "Good time for indoor rides and shows — Next Up and the Smart Planner already favor them."
+        content.sound = .default
+        content.threadIdentifier = "rain"
+        content.userInfo = [DeepLink.userInfoKey: DeepLink.plan.url.absoluteString]
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: "rain-\(resort.rawValue)", content: content, trigger: nil))
+    }
+
     /// A ride you were watching is operating again.
     func fireRideReopened(watch: ReopenWatch, wait: Int?) {
         let content = UNMutableNotificationContent()

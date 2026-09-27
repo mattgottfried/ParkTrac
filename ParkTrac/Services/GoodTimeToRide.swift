@@ -5,12 +5,14 @@ import UserNotifications
 // MARK: - Rule (pure, unit tested)
 
 /// "Slinky Dog Dash is 35 min — usually ~70 at this time." Compares a ride's posted wait with
-/// what this phone has recorded for it (`WaitTimeRecord`, one sample per ride per 10 min):
-/// the same hour on earlier days, or failing that, earlier today.
+/// what this phone has recorded for it (`WaitTimeRecord`, one sample per ride per 10 min) at the
+/// same hour on earlier days, else the server's community history, else earlier today.
 enum GoodTimeToRide {
     enum Basis: Equatable {
         /// Median of earlier days' waits within an hour of now
         case usualAtThisTime
+        /// The server's community history for this ride at this hour on this weekday
+        case typicalForDay
         /// Median of today's earlier waits
         case earlierToday
     }
@@ -29,14 +31,14 @@ enum GoodTimeToRide {
 
         /// "usually ~70" / "was ~70 earlier"
         var shortText: String {
-            usual.basis == .usualAtThisTime ? "usually ~\(usual.minutes)" : "was ~\(usual.minutes) earlier"
+            usual.basis == .earlierToday ? "was ~\(usual.minutes) earlier" : "usually ~\(usual.minutes)"
         }
 
         /// "usually ~70 min at this time" / "down from ~70 min earlier today"
         var longText: String {
-            usual.basis == .usualAtThisTime
-                ? "usually ~\(usual.minutes) min at this time"
-                : "down from ~\(usual.minutes) min earlier today"
+            usual.basis == .earlierToday
+                ? "down from ~\(usual.minutes) min earlier today"
+                : "usually ~\(usual.minutes) min at this time"
         }
     }
 
@@ -53,7 +55,9 @@ enum GoodTimeToRide {
     /// …and at least this many minutes saved
     static let minSaved = 15
 
-    static func usual(samples: [(date: Date, wait: Int)], now: Date = .now,
+    /// - Parameter community: the server's typical wait for this ride at this hour
+    ///   (`CommunityHistoryService`), used when this phone has no history of its own at this time.
+    static func usual(samples: [(date: Date, wait: Int)], community: Int? = nil, now: Date = .now,
                       calendar: Calendar = .current) -> Usual? {
         let hour = calendar.component(.hour, from: now)
         let today = calendar.startOfDay(for: now)
@@ -65,6 +69,11 @@ enum GoodTimeToRide {
         let days = Set(history.map { calendar.startOfDay(for: $0.date) })
         if days.count >= minHistoryDays, history.count >= minSamples, let m = median(history.map(\.wait)) {
             return Usual(minutes: m, basis: .usualAtThisTime)
+        }
+
+        // Everyone's history (server), this weekday at this hour
+        if let community {
+            return Usual(minutes: community, basis: .typicalForDay)
         }
 
         // Today, before the last half hour
@@ -129,8 +138,10 @@ final class GoodTimeService {
         }
 
         var next: [String: GoodTimeToRide.Deal] = [:]
+        let hour = Calendar.current.component(.hour, from: .now)
         for ride in operating {
-            let usual = GoodTimeToRide.usual(samples: byRide[ride.id] ?? [])
+            let community = CommunityHistoryService.shared.waitsByHour(rideId: ride.id, parkId: ride.parkId)[hour]
+            let usual = GoodTimeToRide.usual(samples: byRide[ride.id] ?? [], community: community)
             if let deal = GoodTimeToRide.deal(rideId: ride.id, wait: ride.waitMinutes,
                                               isOperating: ride.isOperating, usual: usual) {
                 next[ride.id] = deal

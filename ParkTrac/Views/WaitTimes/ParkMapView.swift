@@ -632,6 +632,9 @@ struct ParkMapView: View {
             let historyParks = viewModel.currentParks.map(\.id)
             let historyZone = viewModel.selectedGroup.timeZone
             Task { await CommunityHistoryService.shared.refreshIfNeeded(parkIds: historyParks, timeZone: historyZone) }
+            // Rain plan: hourly rain chance (≤ every 30 min) + the once-a-day heads-up
+            let rainResort = viewModel.selectedGroup
+            Task { await RainForecastService.shared.refreshIfNeeded(resort: rainResort) }
             // Today's plan re-plans from here and now
             ItineraryService.shared.replan(viewModel: viewModel, resort: viewModel.selectedGroup,
                                            location: locationService.userCoordinate, context: modelContext)

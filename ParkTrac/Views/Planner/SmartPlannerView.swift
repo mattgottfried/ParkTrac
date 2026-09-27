@@ -291,6 +291,9 @@ struct SmartPlannerView: View {
                 if let planNote {
                     Text(planNote).font(.caption).foregroundStyle(.orange)
                 }
+                if let rain = RainForecastService.shared.headline(for: appState.selectedResort) {
+                    RainHeadsUp(text: rain)
+                }
             }
 
             if !unscheduled.isEmpty {
@@ -410,8 +413,11 @@ struct SmartPlannerView: View {
                             waitByHour: RideProfile.waitsByHour(samples: history[ride.id] ?? [],
                                                                 currentWait: ride.waitMinutes, parkCurve: curve,
                                                                 community: CommunityHistoryService.shared.waitsByHour(
-                                                                    rideId: ride.id, parkId: ride.parkId)))
+                                                                    rideId: ride.id, parkId: ride.parkId)),
+                            isIndoor: RideMetadata.isIndoor(name: ride.name, resort: appState.selectedResort))
         }
+        // Rain: outdoor rides move out of the wet hours
+        let wetHours = RainForecastService.shared.wetHours(for: appState.selectedResort)
 
         // Fixed: chosen shows, today's dining reservations, meals/breaks from the request
         var fixed = shows.compactMap { show -> FixedEvent? in
@@ -428,13 +434,13 @@ struct SmartPlannerView: View {
         planNote = nil
         aiOrderIds = []
         aiExtras = []
-        var plan = DayPlanBuilder.build(rides: planRides, fixed: fixed, start: startTime, end: end)
+        var plan = DayPlanBuilder.build(rides: planRides, fixed: fixed, start: startTime, end: end, wetHours: wetHours)
 
         // Apple Intelligence orders the picks; ThrillTrack times them
         if PlannerAI.isAvailable {
             let aiRides: [PlannerAI.PlanInput.Ride] = planRides.map {
                 PlannerAI.PlanInput.Ride(name: $0.name, waitsByHour: $0.waitByHour,
-                                         isMustDo: appState.wishList.contains($0.id))
+                                         isMustDo: appState.wishList.contains($0.id), isIndoor: $0.isIndoor)
             }
             let aiShows: [PlannerAI.PlanInput.Fixed] = fixed.filter { $0.kind == "show" }.map {
                 PlannerAI.PlanInput.Fixed(title: $0.title, time: $0.start)
@@ -444,7 +450,8 @@ struct SmartPlannerView: View {
             }
             let input = PlannerAI.PlanInput(rides: aiRides, shows: aiShows, dining: aiDining,
                                             start: startTime, end: end, notes: notes,
-                                            interests: Interest.allCases.filter { interests.contains($0) }.map(\.label))
+                                            interests: Interest.allCases.filter { interests.contains($0) }.map(\.label),
+                                            rainHours: Array(wetHours))
             do {
                 let ai = try await PlannerAI.plan(input)
                 let extras = PlannerAI.groundedExtras(ai.extraEvents, notes: notes).compactMap { e -> FixedEvent? in

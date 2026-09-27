@@ -199,7 +199,7 @@ enum PlanInputs {
 
     @MainActor
     static func planRides(_ rides: [DisplayRide], parks: [ParkEntity], fallbackParkName: String,
-                          context: ModelContext) -> [PlanRide] {
+                          resort: ParkGroup? = nil, context: ModelContext) -> [PlanRide] {
         let history = history(for: Set(rides.map(\.id)), days: RideProfile.historyDays, context: context)
         return rides.map { ride -> PlanRide in
             let park = parks.first { $0.id == ride.parkId }?.name ?? fallbackParkName
@@ -207,12 +207,14 @@ enum PlanInputs {
             for hour in RideProfile.dayHours {
                 curve[hour] = CommunityBaselineService.shared.adjustedHourlyAvg(for: park, hour: hour)
             }
-            return PlanRide(id: ride.id, name: ride.name, parkName: park,
+            var planRide = PlanRide(id: ride.id, name: ride.name, parkName: park,
                             latitude: ride.coordinate?.latitude, longitude: ride.coordinate?.longitude,
                             waitByHour: RideProfile.waitsByHour(samples: history[ride.id] ?? [],
                                                                 currentWait: ride.waitMinutes, parkCurve: curve,
                                                                 community: CommunityHistoryService.shared.waitsByHour(
                                                                     rideId: ride.id, parkId: ride.parkId)))
+            if let resort { planRide.isIndoor = RideMetadata.isIndoor(name: ride.name, resort: resort) }
+            return planRide
         }
     }
 
@@ -335,7 +337,8 @@ final class ItineraryService {
         let fallbackPark = parks.first?.name ?? ""
         let rideById = Dictionary(viewModel.allRides.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let remaining = it.remainingRides.compactMap { rideById[$0.id] }.filter(\.isOperating)
-        let planRides = PlanInputs.planRides(remaining, parks: parks, fallbackParkName: fallbackPark, context: context)
+        let planRides = PlanInputs.planRides(remaining, parks: parks, fallbackParkName: fallbackPark,
+                                             resort: resort, context: context)
 
         // Set times: picked shows' next showing, dining, meals/breaks from the notes
         let showIds = Set(it.shows.map(\.id))
@@ -353,7 +356,8 @@ final class ItineraryService {
             .filter { !$0.isTicketedEvent }.compactMap(\.closingDate).max()
 
         live = it.aiOrder.isEmpty
-            ? DayPlanBuilder.build(rides: planRides, fixed: fixed, start: now, end: close, from: location)
+            ? DayPlanBuilder.build(rides: planRides, fixed: fixed, start: now, end: close, from: location,
+                                   wetHours: RainForecastService.shared.wetHours(for: resort))
             : DayPlanBuilder.build(ordered: planRides, fixed: fixed, start: now, end: close, from: location)
         liveUpdatedAt = now
 

@@ -113,7 +113,10 @@ struct TipBoardView: View {
         rows = rides.map { ride -> TipBoard.Row in
             let best = TipBoard.best(profile: profiles[ride.id] ?? [:], fromHour: nowHour, untilHour: closeHour)
             return TipBoard.Row(id: ride.id, name: ride.name, waitNow: ride.waitMinutes, isOperating: ride.isOperating,
-                                usualNow: GoodTimeToRide.usual(samples: history[ride.id] ?? [])?.minutes,
+                                usualNow: GoodTimeToRide.usual(
+                                    samples: history[ride.id] ?? [],
+                                    community: CommunityHistoryService.shared.waitsByHour(
+                                        rideId: ride.id, parkId: ride.parkId)[nowHour])?.minutes,
                                 bestHour: best?.hour, bestWait: best?.wait,
                                 isMustDo: appState.wishList.contains(ride.id))
         }
