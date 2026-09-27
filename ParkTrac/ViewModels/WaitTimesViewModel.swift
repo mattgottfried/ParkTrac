@@ -283,7 +283,7 @@ final class WaitTimesViewModel {
         }
         guard let parks = parksByGroup[selectedGroup], !parks.isEmpty else {
             if errorMessage == nil {
-                errorMessage = "Couldn't load \(selectedGroup.rawValue) parks. Check your connection and pull to refresh."
+                errorMessage = "Couldn't load \(selectedGroup.rawValue) parks. Check your connection and try again."
             }
             return
         }
@@ -298,8 +298,9 @@ final class WaitTimesViewModel {
                 successCount += 1
             }
         }
-        // Keep stale data visible on failure; only surface an error when nothing loaded
-        if successCount == 0 {
+        // Keep stale data visible on failure; only surface an error when nothing loaded.
+        // A cancelled refresh isn't a connection problem.
+        if successCount == 0 && !Task.isCancelled {
             errorMessage = "Couldn't refresh wait times. Check your connection."
         }
         rebuildAllRides()
