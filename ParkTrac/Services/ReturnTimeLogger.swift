@@ -185,7 +185,8 @@ enum ReturnTimeLogger {
             }
         } else {
             LiveActivityManager.startReturnTime(
-                passLabel: passLabel, rideName: rideName, parkName: parkName, returnEnd: returnEnd)
+                passLabel: passLabel, rideName: rideName, parkName: parkName, returnEnd: returnEnd,
+                returnStart: returnStart)
             Task {
                 await NotificationService.shared.requestAuthorization()
                 NotificationService.shared.scheduleLLReminder(

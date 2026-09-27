@@ -10,6 +10,7 @@ struct SettingsView: View {
     @Query private var allPurchases: [PurchaseLog]
     @AppStorage(GoodTimeService.alertsEnabledKey) private var goodTimeAlerts = true
     @AppStorage(RainForecastService.alertsEnabledKey) private var rainAlerts = true
+    @AppStorage(LiveActivityManager.parkDayEnabledKey) private var parkDayActivity = true
     @AppStorage(LaunchResort.askKey) private var askResortOnLaunch = true
     @AppStorage(BookingApp.disney.useShortcutKey) private var disneyViaShortcut = false
     @AppStorage(BookingApp.universal.useShortcutKey) private var universalViaShortcut = false
@@ -134,8 +135,14 @@ struct SettingsView: View {
                     Toggle(isOn: $rainAlerts) {
                         Label("Rain Heads-Up", systemImage: "cloud.rain")
                     }
+                    Toggle(isOn: $parkDayActivity) {
+                        Label("Next Up on Lock Screen", systemImage: "sparkles")
+                    }
+                    .onChange(of: parkDayActivity) { _, on in
+                        if !on { LiveActivityManager.endParkDay() }
+                    }
                 } footer: {
-                    Text("Good Time: once a day per ride, a heads-up when a Must-Do's wait is well below what it usually is at that time — from your own visits, or everyone's recorded waits. Rain: once a day, about half an hour before rain is likely at the resort; the planner already moves indoor rides into those hours.")
+                    Text("Good Time: once a day per ride, a heads-up when a Must-Do's wait is well below what it usually is at that time — from your own visits, or everyone's recorded waits. Rain: once a day, about half an hour before rain is likely at the resort; the planner already moves indoor rides into those hours. Next Up: while a Smart Planner plan is running, a Live Activity keeps your next stop and its wait on the Lock Screen and Dynamic Island.")
                 }
 
                 // MARK: Booking Apps

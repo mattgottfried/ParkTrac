@@ -283,6 +283,7 @@ final class ItineraryService {
         live = nil
         suggestions = []
         persist()
+        LiveActivityManager.endParkDay()
     }
 
     func markDone(_ rideId: String) {
@@ -318,6 +319,8 @@ final class ItineraryService {
         guard var it = active(for: resort) else {
             live = nil
             suggestions = []
+            // Plan ended (maybe on the other phone) or it's a new day
+            if itinerary.map({ !$0.isToday() }) ?? true { LiveActivityManager.endParkDay() }
             return
         }
 
@@ -370,6 +373,13 @@ final class ItineraryService {
                          info: RideMetadata.info(for: ride.name, resort: resort))
         }
         suggestions = InterestSuggestions.pick(candidates, interests: it.interests, excluding: planned)
+
+        // Lock Screen / Dynamic Island: Next Up
+        let parkTitle = viewModel.filterPark?.name ?? resort.rawValue
+        LiveActivityManager.updateParkDay(
+            title: parkTitle,
+            state: ParkDayActivity.state(stops: live?.stops ?? [], done: it.doneIds.count, total: it.rides.count,
+                                         rain: RainForecastService.shared.headline(for: resort)))
     }
 
     private func persist() {
