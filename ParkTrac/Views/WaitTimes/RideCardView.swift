@@ -88,42 +88,8 @@ struct RideCardView: View {
 
     // MARK: Wait tile
 
-    /// Leading square: the wait (colored by length), or Down / Closed.
     private var waitTile: some View {
-        VStack(spacing: 0) {
-            if ride.isOperating, let minutes = ride.waitMinutes {
-                Text("\(minutes)")
-                    .font(.system(size: waitNumberSize, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.6)
-                Text("min")
-                    .font(.caption2.weight(.semibold))
-                    .opacity(0.8)
-            } else if isDown {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.title3)
-                Text("Down")
-                    .font(.caption2.weight(.bold))
-            } else if !ride.isOperating {
-                Image(systemName: "xmark")
-                    .font(.title3.weight(.bold))
-                Text(ride.status == "REFURBISHMENT" ? "Refurb" : "Closed")
-                    .font(.caption2.weight(.bold))
-            } else {
-                Text("Open")
-                    .font(.subheadline.weight(.bold))
-            }
-        }
-        .lineLimit(1)
-        .foregroundStyle(tileColor)
-        .frame(width: tileSize, height: tileSize)
-        .background(tileColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
-    private var tileColor: Color {
-        if isDown { return .orange }
-        if !ride.isOperating { return .red }
-        return ride.waitMinutes == nil ? .gray : badgeColor
+        WaitTile(ride: ride, size: tileSize, numberSize: waitNumberSize)
     }
 
     // MARK: Subtitle + details
@@ -196,5 +162,56 @@ struct RideCardView: View {
         if let walk = walkMinutes { parts.append("about \(walk) minute walk") }
         if let meta, let h = HeightFormat.spoken(meta, metric: metric) { parts.append("height requirement \(h)") }
         return parts.joined(separator: ", ")
+    }
+}
+
+/// The colored wait square shared by the ride card and the ride sheet: the wait (colored by
+/// length), or Down / Closed / Open when there's no number.
+struct WaitTile: View {
+    let ride: DisplayRide
+    var size: CGFloat = 58
+    var numberSize: CGFloat = 24
+    /// Under the number: "min" on cards, "min wait" on the ride sheet
+    var unit: String = "min"
+
+    private var isDown: Bool { ride.status == "DOWN" }
+
+    var color: Color {
+        if isDown { return .orange }
+        if !ride.isOperating { return .red }
+        guard ride.waitMinutes != nil else { return .gray }
+        return waitTimeColor(minutes: ride.waitMinutes, isOperating: ride.isOperating, status: ride.status)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if ride.isOperating, let minutes = ride.waitMinutes {
+                Text("\(minutes)")
+                    .font(.system(size: numberSize, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.6)
+                Text(unit)
+                    .font(.caption2.weight(.semibold))
+                    .opacity(0.8)
+            } else if isDown {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: numberSize * 0.8))
+                Text("Down")
+                    .font(.caption2.weight(.bold))
+            } else if !ride.isOperating {
+                Image(systemName: "xmark")
+                    .font(.system(size: numberSize * 0.8, weight: .bold))
+                Text(ride.status == "REFURBISHMENT" ? "Refurb" : "Closed")
+                    .font(.caption2.weight(.bold))
+            } else {
+                Text("Open")
+                    .font(.subheadline.weight(.bold))
+            }
+        }
+        .lineLimit(1)
+        .foregroundStyle(color)
+        .frame(width: size, height: size)
+        .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: size * 0.21, style: .continuous))
+        .accessibilityHidden(true)
     }
 }
