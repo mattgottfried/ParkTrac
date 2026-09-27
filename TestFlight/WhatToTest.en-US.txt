@@ -1,32 +1,7 @@
-NEW: Your own Genie
+Fixed since the last build
 
-Plan it (My Day → Smart Planner)
-• Pick the rides and shows you want, plus your interests (thrill, coasters, slow & gentle, dark rides, water, simulators, shows). Optional notes like "dinner at 6:30, Rise right before close".
-• Tap "Plan with Apple Intelligence" — it orders your picks around each ride's usual waits, your shows and dining reservations, and explains the plan. ThrillTrack works out the times.
-
-Live all day
-• "Start Plan" makes it live. A Next Up card at the top of Wait Times and My Day re-plans from where you are with live waits: "Get in line ~2:16 PM · ~35 min wait · 6 min walk".
-• Done / Skip on the card; rides you log with Rode It! drop off on their own. Heather's phone follows the same plan.
-• "Fits your interests" suggests short rides you'd like right now — tap + to add one.
-• My Day shows the whole plan with updated times ("Today's Plan · Updates Live"). End it from there.
-
-Tip Board
-• The list-star button on the map (or My Day → Tip Board): your Must-Dos and picks with the wait now, what it usually is now, and today's best time. "Good Time Now" rides are at the top.
-
-Launch screen
-• ThrillTrack opens with "Where are you headed?" — pick Walt Disney World, Universal Orlando, Tokyo Disney Resort or Universal Studios Japan while wait times load. It highlights the resort you're at (or the one you used last) and shows your trip countdown.
-• Opening from a notification, Siri, a Home Screen shortcut or a link skips it. Turn it off in Settings → Resort → Choose Resort at Launch.
-
-Park picker
-• The row of park buttons is now one dropdown ("All Parks ▾") plus a ★ for Must-Dos only. It follows the map: zoom into a park and it switches to that park; zoom out and it goes back to All Parks. Pick a park from the dropdown to fly there.
-• Zoomed out to the whole resort, the park-hours bar is hidden (it used to show a random park's hours).
-
-Easier to read
-• The Good Time to Ride strip has bigger cards with the wait in large green numbers; the tag on ride cards is a solid green label.
-
-Please check:
-• Force-quit and reopen: the resort screen appears, suggests the right resort, and the app is ready after you tap one.
-• Zoom in and out on the map — the dropdown and ride list follow, and the hours bar only shows for a single park.
-• Pick 4–5 rides and a show, add "dinner at 6:30", and plan with Apple Intelligence — the order and summary make sense and dinner stays at 6:30.
-• Start the plan: Next Up updates as waits change; Done and Skip move to the next stop.
-• Tip Board rows show "Best today" after a few park visits.
+Smart Planner no longer adds a dinner you didn't pick
+- Apple Intelligence was sometimes inventing a "Dinner at Be Our Guest" (even twice), which pushed your rides past park close.
+- Now it only adds a meal or break when your notes ask for one (e.g. "dinner at 6:30"), and never the same one twice.
+- Check: pick a few rides with no notes → Plan with Apple Intelligence → only your rides and chosen shows appear, no extra dining.
+- Check: add "snack break at 3" in the notes → one snack break at 3.
