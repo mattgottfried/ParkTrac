@@ -30,6 +30,13 @@ struct BucketRestaurantDetailView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if restaurant.isClosed {
+                    Section {
+                        Label("This restaurant has permanently closed. Your rating and notes are kept, but it can't be visited anymore.", systemImage: "xmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
                 Section {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {

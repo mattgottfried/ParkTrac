@@ -14,6 +14,9 @@ final class BucketRestaurant {
     var wifeRating: Double = 0
     var notes: String = ""
     var isFromAPI: Bool = false
+    /// Permanently closed in real life — set by a `BucketListService` migration, never on new
+    /// seeds. Kept (not deleted) so any rating/notes/photos survive; shown with a CLOSED banner.
+    var isClosed: Bool = false
     @Attribute(.externalStorage) var photoData: [Data] = []
 
     var averageRating: Double? {

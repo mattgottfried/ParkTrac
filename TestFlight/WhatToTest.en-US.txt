@@ -2,46 +2,37 @@ New since the last build (short version: TestFlight allows 4,000 characters)
 
 Smart Planner
 - No more invented dinners: meals/breaks only when your notes ask ("snack break at 3").
-- Plan a future day (Day picker, 60 days out) using that day's hours and typical waits. Save Plan → My Day → Coming Up; the morning of, it becomes your live Next Up plan.
-- Change the Plan: shows total walking; one-tap Less Walking / Must-Dos First / Shortest Waits; with Apple Intelligence, type requests ("keep rides close together").
-- Rain plan: indoor rides move into likely-rain hours, with a heads-up note and a notification ~30 min before.
+- Plan a future day (Day picker, 60 days out). Save Plan → My Day → Coming Up; the morning of, it becomes your live Next Up plan.
+- Change the Plan: shows total walking; one-tap Less Walking/Must-Dos First/Shortest Waits; with Apple Intelligence, type requests.
+- Rain AND heat plan: indoor rides move into likely-rain or hottest hours, with a heads-up note and a notification ~30 min before (Settings → Rain/Heat Heads-Up).
 
-Wait Times
-- New ride cards: colored wait tile, Must-Do star, one info line. Drag/tap anywhere on the panel header to expand/shrink.
-- My-location button on the map. Pull-to-refresh is gone (caused false errors); tap the "N min ago" pill instead.
-- Shows open a show page: showtimes, 15-min reminders, Add to My Day.
+Wait Times: new ride cards (colored wait tile, Must-Do star); drag/tap the panel header to expand/shrink; my-location button; pull-to-refresh replaced by a tappable "N min ago" pill; shows open a show page with reminders.
 
-Ride page
-- New layout: wait tile header, 4 buttons (Rode It!, My Day, Alert, Return), cards.
-- Wait Forecast replaces Predictions: a clear call ("Go now" / "Shorter at 8pm"), hourly bars, best hour ★.
-- "You usually wait ~45 (posted 60)" after 2 timed rides. Forecasts/Good Time/Tip Board now use everyone's recorded waits, so they work day one.
+Ride page: new layout (wait tile, 4 buttons); Wait Forecast replaces Predictions ("Go now"/"Shorter at 8pm", hourly bars); "you usually wait ~X" after timed rides; forecasts now use everyone's recorded waits (day one, not just your own history).
 
-Add to My Day: one screen — pick several rides/a show, then Anytime/Now/Best time/showtime/set time. LL returns start the Live Activity.
+Add to My Day: one screen — pick several rides/a show, then Anytime/Now/Best time/showtime/set time.
 
-Live Activities: resort colors, big countdowns, progress bars. Next Up timeline (3 stops) while a plan runs. Buttons: Done/Skip, "I'm On — Log It", "Used It".
+Live Activities: resort colors, big countdowns, progress bars, a 3-stop Next Up timeline, and Done/Skip/"I'm On"/"Used It" buttons.
 
-Alerts & stats
-- Must-Do down alerts ("is down"/"is back up"). Crowd Calendar uses measured waits + predicts 2 weeks out.
-- Day recap (My Day → ✨): rides, time in line, steps, spending; share as image/text. Past days: Stats → Recaps (asks for Motion & Fitness).
+Alerts & stats: Must-Do down alerts; Crowd Calendar uses measured waits + predicts 2 weeks out; Day recap (My Day → ✨) with rides/steps/spending, shareable.
 
-Car locator
-- Sections/rows match the Disney/Universal apps; rows are a scroll wheel. Opening it guesses your section (from the lot map) and row (GPS + mapped rows) automatically.
-- Lot maps: Magic Kingdom (12), Animal Kingdom (6), EPCOT (8), Hollywood Studios (5/6), Epic Universe (Explorer/Monster/Viking/Dragon/Hero — new, rows 501–511).
-- Unmapped lots learn from saved spots (yours + everyone's, "Help Map This Lot"). CityWalk garages aren't guessed.
-- Check: at a lot, section/row should fill in ("Guessed from…"); spin if off, save. Tell me if a Magic Kingdom/Animal Kingdom/Epic section comes up wrong.
+Car locator: sections/rows match the Disney/Universal apps (scroll wheel); opening it guesses your section and row from GPS automatically. Lot maps: Magic Kingdom, Animal Kingdom, EPCOT, Hollywood Studios, Epic Universe. Unmapped lots learn from saved spots. Check: section/row should fill in ("Guessed from…"); tell me if one's wrong.
 
-Fixed: the upload was rejected — Siri's "Plan my day" description mentioned Apple (App Store rule 90626).
+Fixed: the upload rejected for Siri's "Plan my day" description mentioning Apple (App Store rule 90626).
 
-Ride photos: Rode It! (the full log sheet) has an optional "Add a Photo" step; Visit History shows a thumbnail — tap for full screen.
+Ride photos: Rode It! has an optional photo step; Visit History shows a thumbnail.
 
-Trip budget: Spending → "Set a Trip Budget" — a progress bar (green/orange/red) tracks spend against it, with amount left or over. Pass Savings (top-left) is unchanged.
+Trip budget: Spending → "Set a Trip Budget" — a progress bar tracks spend against it.
 
-Offline, no more misleading wait times: with no signal, rides show "No signal" instead of a fake wait or a false "Closed", with a gray "Offline" banner. Check: Airplane Mode at a park, open Wait Times.
+Offline, no more misleading wait times: with no signal, rides show "No signal" instead of a fake wait or false "Closed".
 
-Lightning Lane cost auto-log: booking a paid Single Pass now has its own "I Booked It" button — logs the return AND the price into Spending automatically. Check: book a paid LL return, confirm it shows up in Spending under "Lightning Lane".
+Lightning Lane cost auto-log: booking a paid Single Pass logs its return AND price into Spending automatically.
 
-Heat heads-up: same idea as rain — the hottest hours of the day push indoor rides into that window in the Smart Planner/Next Up, with a heads-up note and a notification ~30 min before (Settings → Heat Heads-Up).
+Character meet tracker: Bucket List's new "Characters" tab — a checklist (met/date/notes/photo), 22 Orlando characters seeded.
 
-Character meet tracker: Bucket List has a new "Characters" tab — a checklist (met, date, notes, photo) seeded with 22 Orlando characters. Check: mark one met with a photo, confirm it shows in the list.
+Bucket List restaurant refresh: fixed a few closed/changed restaurants.
+- Wolfgang Puck Bar & Grill (Disney Springs) and Thunder Falls Terrace (Islands of Adventure) permanently closed — they now show a red CLOSED banner instead of vanishing, so any rating you gave them is kept.
+- Hot Dog Hall of Fame® (CityWalk) closed; Fat One's Hot Dogs & Italian Ice (Joey Fatone's spot, same location) is added as a new entry — it's a different restaurant, not a rename, so the old one keeps its own rating and CLOSED banner.
+- Check: if you'd rated any of these three, open Bucket List → Restaurants and confirm your rating is still there.
 
-Check overall: plan a day, watch Next Up on the Lock Screen, open ride pages, add to My Day, log a ride with a photo, try the car locator, set a trip budget, book a paid Lightning Lane, check off a character.
+Check overall: plan a day, watch Next Up, open ride pages, add to My Day, log a ride with a photo, try the car locator, set a trip budget, book a paid Lightning Lane, check off a character, look at the Bucket List restaurant changes.
