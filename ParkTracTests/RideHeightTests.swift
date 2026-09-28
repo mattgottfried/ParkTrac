@@ -69,4 +69,47 @@ final class RideHeightTests: XCTestCase {
         XCTAssertEqual(AreaEntry.window(start: start, minutes: 0).end.timeIntervalSince(start), 15 * 60)
         XCTAssertEqual(AreaEntry.window(start: start, minutes: 999).end.timeIntervalSince(start), 240 * 60)
     }
+
+    // MARK: Single rider / alternate ride suggestion
+
+    func testSingleRiderIsUniversalOnly() {
+        XCTAssertTrue(RideMetadata.hasSingleRider(name: "The Incredible Hulk Coaster", resort: .universal))
+        XCTAssertTrue(RideMetadata.hasSingleRider(name: "Jurassic World VelociCoaster®", resort: .universal), "punctuation-insensitive")
+        XCTAssertTrue(RideMetadata.hasSingleRider(name: "Yoshi's Adventure", resort: .universalJapan))
+        XCTAssertFalse(RideMetadata.hasSingleRider(name: "Space Mountain", resort: .disney), "Disney doesn't run single rider")
+        XCTAssertFalse(RideMetadata.hasSingleRider(name: "Space Mountain", resort: .tokyoDisney))
+        XCTAssertFalse(RideMetadata.hasSingleRider(name: "Big Thunder Mountain Railroad", resort: .disney), "no single rider line")
+    }
+
+    func testAlternateSuggestionPrefersSingleRiderOverASimilarRide() {
+        let kind = AlternateRideSuggestion.suggest(
+            rideName: "The Incredible Hulk Coaster", waitMinutes: 60, isOperating: true,
+            candidates: [(name: "Jurassic World VelociCoaster", waitMinutes: 20, isOperating: true)],
+            resort: .universal)
+        XCTAssertEqual(kind, .singleRider)
+    }
+
+    func testAlternateSuggestionFindsASimilarShorterRide() {
+        let kind = AlternateRideSuggestion.suggest(
+            rideName: "Space Mountain", waitMinutes: 80, isOperating: true,
+            candidates: [
+                (name: "Big Thunder Mountain Railroad", waitMinutes: 30, isOperating: true),  // same type (coaster), short enough
+                (name: "Haunted Mansion", waitMinutes: 10, isOperating: true),                // different type
+                (name: "Seven Dwarfs Mine Train", waitMinutes: 75, isOperating: true),        // same type but not short enough
+            ], resort: .disney)
+        XCTAssertEqual(kind, .similarRide(name: "Big Thunder Mountain Railroad", waitMinutes: 30))
+    }
+
+    func testNoSuggestionBelowTheBusyThreshold() {
+        XCTAssertNil(AlternateRideSuggestion.suggest(rideName: "Space Mountain", waitMinutes: 20, isOperating: true,
+                                                      candidates: [], resort: .disney))
+    }
+
+    func testNoSuggestionWhenNothingIsActuallyShorter() {
+        let kind = AlternateRideSuggestion.suggest(
+            rideName: "Space Mountain", waitMinutes: 50, isOperating: true,
+            candidates: [(name: "Big Thunder Mountain Railroad", waitMinutes: 40, isOperating: true)],
+            resort: .disney)
+        XCTAssertNil(kind)
+    }
 }

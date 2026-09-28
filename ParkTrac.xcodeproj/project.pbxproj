@@ -89,6 +89,7 @@
 		AA00000000000000000001A4 /* TripPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A5 /* TripPlannerView.swift */; };
 		AA00000000000000000001B6 /* DayRecapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001B7 /* DayRecapView.swift */; };
 		AA0000000000000000000137 /* HeightCheckerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000136 /* HeightCheckerView.swift */; };
+		AA00000000000000000001C3 /* TipCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001C4 /* TipCalculatorView.swift */; };
 		AA0000000000000000000139 /* TodayBlockOutBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000138 /* TodayBlockOutBanner.swift */; };
 		AA000000000000000000013C /* AnnualPassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013B /* AnnualPassView.swift */; };
 		AA000000000000000000013E /* APOffersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013D /* APOffersView.swift */; };
@@ -240,6 +241,7 @@
 		AA00000000000000000001A5 /* TripPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlannerView.swift; sourceTree = "<group>"; };
 		AA00000000000000000001B7 /* DayRecapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayRecapView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000136 /* HeightCheckerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeightCheckerView.swift; sourceTree = "<group>"; };
+		AA00000000000000000001C4 /* TipCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipCalculatorView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000138 /* TodayBlockOutBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayBlockOutBanner.swift; sourceTree = "<group>"; };
 		AA000000000000000000013B /* AnnualPassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnualPassView.swift; sourceTree = "<group>"; };
 		AA000000000000000000013D /* APOffersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APOffersView.swift; sourceTree = "<group>"; };
@@ -495,6 +497,7 @@
 			children = (
 				AA00000000000000000000FE /* SettingsView.swift */,
 				AA0000000000000000000136 /* HeightCheckerView.swift */,
+				AA00000000000000000001C4 /* TipCalculatorView.swift */,
 				AA000000000000000000013B /* AnnualPassView.swift */,
 				AA000000000000000000017E /* PassSavingsView.swift */,
 			);
@@ -792,6 +795,7 @@
 				AA00000000000000000001A4 /* TripPlannerView.swift in Sources */,
 				AA00000000000000000001B6 /* DayRecapView.swift in Sources */,
 				AA0000000000000000000137 /* HeightCheckerView.swift in Sources */,
+				AA00000000000000000001C3 /* TipCalculatorView.swift in Sources */,
 				AA0000000000000000000139 /* TodayBlockOutBanner.swift in Sources */,
 				AA000000000000000000013C /* AnnualPassView.swift in Sources */,
 				AA000000000000000000013E /* APOffersView.swift in Sources */,

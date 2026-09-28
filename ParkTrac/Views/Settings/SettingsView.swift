@@ -194,6 +194,11 @@ struct SettingsView: View {
                     } label: {
                         Label("Character Finder", systemImage: "figure.wave")
                     }
+                    NavigationLink {
+                        TipCalculatorView()
+                    } label: {
+                        Label("Tip Calculator", systemImage: "percent")
+                    }
                 } header: {
                     Text("Tools")
                 }

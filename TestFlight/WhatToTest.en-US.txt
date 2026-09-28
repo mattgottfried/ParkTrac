@@ -40,4 +40,8 @@ Trip vs. last visit: Visit History shows "This Trip So Far" — ride count (+ ne
 
 Budget pacing: with a Trip + Trip Budget set, Spending shows "~$X/day for N more days".
 
-Check overall: plan a day, add to My Day, log a ride with a photo, try the car locator, book a paid Lightning Lane, check off a character, look at Bucket List changes, export from Settings, check Tip Board's LL card and Visit History's trip comparison.
+Alternate ride suggestion: on a ride with a 40+ min wait, its page now suggests either a Single Rider line (Universal only — much shorter, but you won't sit with your group) or a similar ride nearby that's currently much shorter. Tap to jump straight there.
+
+Tip Calculator: Settings → Tools — quick 15/18/20/25% or custom, split across your party, in your resort's currency.
+
+Check overall: plan a day, add to My Day, log a ride with a photo, try the car locator, book a paid Lightning Lane, check off a character, look at Bucket List changes, export from Settings, check Tip Board's LL card and Visit History's trip comparison, open a busy ride to see the alternate suggestion, try the Tip Calculator.

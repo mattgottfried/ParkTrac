@@ -158,6 +158,32 @@ enum RideMetadata {
         "Living with the Land",
     ].map { RideMetadata.normalize($0) })
 
+    /// Rides with a standing single rider queue — Universal only; Disney doesn't run them.
+    /// Compared normalized, across all four resorts. Sourced Sept 2026; single rider is turned
+    /// on and off by operations, so this says a ride *has* one, not that it's open right now
+    /// (the live API has no per-ride single rider signal to check).
+    static let singleRiderRides: Set<String> = Set([
+        // Universal Orlando — Islands of Adventure
+        "The Amazing Adventures of Spider-Man", "Doctor Doom's Fearfall",
+        "Dudley Do-Right's Ripsaw Falls", "Hagrid's Magical Creatures Motorbike Adventure",
+        "Harry Potter and the Forbidden Journey", "The Incredible Hulk Coaster",
+        "Jurassic Park River Adventure", "Jurassic World VelociCoaster",
+        // Universal Orlando — Universal Studios Florida
+        "Harry Potter and the Escape from Gringotts", "Men in Black Alien Attack",
+        // Epic Universe
+        "Stardust Racers", "Mario Kart: Bowser's Challenge", "Mine-Cart Madness",
+        "Hiccup's Wing Gliders", "Curse of the Werewolf", "Monsters Unchained: The Frankenstein Experiment",
+        "Harry Potter and the Battle at the Ministry", "Yoshi's Adventure",
+        // Universal Studios Japan
+        "Hollywood Dream – The Ride", "Space Fantasy – The Ride",
+    ].map { RideMetadata.normalize($0) })
+
+    static func hasSingleRider(name: String, resort: ParkGroup) -> Bool {
+        guard resort != .disney, resort != .tokyoDisney else { return false }   // Disney parks don't run single rider
+        let key = normalize(name)
+        return singleRiderRides.contains(key) || singleRiderRides.contains(where: { $0.count >= 10 && key.contains($0) })
+    }
+
     /// Mostly indoors, so it keeps running (and you stay dry) in the rain.
     static func isIndoor(name: String, resort: ParkGroup) -> Bool {
         let key = normalize(name)
@@ -195,6 +221,41 @@ enum RideMetadata {
             }
         }
         return containsMatch?.info
+    }
+}
+
+// MARK: - Alternate ride suggestion (pure)
+// A shorter standby wait is the only accommodation left for a lot of guests since Disney
+// tightened DAS eligibility — this surfaces the two real ways to cut a long standby without
+// a return-time pass: a single rider queue on the same ride, or a similar ride nearby that's
+// currently shorter. Never a manufactured claim about accessibility — just wait-time facts.
+
+enum AlternateRideSuggestion {
+    enum Kind: Equatable {
+        case singleRider
+        case similarRide(name: String, waitMinutes: Int)
+    }
+
+    /// Only worth suggesting an alternative once the wait is genuinely long.
+    static let busyThresholdMinutes = 40
+
+    /// `candidates` should be every other operating ride at the same park (not just Must-Dos),
+    /// so a short-wait alternative can be found even if it isn't starred.
+    static func suggest(rideName: String, waitMinutes: Int?, isOperating: Bool,
+                        candidates: [(name: String, waitMinutes: Int?, isOperating: Bool)],
+                        resort: ParkGroup) -> Kind? {
+        guard isOperating, let wait = waitMinutes, wait >= busyThresholdMinutes else { return nil }
+        if hasSingleRider(name: rideName, resort: resort) { return .singleRider }
+        guard let info = info(for: rideName, resort: resort) else { return nil }
+        let best = candidates
+            .compactMap { c -> (name: String, wait: Int)? in
+                guard c.isOperating, let cw = c.waitMinutes, cw < wait - 15, cw <= wait / 2,
+                      let cInfo = info(for: c.name, resort: resort), cInfo.type == info.type else { return nil }
+                return (c.name, cw)
+            }
+            .min { $0.wait < $1.wait }
+        guard let best else { return nil }
+        return .similarRide(name: best.name, waitMinutes: best.wait)
     }
 }
 
