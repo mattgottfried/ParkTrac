@@ -13,6 +13,7 @@ struct RideDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Environment(AppState.self) private var appState
+    @Environment(WaitTimesViewModel.self) private var viewModel
     @Query private var allRideLogs: [RideLog]
     @Query private var allAlerts: [RideAlert]
     @Query(filter: #Predicate<PlanItem> { $0.kind == "aap" && !$0.isDone }) private var openAccessReturns: [PlanItem]
@@ -26,6 +27,22 @@ struct RideDetailSheet: View {
 
     private var rideCount: Int {
         allRideLogs.filter { $0.rideId == ride.id }.count
+    }
+
+    /// A single rider line, or a similar ride with a much shorter wait right now — the two real
+    /// ways to cut a long standby line without a return-time pass.
+    private var alternateSuggestion: AlternateRideSuggestion.Kind? {
+        let candidates = viewModel.allRides
+            .filter { $0.parkId == ride.parkId && $0.id != ride.id }
+            .map { (name: $0.name, waitMinutes: $0.waitMinutes, isOperating: $0.isOperating) }
+        return AlternateRideSuggestion.suggest(
+            rideName: ride.name, waitMinutes: ride.waitMinutes, isOperating: ride.isOperating,
+            candidates: candidates, resort: parkGroup)
+    }
+
+    /// The suggested ride's live entry, so tapping it can open its own sheet
+    private func alternateRide(named name: String) -> DisplayRide? {
+        viewModel.allRides.first { $0.parkId == ride.parkId && $0.name == name }
     }
 
     /// Today's logged-but-unused DAS/AAP return for this ride, if any
@@ -108,6 +125,12 @@ struct RideDetailSheet: View {
                 // Ride info chips (height, thrill, type, Lightning Lane)
                 if let info = RideMetadata.info(for: ride.name, resort: parkGroup) {
                     rideInfoSection(info)
+                }
+
+                // A shorter way in when the standby line is long: single rider, or a similar
+                // ride nearby that's currently much shorter
+                if let alt = alternateSuggestion {
+                    card { alternateSuggestionSection(alt) }
                 }
 
                 // DAS / AAP: book in the resort's app, then log the return here in one tap
@@ -380,6 +403,36 @@ struct RideDetailSheet: View {
             }
             .buttonStyle(.bordered)
             .tint(.green)
+        }
+    }
+
+    // MARK: - Alternate suggestion (single rider / similar shorter ride)
+
+    @ViewBuilder
+    private func alternateSuggestionSection(_ kind: AlternateRideSuggestion.Kind) -> some View {
+        switch kind {
+        case .singleRider:
+            Label("Single Rider line available here", systemImage: "person.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.blue)
+            Text("Usually much shorter — you won't sit with your group, but it's the fastest way on. Ask a team member for the entrance.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        case .similarRide(let name, let waitMinutes):
+            Label("Try instead: \(name)", systemImage: "arrow.triangle.swap")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.blue)
+            Text("Similar ride, only \(waitMinutes) min right now")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if let alt = alternateRide(named: name) {
+                Button("View \(name)") {
+                    dismiss()
+                    DeepLinkRouter.shared.open(.ride(id: alt.id))
+                }
+                .font(.caption.weight(.semibold))
+                .padding(.top, 2)
+            }
         }
     }
 
