@@ -105,14 +105,25 @@ struct RideCardView: View {
         return nil
     }
 
+    private var hasSingleRider: Bool {
+        ride.isOperating && RideMetadata.hasSingleRider(name: ride.name, resort: resort)
+    }
+
     private var hasDetails: Bool {
         (ride.isOperating && ride.multiPass != nil) || isWatchingLL || walkMinutes != nil
-            || meta != nil
+            || meta != nil || hasSingleRider
     }
 
     /// Return pass, walk and height on one line, dot-separated.
     private var detailRow: some View {
         HStack(spacing: 6) {
+            if hasSingleRider {
+                Label("Single Rider", systemImage: "person.fill")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.blue)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(Color.blue.opacity(0.12), in: Capsule())
+            }
             if ride.isOperating, let ll = ride.multiPass {
                 Text(ll.shortText(prefix: returnPassShort))
                     .font(.caption2.weight(.bold))

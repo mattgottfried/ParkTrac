@@ -23,6 +23,13 @@ final class PlanRefineTests: XCTestCase {
         XCTAssertEqual(PlanOrdering.lessWalking([a, unknown, c, b]).map(\.id), ["A", "B", "C", "X"])
     }
 
+    /// Rope Drop Plan routes by distance, not wait — everything's near-zero wait at park open.
+    func testRopeDropOrdersByDistanceNotWait() {
+        let a = ride("A", east: 0), b = ride("B", east: 1), c = ride("C", east: 2)
+        let zigzag = [a, c, b]
+        XCTAssertEqual(RopeDropPlan.order(zigzag).map(\.id), ["A", "B", "C"])
+    }
+
     func testMustDosFirst() {
         let a = ride("A", east: 0), b = ride("B", east: 1), c = ride("C", east: 2)
         XCTAssertEqual(PlanOrdering.mustDosFirst([a, b, c], mustDo: ["C"]).map(\.id), ["C", "A", "B"])

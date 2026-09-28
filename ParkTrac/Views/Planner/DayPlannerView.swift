@@ -11,6 +11,7 @@ struct DayPlannerView: View {
     @Query private var purchases: [PurchaseLog]
     @State private var showAddSheet = false
     @State private var showRecap = false
+    @State private var showRopeDrop = false
     @State private var showGuestPicker = false
     @State private var showSmartPlanner = false
     @State private var showAreaEntry = false
@@ -347,6 +348,10 @@ struct DayPlannerView: View {
                         Image(systemName: "wand.and.stars")
                     }
                     .accessibilityLabel("Smart Planner")
+                    Button { showRopeDrop = true } label: {
+                        Image(systemName: "sunrise.fill")
+                    }
+                    .accessibilityLabel("Rope Drop Plan")
                     Button { showAddSheet = true } label: {
                         Image(systemName: "plus")
                     }
@@ -363,6 +368,9 @@ struct DayPlannerView: View {
         }
         .sheet(isPresented: $showAddSheet) {
             AddPlanItemView(resort: resort)
+        }
+        .sheet(isPresented: $showRopeDrop) {
+            RopeDropPlanView()
         }
         .sheet(isPresented: $showRecap) {
             NavigationStack {
