@@ -817,6 +817,13 @@ struct ParkMapView: View {
                 if let avg = viewModel.currentAverageWait, let park = viewModel.filterPark {
                     ParkComparisonView(parkName: park.name, parkId: park.id, currentAvgWait: avg)
                 }
+                if viewModel.isOffline {
+                    Label("Offline — no live wait times", systemImage: "wifi.slash")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Color.gray, in: Capsule())
+                }
                 if let refreshed = viewModel.lastRefreshed {
                     TimelineView(.periodic(from: .now, by: 30)) { ctx in
                         let minutesOld = Int(ctx.date.timeIntervalSince(refreshed) / 60)

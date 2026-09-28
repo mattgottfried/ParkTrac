@@ -74,6 +74,15 @@ final class LiveDataParsingTests: XCTestCase {
         XCTAssertEqual(ride.spokenStatus, "Closed")
     }
 
+    /// Offline (no live data at all): not claimed to be Closed, and no wait time is shown.
+    func testUnknownStatusRideIsNotShownAsClosed() {
+        let ride = DisplayRide(catalogId: "c", name: "Ride", parkId: "p", location: nil, status: "UNKNOWN")
+        XCTAssertNil(ride.waitMinutes)
+        XCTAssertFalse(ride.isOperating)
+        XCTAssertEqual(ride.statusDisplay, "No signal")
+        XCTAssertNotEqual(ride.spokenStatus, "Closed")
+    }
+
     // MARK: Schedule event names
 
     func testTicketedEventName() throws {

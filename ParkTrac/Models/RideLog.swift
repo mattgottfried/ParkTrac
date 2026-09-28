@@ -12,6 +12,8 @@ final class RideLog {
     var waitMinutes: Int?
     var actualWaitMinutes: Int? = nil
     var notes: String = ""
+    /// One photo from the ride, picked when logging it ("Rode It!" only, not the stopwatch quick-log)
+    @Attribute(.externalStorage) var photoData: Data? = nil
 
     init(
         rideId: String,
@@ -22,7 +24,8 @@ final class RideLog {
         riddenAt: Date = .now,
         waitMinutes: Int? = nil,
         actualWaitMinutes: Int? = nil,
-        notes: String = ""
+        notes: String = "",
+        photoData: Data? = nil
     ) {
         self.rideId             = rideId
         self.rideName           = rideName
@@ -33,6 +36,7 @@ final class RideLog {
         self.waitMinutes        = waitMinutes
         self.actualWaitMinutes  = actualWaitMinutes
         self.notes              = notes
+        self.photoData          = photoData
     }
 }
 

@@ -100,6 +100,7 @@ struct RideCardView: View {
             return (text: "Good time · \(goodTime.shortText)", icon: "arrow.down.circle.fill", color: .green)
         }
         if isDown { return (text: "Temporarily down", icon: "wrench.and.screwdriver", color: .orange) }
+        if ride.status == "UNKNOWN" { return (text: "No signal — wait time unknown", icon: "wifi.slash", color: .secondary) }
         if !ride.isOperating { return (text: ride.statusDisplay, icon: "moon.zzz", color: .secondary) }
         return nil
     }
@@ -176,8 +177,11 @@ struct WaitTile: View {
 
     private var isDown: Bool { ride.status == "DOWN" }
 
+    private var isUnknown: Bool { ride.status == "UNKNOWN" }
+
     var color: Color {
         if isDown { return .orange }
+        if isUnknown { return .gray }
         if !ride.isOperating { return .red }
         guard ride.waitMinutes != nil else { return .gray }
         return waitTimeColor(minutes: ride.waitMinutes, isOperating: ride.isOperating, status: ride.status)
@@ -197,6 +201,11 @@ struct WaitTile: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: numberSize * 0.8))
                 Text("Down")
+                    .font(.caption2.weight(.bold))
+            } else if isUnknown {
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: numberSize * 0.8))
+                Text("No Signal")
                     .font(.caption2.weight(.bold))
             } else if !ride.isOperating {
                 Image(systemName: "xmark")

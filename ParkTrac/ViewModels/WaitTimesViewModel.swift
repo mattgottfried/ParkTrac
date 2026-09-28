@@ -195,6 +195,11 @@ final class WaitTimesViewModel {
     var searchText = ""
     var lastRefreshed: Date?
 
+    /// Set when a park has no live data at all this session (no signal). The ride list still
+    /// shows the roster, but with no wait times or status — showing a stale number would be
+    /// misleading, so it isn't cached or reused across launches.
+    var isOffline = false
+
     private var refreshTask: Task<Void, Never>?
 
     // MARK: - Computed
@@ -295,6 +300,7 @@ final class WaitTimesViewModel {
         }
         isLoading = true
         errorMessage = nil
+        isOffline = false
         var successCount = 0
         await withTaskGroup(of: Bool.self) { group in
             for park in parks {
@@ -305,8 +311,9 @@ final class WaitTimesViewModel {
             }
         }
         // Keep stale data visible on failure; only surface an error when nothing loaded.
-        // A cancelled refresh isn't a connection problem.
-        if successCount == 0 && !Task.isCancelled {
+        // A cancelled refresh isn't a connection problem, and the offline banner (below)
+        // already explains the no-signal case — no need for the red error too.
+        if successCount == 0 && !Task.isCancelled && !isOffline {
             errorMessage = "Couldn't refresh wait times. Check your connection."
         }
         rebuildAllRides()
@@ -332,13 +339,15 @@ final class WaitTimesViewModel {
         }
 
         guard let liveEntries = try? await ParkAPIService.shared.fetchLiveData(for: park.id) else {
-            // No live data at all (offline / park closed overnight on some
-            // endpoints): still show every cataloged ride as Closed
+            // No live data at all (no signal / park closed overnight on some endpoints): show
+            // the roster with no wait/status rather than either an empty list or a stale,
+            // possibly-wrong number.
             if ridesByPark[park.id] == nil && !catalog.isEmpty {
                 ridesByPark[park.id] = catalog.map {
                     DisplayRide(catalogId: $0.id, name: $0.name, parkId: park.id,
-                                location: attractionLocations[$0.id])
+                                location: attractionLocations[$0.id], status: "UNKNOWN")
                 }
+                isOffline = true
             }
             return false
         }

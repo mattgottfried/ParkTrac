@@ -154,6 +154,7 @@ struct VisitDayDetailView: View {
     let visit: VisitDay
 
     @Environment(\.modelContext) private var context
+    @State private var fullScreenPhoto: UIImage?
 
     private var dateStr: String {
         let f = DateFormatter()
@@ -217,6 +218,16 @@ struct VisitDayDetailView: View {
                 Section(group.park) {
                     ForEach(group.logs) { log in
                         HStack {
+                            if let data = log.photoData, let image = UIImage(data: data) {
+                                Button { fullScreenPhoto = image } label: {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 40, height: 40)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                }
+                                .buttonStyle(.plain)
+                            }
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(log.rideName)
                                     .font(.subheadline)
@@ -248,5 +259,22 @@ struct VisitDayDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle(dateStr)
         .navigationBarTitleDisplayMode(.inline)
+        .fullScreenCover(item: Binding(
+            get: { fullScreenPhoto.map { IdentifiableImage(image: $0) } },
+            set: { fullScreenPhoto = $0?.image }
+        )) { wrapped in
+            ZStack {
+                Color.black.ignoresSafeArea()
+                Image(uiImage: wrapped.image)
+                    .resizable()
+                    .scaledToFit()
+            }
+            .onTapGesture { fullScreenPhoto = nil }
+        }
     }
+}
+
+private struct IdentifiableImage: Identifiable {
+    let id = UUID()
+    let image: UIImage
 }

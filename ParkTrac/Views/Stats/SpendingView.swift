@@ -7,9 +7,11 @@ struct SpendingView: View {
     @Query(sort: \PurchaseLog.date, order: .reverse) private var allPurchases: [PurchaseLog]
 
     @State private var showAddSheet = false
+    @State private var showBudgetSheet = false
 
     private var resort: String { appState.selectedResort.rawValue }
     private var resortPurchases: [PurchaseLog] { allPurchases.filter { $0.resort == resort && !UndoDeleteCenter.shared.isHidden($0) } }
+    private var budget: Double { appState.tripBudget(for: appState.selectedResort) }
 
     private var todayTotal: Double {
         resortPurchases.filter { Calendar.current.isDateInToday($0.date) }.map(\.amount).reduce(0, +)
@@ -36,6 +38,18 @@ struct SpendingView: View {
                         spendStat(label: "This Trip", value: tripTotal, color: .green)
                     }
                     .frame(height: 70)
+                }
+
+                Section {
+                    if budget > 0 {
+                        budgetProgress
+                    } else {
+                        Button {
+                            showBudgetSheet = true
+                        } label: {
+                            Label("Set a Trip Budget", systemImage: "target")
+                        }
+                    }
                 }
 
                 if !resortPurchases.isEmpty {
@@ -105,6 +119,7 @@ struct SpendingView: View {
                 }
             }
             .sheet(isPresented: $showAddSheet) { AddPurchaseView(resort: resort) }
+            .sheet(isPresented: $showBudgetSheet) { TripBudgetSheet(resort: appState.selectedResort) }
             .task { if showsDollars { await currency.refresh() } }
         }
     }
@@ -119,6 +134,90 @@ struct SpendingView: View {
             Text(label).font(.caption).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Budget
+
+    private var budgetFraction: Double { budget > 0 ? min(tripTotal / budget, 1.5) : 0 }
+    private var budgetColor: Color {
+        let f = tripTotal / max(budget, 0.01)
+        return f >= 1 ? .red : f >= 0.8 ? .orange : .green
+    }
+
+    private var budgetProgress: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Trip Budget")
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Button("Edit") { showBudgetSheet = true }
+                    .font(.caption)
+            }
+            ProgressView(value: min(budgetFraction, 1))
+                .tint(budgetColor)
+            HStack {
+                Text(tripTotal, format: .currency(code: appState.selectedResort.currencyCode))
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(budgetColor)
+                Text("of")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(budget, format: .currency(code: appState.selectedResort.currencyCode))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                if tripTotal > budget {
+                    Text("\(tripTotal - budget, format: .currency(code: appState.selectedResort.currencyCode)) over")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.red)
+                } else {
+                    Text("\(budget - tripTotal, format: .currency(code: appState.selectedResort.currencyCode)) left")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct TripBudgetSheet: View {
+    let resort: ParkGroup
+    @Environment(\.dismiss) private var dismiss
+    @Environment(AppState.self) private var appState
+    @State private var amount = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack {
+                        Text(resort.currencyCode)
+                            .foregroundStyle(.secondary)
+                        TextField("e.g. 500", text: $amount)
+                            .keyboardType(.decimalPad)
+                    }
+                } footer: {
+                    Text("A rough target for this trip's spending. Set it to 0 to hide the tracker.")
+                }
+            }
+            .navigationTitle("Trip Budget")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        appState.setTripBudget(Double(amount) ?? 0, for: resort)
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+            .onAppear {
+                let existing = appState.tripBudget(for: resort)
+                amount = existing > 0 ? String(format: "%.0f", existing) : ""
+            }
+        }
     }
 }
 
