@@ -176,7 +176,7 @@ let allSeedRestaurants: [SeedRestaurant] = [
     SeedRestaurant(name: "Via Napoli Ristorante e Pizzeria", park: "EPCOT", resort: "Walt Disney World", category: "Table Service", isVisited: true, mattRating: 5, wifeRating: 4.5),
     SeedRestaurant(name: "Whispering Canyon Café", park: "Wilderness Lodge", resort: "Walt Disney World", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Wine Bar George", park: "Disney Springs", resort: "Walt Disney World", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
-    SeedRestaurant(name: "Wolfgang Puck Bar & Grill", park: "Disney Springs", resort: "Walt Disney World", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
+    // Wolfgang Puck Bar & Grill: permanently closed Sept 13, 2026 — see BucketListService.closedRestaurantKeys (kept on-device with a CLOSED banner, not re-seeded)
     SeedRestaurant(name: "Woody's Lunch Box", park: "Hollywood Studios", resort: "Walt Disney World", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "World Premiere Food Court", park: "All-Star Movies Resort", resort: "Walt Disney World", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Yachtsman Steakhouse", park: "Yacht Club Resort", resort: "Walt Disney World", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
@@ -212,7 +212,8 @@ let allSeedRestaurants: [SeedRestaurant] = [
     SeedRestaurant(name: "Galaxy Bowl Restaurant", park: "Cabana Bay Beach Resort", resort: "Universal Orlando", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Green Eggs and Ham™ Cafe", park: "Islands of Adventure", resort: "Universal Orlando", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Hard Rock Cafe® Orlando", park: "CityWalk", resort: "Universal Orlando", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
-    SeedRestaurant(name: "Hot Dog Hall of Fame®", park: "CityWalk", resort: "Universal Orlando", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
+    // Closed July 2026, replaced by a different restaurant in the same spot (Fat One's, below) — see BucketListService.closedRestaurantKeys
+    SeedRestaurant(name: "Fat One's Hot Dogs & Italian Ice", park: "CityWalk", resort: "Universal Orlando", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Minion Cafe", park: "Universal Studios Florida", resort: "Universal Orlando", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Islands Dining Room", park: "Royal Pacific Resort", resort: "Universal Orlando", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Jake's American Bar", park: "Royal Pacific Resort", resort: "Universal Orlando", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
@@ -244,7 +245,7 @@ let allSeedRestaurants: [SeedRestaurant] = [
     SeedRestaurant(name: "The Palm", park: "Hard Rock Hotel", resort: "Universal Orlando", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "The Toothsome Chocolate Emporium and Savory Feast Kitchen", park: "CityWalk", resort: "Universal Orlando", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Three Broomsticks™", park: "Islands of Adventure", resort: "Universal Orlando", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
-    SeedRestaurant(name: "Thunder Falls Terrace", park: "Islands of Adventure", resort: "Universal Orlando", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
+    // Thunder Falls Terrace: permanently closed July 20, 2026, being rebuilt (no successor name yet) — see BucketListService.closedRestaurantKeys
     SeedRestaurant(name: "TODAY Cafe", park: "Universal Studios Florida", resort: "Universal Orlando", category: "Quick Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "Trattoria del Porto", park: "Portofino Bay Hotel", resort: "Universal Orlando", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),
     SeedRestaurant(name: "VIVO Italian Kitchen", park: "CityWalk", resort: "Universal Orlando", category: "Table Service", isVisited: false, mattRating: 0, wifeRating: 0),

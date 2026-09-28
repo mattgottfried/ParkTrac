@@ -4,13 +4,40 @@ import SwiftData
 actor BucketListService {
     static let shared = BucketListService()
 
+    /// Restaurants that have permanently closed in real life (Sept 2026), keyed "name|park".
+    /// `markClosedRestaurants` sets `isClosed` on any existing row rather than deleting it, so a
+    /// guest's rating/notes/photos on a since-closed restaurant are never lost — the row just
+    /// shows a CLOSED banner. New installs don't get these seeded at all (removed from
+    /// `allSeedRestaurants`), so this only ever affects installs that had them already.
+    static let closedRestaurantKeys: Set<String> = [
+        "Wolfgang Puck Bar & Grill|Disney Springs",
+        "Thunder Falls Terrace|Islands of Adventure",
+        // Hot Dog Hall of Fame® closed and was replaced by a different restaurant (Fat One's
+        // Hot Dogs & Italian Ice) in the same spot — not a rename, so the old one is marked
+        // closed rather than renamed, and Fat One's is seeded separately.
+        "Hot Dog Hall of Fame®|CityWalk",
+    ]
+
     // Seeds restaurants and hotels into SwiftData on first launch.
     // Skips entries that already exist (matched by name + park).
     @MainActor
     func seedIfNeeded(context: ModelContext) async {
+        await markClosedRestaurants(context: context)
         await seedRestaurants(context: context)
         await seedHotels(context: context)
         await seedCharacters(context: context)
+    }
+
+    @MainActor
+    private func markClosedRestaurants(context: ModelContext) async {
+        let existing = (try? context.fetch(FetchDescriptor<BucketRestaurant>())) ?? []
+        for restaurant in existing {
+            let key = "\(restaurant.name)|\(restaurant.park)"
+            if Self.closedRestaurantKeys.contains(key), !restaurant.isClosed {
+                restaurant.isClosed = true
+            }
+        }
+        try? context.save()
     }
 
     @MainActor

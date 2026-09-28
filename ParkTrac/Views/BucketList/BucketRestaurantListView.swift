@@ -196,9 +196,18 @@ private struct BucketRestaurantRow: View {
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(restaurant.name)
-                    .font(.subheadline.weight(.medium))
-                    .strikethrough(restaurant.isVisited, color: .secondary)
+                HStack(spacing: 6) {
+                    Text(restaurant.name)
+                        .font(.subheadline.weight(.medium))
+                        .strikethrough(restaurant.isVisited, color: .secondary)
+                    if restaurant.isClosed {
+                        Text("CLOSED")
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 6).padding(.vertical, 1)
+                            .background(Color.red.opacity(0.15), in: Capsule())
+                            .foregroundStyle(.red)
+                    }
+                }
                 HStack(spacing: 6) {
                     Text(restaurant.park)
                         .font(.caption)
