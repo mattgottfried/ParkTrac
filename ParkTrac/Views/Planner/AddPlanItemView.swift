@@ -305,6 +305,9 @@ struct AddPlanItemView: View {
                         if appState.wishList.contains(ride.id) {
                             Image(systemName: "star.fill").font(.caption2).foregroundStyle(.yellow)
                         }
+                        if ride.isOperating, let group = ParkGroup(rawValue: resort), RideMetadata.hasSingleRider(name: ride.name, resort: group) {
+                            Image(systemName: "person.fill").font(.caption2).foregroundStyle(.blue)
+                        }
                     }
                     if plannedIds.contains(ride.id) {
                         Text("Already in today's plan").font(.caption2).foregroundStyle(.secondary)

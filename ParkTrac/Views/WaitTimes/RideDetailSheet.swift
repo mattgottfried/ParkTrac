@@ -465,6 +465,9 @@ struct RideDetailSheet: View {
                         color: info.lightningLane ? .yellow : .secondary
                     )
                 }
+                if RideMetadata.hasSingleRider(name: ride.name, resort: parkGroup) {
+                    infoChip(label: "Single Rider", systemImage: "person.fill", color: .blue)
+                }
             }
         }
     }

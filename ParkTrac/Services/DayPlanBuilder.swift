@@ -71,6 +71,9 @@ struct DayPlan: Equatable {
     var stops: [PlannedStop]
     /// Rides that didn't fit before the end of the day
     var unscheduled: [String]
+
+    /// Total standing-in-line time — shows/dining/breaks carry no wait, only ride stops do.
+    var totalWaitMinutes: Int { stops.filter { $0.kind == "ride" }.reduce(0) { $0 + $1.waitMinutes } }
 }
 
 // MARK: - Per-ride wait profile

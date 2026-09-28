@@ -123,4 +123,18 @@ final class DayPlanBuilderTests: XCTestCase {
                        "Go for Seven Dwarfs at MK — 40 minutes now, usually about 90. Also good: Peter Pan, 30 minutes.")
         XCTAssertTrue(NextRideAdvisor.dialog([]).contains("Nothing is posting"))
     }
+
+    // MARK: Standby time total (Smart Planner's "min standing in line" stat)
+
+    func testTotalWaitMinutesCountsOnlyRideStops() {
+        let plan = DayPlan(stops: [
+            PlannedStop(title: "Space Mountain", kind: "ride", rideId: "space", parkName: "MK",
+                       start: at(10), walkMinutes: 5, waitMinutes: 40, totalMinutes: 45),
+            PlannedStop(title: "Lunch", kind: "dining", rideId: nil, parkName: "MK",
+                       start: at(12), walkMinutes: 5, waitMinutes: 0, totalMinutes: 75),
+            PlannedStop(title: "Big Thunder", kind: "ride", rideId: "bttm", parkName: "MK",
+                       start: at(13), walkMinutes: 5, waitMinutes: 20, totalMinutes: 25),
+        ], unscheduled: [])
+        XCTAssertEqual(plan.totalWaitMinutes, 60)
+    }
 }

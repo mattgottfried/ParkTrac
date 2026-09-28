@@ -399,6 +399,7 @@ struct ParkMapView: View {
     @State private var showMustDoOnly: Bool = false
     @AppStorage("rideSort") private var rideSort: RideSort = .longestWait
     @AppStorage("hideClosedRides") private var hideClosed: Bool = false
+    @AppStorage("singleRiderOnly") private var singleRiderOnly: Bool = false
     /// 0 = no limit
     @AppStorage("maxWaitFilter") private var maxWait: Int = 0
     @State private var rideAction: RideMenuAction?
@@ -946,11 +947,14 @@ struct ParkMapView: View {
                 guard ride.isOperating else { return false }
                 if let m = ride.waitMinutes, m > maxWait { return false }
             }
+            if singleRiderOnly && !RideMetadata.hasSingleRider(name: ride.name, resort: viewModel.selectedGroup) {
+                return false
+            }
             return true
         }
     }
 
-    private var listFiltersActive: Bool { hideClosed || maxWait > 0 }
+    private var listFiltersActive: Bool { hideClosed || maxWait > 0 || singleRiderOnly }
 
     private func parkName(for ride: DisplayRide) -> String {
         viewModel.currentParks.first(where: { $0.id == ride.parkId })?.name ?? ""
@@ -966,6 +970,9 @@ struct ParkMapView: View {
                 Picker("Max Wait", selection: $maxWait) {
                     Text("Any Wait").tag(0)
                     ForEach([15, 30, 45, 60], id: \.self) { Text("≤ \($0) min").tag($0) }
+                }
+                if viewModel.selectedGroup == .universal || viewModel.selectedGroup == .universalJapan {
+                    Toggle("Single Rider Only", isOn: $singleRiderOnly)
                 }
             }
             if listFiltersActive {
@@ -983,6 +990,7 @@ struct ParkMapView: View {
     private func clearListFilters() {
         hideClosed = false
         maxWait = 0
+        singleRiderOnly = false
     }
 
     /// UIKit version of `rideContextMenu` for long-pressing a map pin.

@@ -68,6 +68,7 @@ struct SmartPlannerView: View {
     @State private var isRefining = false
     /// Minutes walked between stops in the current plan
     @State private var walkTotal = 0
+    @State private var waitTotal = 0
 
     private enum Phase { case picking, generating, result }
 
@@ -570,6 +571,7 @@ struct SmartPlannerView: View {
         }
         unscheduled = plan.unscheduled
         walkTotal = plan.stops.dropFirst().reduce(0) { $0 + $1.walkMinutes }
+        waitTotal = plan.totalWaitMinutes
     }
 
     // MARK: - Change the plan
@@ -595,15 +597,24 @@ struct SmartPlannerView: View {
     }
 
     private func quickChange(_ label: String, _ reorder: ([PlanRide]) -> [PlanRide]) {
-        let before = walkTotal
+        let beforeWalk = walkTotal
+        let beforeWait = waitTotal
         apply(reorder(currentOrder), extras: currentExtras)
-        refinements.append(Refinement(request: label, reply: walkReply(before: before)))
+        let parts = [walkReply(before: beforeWalk), waitReply(before: beforeWait)].filter { !$0.isEmpty }
+        refinements.append(Refinement(request: label, reply: parts.joined(separator: " ")))
     }
 
     private func walkReply(before: Int) -> String {
         if walkTotal < before { return "Walking cut from about \(before) to \(walkTotal) min." }
         if walkTotal > before { return "Walking is now about \(walkTotal) min (was \(before))." }
         return "Walking stays about \(walkTotal) min."
+    }
+
+    /// Only mentioned when it actually changed — most reorderings don't touch standby time at all.
+    private func waitReply(before: Int) -> String {
+        if waitTotal < before { return "Standby time cut from about \(before) to \(waitTotal) min." }
+        if waitTotal > before { return "Standby time is now about \(waitTotal) min (was \(before))." }
+        return ""
     }
 
     /// "Shortest Waits": let the wait-driven planner order them
@@ -622,6 +633,7 @@ struct SmartPlannerView: View {
         isRefining = true
         defer { isRefining = false }
         let before = walkTotal
+        let beforeWait = waitTotal
         let requests = refinements.map(\.request) + [request]
         do {
             let ai = try await PlannerAI.refine(input, currentOrder: currentOrder.map(\.name),
@@ -639,7 +651,7 @@ struct SmartPlannerView: View {
             apply(order, extras: extras.isEmpty ? currentExtras : extras)
             if !ai.summary.isEmpty { aiSummary = ai.summary }
             refinements.append(Refinement(request: request,
-                                          reply: [ai.summary, walkReply(before: before)]
+                                          reply: [ai.summary, walkReply(before: before), waitReply(before: beforeWait)]
                                               .filter { !$0.isEmpty }.joined(separator: " ")))
             refineText = ""
         } catch {
@@ -653,6 +665,11 @@ struct SmartPlannerView: View {
             if walkTotal > 0 {
                 Label("About \(walkTotal) min of walking between stops", systemImage: "figure.walk")
                     .font(.subheadline)
+            }
+            if waitTotal > 0 {
+                Label("About \(waitTotal) min standing in line today", systemImage: "hourglass")
+                    .font(.subheadline)
+                    .foregroundStyle(.orange)
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
