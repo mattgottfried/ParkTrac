@@ -939,6 +939,61 @@ struct ParkMapView: View {
         }
     }
 
+    /// Shortest absolute waits right now — a ride doesn't need a long "usual" to belong here,
+    /// just a short line, so this catches things `goodTimeStrip` can't.
+    private var easyWinsStrip: some View {
+        let goodTimeIds = Set(GoodTimeService.shared.ranked(rides: displayedRides, mustDo: appState.wishList).map(\.ride.id))
+        let picks = EasyWins.pick(rides: displayedRides, excluding: goodTimeIds)
+        return Group {
+            if !picks.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "bolt.fill").foregroundStyle(.blue)
+                        Text("Easy Wins").foregroundStyle(.primary)
+                    }
+                    .font(.subheadline.weight(.bold))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(picks) { ride in
+                                Button { selectedRide = ride } label: {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        HStack(alignment: .top, spacing: 4) {
+                                            if appState.wishList.contains(ride.id) {
+                                                Image(systemName: "star.fill").foregroundStyle(.yellow).font(.caption)
+                                            }
+                                            Text(ride.name)
+                                                .font(.subheadline.weight(.semibold))
+                                                .foregroundStyle(.primary)
+                                                .lineLimit(2)
+                                                .multilineTextAlignment(.leading)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
+                                        Spacer(minLength: 0)
+                                        Text("\(ride.waitMinutes ?? 0) min")
+                                            .font(.title3.weight(.bold))
+                                            .foregroundStyle(.blue)
+                                    }
+                                    .frame(width: 140, alignment: .leading)
+                                    .frame(minHeight: 78)
+                                    .padding(12)
+                                    .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .stroke(Color.blue.opacity(0.4), lineWidth: 1.5))
+                                    .shadow(color: .black.opacity(0.08), radius: 3, y: 1)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("\(ride.name), \(ride.waitMinutes ?? 0) minute wait")
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.bottom, 6)
+            }
+        }
+    }
+
     private var displayedRides: [DisplayRide] {
         viewModel.filteredRides.filter { ride in
             if showMustDoOnly && !appState.wishList.contains(ride.id) { return false }
@@ -1128,12 +1183,14 @@ struct ParkMapView: View {
                         LazyVStack(spacing: 8) {
                             NextUpCard(resort: viewModel.selectedGroup)
                             goodTimeStrip
+                            easyWinsStrip
                             ForEach(displayedRides) { ride in
                                 RideCardView(ride: ride, theme: theme, walkMinutes: walkMinutes(to: ride),
                                              returnPassShort: viewModel.selectedGroup.returnPassNames.short,
                                              returnPassName: viewModel.selectedGroup.returnPassNames.free,
                                              resort: viewModel.selectedGroup,
                                              goodTime: GoodTimeService.shared.deal(for: ride.id),
+                                             usual: GoodTimeService.shared.usual(for: ride.id),
                                              isMustDo: appState.wishList.contains(ride.id))
                                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14, style: .continuous))
                                     .onTapGesture { selectedRide = ride }

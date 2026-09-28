@@ -87,6 +87,7 @@
 		AA0000000000000000000133 /* WeatherCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000132 /* WeatherCardView.swift */; };
 		AA0000000000000000000135 /* SpendingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000134 /* SpendingView.swift */; };
 		AA00000000000000000001A4 /* TripPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A5 /* TripPlannerView.swift */; };
+		AA00000000000000000001C7 /* VacationCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001C8 /* VacationCalendarView.swift */; };
 		AA00000000000000000001B6 /* DayRecapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001B7 /* DayRecapView.swift */; };
 		AA0000000000000000000137 /* HeightCheckerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000136 /* HeightCheckerView.swift */; };
 		AA00000000000000000001C3 /* TipCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001C4 /* TipCalculatorView.swift */; };
@@ -240,6 +241,7 @@
 		AA0000000000000000000132 /* WeatherCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCardView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000134 /* SpendingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingView.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A5 /* TripPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlannerView.swift; sourceTree = "<group>"; };
+		AA00000000000000000001C8 /* VacationCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VacationCalendarView.swift; sourceTree = "<group>"; };
 		AA00000000000000000001B7 /* DayRecapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayRecapView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000136 /* HeightCheckerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeightCheckerView.swift; sourceTree = "<group>"; };
 		AA00000000000000000001C4 /* TipCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipCalculatorView.swift; sourceTree = "<group>"; };
@@ -517,6 +519,7 @@
 				AA0000000000000000000132 /* WeatherCardView.swift */,
 				AA0000000000000000000134 /* SpendingView.swift */,
 				AA00000000000000000001A5 /* TripPlannerView.swift */,
+				AA00000000000000000001C8 /* VacationCalendarView.swift */,
 				AA00000000000000000001B7 /* DayRecapView.swift */,
 				AA000000000000000000013D /* APOffersView.swift */,
 				AA0000000000000000000163 /* WaitAccuracyCard.swift */,
@@ -796,6 +799,7 @@
 				AA0000000000000000000133 /* WeatherCardView.swift in Sources */,
 				AA0000000000000000000135 /* SpendingView.swift in Sources */,
 				AA00000000000000000001A4 /* TripPlannerView.swift in Sources */,
+				AA00000000000000000001C7 /* VacationCalendarView.swift in Sources */,
 				AA00000000000000000001B6 /* DayRecapView.swift in Sources */,
 				AA0000000000000000000137 /* HeightCheckerView.swift in Sources */,
 				AA00000000000000000001C3 /* TipCalculatorView.swift in Sources */,

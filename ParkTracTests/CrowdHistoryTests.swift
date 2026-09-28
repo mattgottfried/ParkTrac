@@ -42,4 +42,22 @@ final class CrowdHistoryTests: XCTestCase {
         XCTAssertEqual(CrowdHistory.level(for: day(9), resort: .disney, data: data, today: day(10), calendar: cal), .moderate,
                        "20 min average → Moderate")
     }
+
+    // MARK: Best park today (multi-resort trips)
+
+    func testBestParkPicksTheLeastCrowded() {
+        let best = BestParkToday.pick(resorts: [.disney, .universal]) { resort in
+            resort == .disney ? .high : .low
+        }
+        XCTAssertEqual(best?.resort, .universal)
+        XCTAssertEqual(best?.level, .low)
+    }
+
+    func testNoBestParkWithOnlyOneResort() {
+        XCTAssertNil(BestParkToday.pick(resorts: [.disney]) { _ in .low })
+    }
+
+    func testNoBestParkWithoutAnyData() {
+        XCTAssertNil(BestParkToday.pick(resorts: [.disney, .universal]) { _ in nil })
+    }
 }

@@ -80,4 +80,17 @@ final class TripTests: XCTestCase {
         XCTAssertNil(BudgetPacer.pace(budget: 600, spent: 100, today: day(11, 13), tripEnd: day(11, 12), calendar: cal))
         XCTAssertNil(BudgetPacer.pace(budget: 0, spent: 100, today: day(11, 7), tripEnd: day(11, 12), calendar: cal))
     }
+
+    // MARK: Vacation Calendar
+
+    func testVacationCalendarDaysInclusive() {
+        let days = VacationCalendar.days(start: day(11, 5), end: day(11, 8), calendar: cal)
+        XCTAssertEqual(days.count, 4)
+        XCTAssertEqual(days.first, cal.startOfDay(for: day(11, 5)))
+        XCTAssertEqual(days.last, cal.startOfDay(for: day(11, 8)))
+    }
+
+    func testVacationCalendarSingleDayTrip() {
+        XCTAssertEqual(VacationCalendar.days(start: day(11, 5), end: day(11, 5), calendar: cal).count, 1)
+    }
 }

@@ -74,6 +74,42 @@ struct TripComparison: Equatable {
     var rideDifference: Int { currentRides - priorRidesByThisPoint }
 }
 
+// MARK: - "On this day" memories (pure)
+
+struct OnThisDayMemory: Equatable {
+    let yearsAgo: Int
+    let rideCount: Int
+    let parks: [String]
+    /// A ride ridden more than once that day, if any
+    let repeatRide: (name: String, count: Int)?
+}
+
+enum OnThisDayMemories {
+    /// The most recent earlier year (up to `maxYears` back) with a logged visit on this same
+    /// month and day — nil if there's no history yet.
+    static func find(logs: [RideLog], resort: String, today: Date = .now, maxYears: Int = 8,
+                     calendar: Calendar = .current) -> OnThisDayMemory? {
+        let todayComps = calendar.dateComponents([.month, .day], from: today)
+        for yearsAgo in 1...maxYears {
+            guard let target = calendar.date(byAdding: .year, value: -yearsAgo, to: today) else { continue }
+            let targetYear = calendar.component(.year, from: target)
+            let dayLogs = logs.filter { log in
+                guard log.resort == resort else { return false }
+                let c = calendar.dateComponents([.year, .month, .day], from: log.riddenAt)
+                return c.year == targetYear && c.month == todayComps.month && c.day == todayComps.day
+            }
+            guard !dayLogs.isEmpty else { continue }
+            let parks = Array(Set(dayLogs.map(\.parkName))).sorted()
+            let counts = Dictionary(dayLogs.map { ($0.rideName, 1) }, uniquingKeysWith: +)
+            let repeatRide = counts.filter { $0.value > 1 }
+                .max { $0.value < $1.value || ($0.value == $1.value && $0.key > $1.key) }
+                .map { (name: $0.key, count: $0.value) }
+            return OnThisDayMemory(yearsAgo: yearsAgo, rideCount: dayLogs.count, parks: parks, repeatRide: repeatRide)
+        }
+        return nil
+    }
+}
+
 enum VisitTripGrouper {
     /// Visit days more than `maxGapDays` apart (a rest day or two is still the same trip;
     /// a multi-week gap is a new one) are grouped into one `VisitTrip`. `days` needn't be sorted.

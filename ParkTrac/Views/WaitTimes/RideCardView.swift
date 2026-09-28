@@ -12,6 +12,9 @@ struct RideCardView: View {
     var resort: ParkGroup = .disney
     /// Wait well below this ride's usual (GoodTimeService)
     var goodTime: GoodTimeToRide.Deal? = nil
+    /// This ride's usual wait at this time (GoodTimeService) — used only for the "+15 vs usual"
+    /// line when it isn't already a Good Time deal (that line says the same thing better).
+    var usual: GoodTimeToRide.Usual? = nil
 
     /// Starred as a Must-Do (shown as a star beside the name)
     var isMustDo: Bool = false
@@ -102,7 +105,19 @@ struct RideCardView: View {
         if isDown { return (text: "Temporarily down", icon: "wrench.and.screwdriver", color: .orange) }
         if ride.status == "UNKNOWN" { return (text: "No signal — wait time unknown", icon: "wifi.slash", color: .secondary) }
         if !ride.isOperating { return (text: ride.statusDisplay, icon: "moon.zzz", color: .secondary) }
+        if let delta = usualDelta {
+            let sign = delta > 0 ? "+" : ""
+            return (text: "\(sign)\(delta) vs usual", icon: delta > 0 ? "arrow.up" : "arrow.down",
+                    color: delta > 0 ? .orange : .green)
+        }
         return nil
+    }
+
+    /// Only shown when it's a meaningful gap — a couple minutes either way isn't worth a line.
+    private var usualDelta: Int? {
+        guard ride.isOperating, let wait = ride.waitMinutes, let usual else { return nil }
+        let delta = wait - usual.minutes
+        return abs(delta) >= 10 ? delta : nil
     }
 
     private var hasSingleRider: Bool {
