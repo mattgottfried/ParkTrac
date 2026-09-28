@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct RideDetailSheet: View {
     @ScaledMetric(relativeTo: .largeTitle) private var tileSize: CGFloat = 84
@@ -449,6 +450,8 @@ struct LogRideSheet: View {
     @State private var notes = ""
     @State private var riddenAt = Date()
     @State private var saved = false
+    @State private var photoItem: PhotosPickerItem?
+    @State private var photoImage: UIImage?
 
     var body: some View {
         NavigationStack {
@@ -486,6 +489,27 @@ struct LogRideSheet: View {
                     TextField("e.g. front row, single rider…", text: $notes, axis: .vertical)
                         .lineLimit(3...5)
                 }
+
+                Section("Photo (optional)") {
+                    if let photoImage {
+                        HStack {
+                            Image(uiImage: photoImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 60, height: 60)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            Spacer()
+                            Button("Remove", role: .destructive) {
+                                self.photoImage = nil
+                                photoItem = nil
+                            }
+                        }
+                    } else {
+                        PhotosPicker(selection: $photoItem, matching: .images) {
+                            Label("Add a Photo", systemImage: "photo.badge.plus")
+                        }
+                    }
+                }
             }
             .navigationTitle("Log Ride")
             .navigationBarTitleDisplayMode(.inline)
@@ -514,6 +538,12 @@ struct LogRideSheet: View {
                 }
             }
         }
+        .onChange(of: photoItem) { _, newItem in
+            Task {
+                guard let data = try? await newItem?.loadTransferable(type: Data.self) else { return }
+                photoImage = UIImage(data: data)
+            }
+        }
     }
 
     private func saveLog() {
@@ -525,7 +555,8 @@ struct LogRideSheet: View {
             resort: resort,
             riddenAt: riddenAt,
             waitMinutes: waitMinutes,
-            notes: notes
+            notes: notes,
+            photoData: photoImage?.jpegData(compressionQuality: 0.7)
         )
         context.insert(log)
         try? context.save()

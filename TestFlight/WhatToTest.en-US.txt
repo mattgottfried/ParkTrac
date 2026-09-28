@@ -2,42 +2,40 @@ New since the last build (short version: TestFlight allows 4,000 characters)
 
 Smart Planner
 - No more invented dinners: meals/breaks only when your notes ask ("snack break at 3").
-- Plan a future day: Day picker (60 days ahead) uses that day's hours and typical waits. Save Plan → My Day → Coming Up; that morning it becomes your live Next Up plan.
-- Change the Plan: shows total walking; one tap for Less Walking, Must-Dos First, Shortest Waits; with Apple Intelligence type requests ("keep rides close together").
-- Rain plan: when rain is likely, indoor rides go in the wet hours, a "Rain likely 3–5 PM" note shows, and a heads-up comes ~30 min before.
+- Plan a future day (Day picker, 60 days out) using that day's hours and typical waits. Save Plan → My Day → Coming Up; the morning of, it becomes your live Next Up plan.
+- Change the Plan: shows total walking; one-tap Less Walking / Must-Dos First / Shortest Waits; with Apple Intelligence, type requests ("keep rides close together").
+- Rain plan: indoor rides move into likely-rain hours, with a heads-up note and a notification ~30 min before.
 
 Wait Times
-- New ride cards: colored wait tile on the left, Must-Do star, one tidy info line.
-- Drag or tap anywhere on the panel header to expand/shrink the list.
-- My-location button top-right on the map.
-- Pull-to-refresh is gone (it caused false errors); tap the orange "N min ago" pill to refresh.
+- New ride cards: colored wait tile, Must-Do star, one info line. Drag/tap anywhere on the panel header to expand/shrink.
+- My-location button on the map. Pull-to-refresh is gone (caused false errors); tap the "N min ago" pill instead.
 - Shows open a show page: showtimes, 15-min reminders, Add to My Day.
 
 Ride page
-- New layout: wait tile header, four buttons (Rode It!, My Day, Alert, Return), cards.
-- Wait Forecast replaces Predictions: "Good time to go now" or "Shorter around 8pm", hourly bars (touch to read), best hour ★.
-- "You usually wait ~45 (posted 60)" after you've timed a ride twice.
-- Forecasts, Good Time badges and the Tip Board now use everyone's recorded waits (server history), so they work on day one.
+- New layout: wait tile header, 4 buttons (Rode It!, My Day, Alert, Return), cards.
+- Wait Forecast replaces Predictions: a clear call ("Go now" / "Shorter at 8pm"), hourly bars, best hour ★.
+- "You usually wait ~45 (posted 60)" after 2 timed rides. Forecasts/Good Time/Tip Board now use everyone's recorded waits, so they work day one.
 
-Add to My Day
-- One screen: pick several rides or a show, then Anytime / Now / Best time / showtime / set time. Lightning Lane returns start the Live Activity.
+Add to My Day: one screen — pick several rides/a show, then Anytime/Now/Best time/showtime/set time. LL returns start the Live Activity.
 
-Live Activities
-- Resort colors, big countdowns, progress bars for return windows and the stopwatch.
-- Next Up on the Lock Screen while a plan runs: timeline of the next 3 stops.
-- Buttons: Done / Skip, "I'm On — Log It", "Used It". Settings → Next Up on Lock Screen.
+Live Activities: resort colors, big countdowns, progress bars. Next Up timeline (3 stops) while a plan runs. Buttons: Done/Skip, "I'm On — Log It", "Used It".
 
-Alerts and stats
-- Must-Do down alerts: "is down" / "is back up" (Settings → Must-Do Down Alerts).
-- Crowd Calendar uses measured waits for past days and predicts the next two weeks.
-- Day recap (My Day → ✨): rides, time in line, steps, spending; share as image or text. Past days: Stats → Recaps. Asks for Motion & Fitness.
+Alerts & stats
+- Must-Do down alerts ("is down"/"is back up"). Crowd Calendar uses measured waits + predicts 2 weeks out.
+- Day recap (My Day → ✨): rides, time in line, steps, spending; share as image/text. Past days: Stats → Recaps (asks for Motion & Fitness).
 
 Car locator
-- Sections and rows match the Disney/Universal apps; rows are a scroll wheel.
-- It guesses your section and row from GPS when you open it. Lot maps now cover Magic Kingdom (all 12 sections), Animal Kingdom (Peacock, Butterfly, Unicorn, Dinosaur, Giraffe, Yeti), EPCOT (all 8), Hollywood Studios (5 of 6) and Epic Universe (Explorer, Monster, Viking, Dragon, Hero — Hero is new: rows 501–511).
-- Unmapped lots learn from saved spots (yours, plus everyone's with "Help Map This Lot" on). CityWalk garages aren't guessed.
-- Check: at a lot, open the car locator. The section and row should be filled in ("Guessed from the lot map"). Spin the wheel if the row is off, then save. Your first save in a section sets which way its rows count. Magic Kingdom, Animal Kingdom and Epic sections were drawn from the lot diagrams, so say if a section comes up wrong.
+- Sections/rows match the Disney/Universal apps; rows are a scroll wheel. Opening it guesses your section (from the lot map) and row (GPS + mapped rows) automatically.
+- Lot maps: Magic Kingdom (12), Animal Kingdom (6), EPCOT (8), Hollywood Studios (5/6), Epic Universe (Explorer/Monster/Viking/Dragon/Hero — new, rows 501–511).
+- Unmapped lots learn from saved spots (yours + everyone's, "Help Map This Lot"). CityWalk garages aren't guessed.
+- Check: at a lot, section/row should fill in ("Guessed from…"); spin if off, save. Tell me if a Magic Kingdom/Animal Kingdom/Epic section comes up wrong.
 
-Fixed: the upload was rejected because the Siri "Plan my day" description mentioned Apple (App Store rule 90626).
+Fixed: the upload was rejected — Siri's "Plan my day" description mentioned Apple (App Store rule 90626).
 
-Check overall: plan a day and tap through Next Up on the Lock Screen, open a few ride pages, add rides to My Day, and try the car locator.
+Ride photos: Rode It! (the full log sheet) has an optional "Add a Photo" step; Visit History shows a thumbnail — tap for full screen.
+
+Trip budget: Spending → "Set a Trip Budget" — a progress bar (green/orange/red) tracks spend against it, with amount left or over. Pass Savings (top-left) is unchanged.
+
+Offline, no more misleading wait times: with no signal, rides show "No signal" instead of a fake wait or a false "Closed", with a gray "Offline" banner. Check: Airplane Mode at a park, open Wait Times.
+
+Check overall: plan a day, watch Next Up on the Lock Screen, open ride pages, add to My Day, log a ride with a photo, try the car locator, set a trip budget.

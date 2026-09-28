@@ -395,6 +395,7 @@ struct DisplayRide: Identifiable {
         case "CLOSED":        return "Closed"
         case "DOWN":          return "Down"
         case "REFURBISHMENT": return "Refurbishment"
+        case "UNKNOWN":       return "No signal"
         default:              return status ?? "Unknown"
         }
     }
@@ -402,6 +403,7 @@ struct DisplayRide: Identifiable {
     /// VoiceOver phrasing of the wait/status (map pins and ride cards).
     var spokenStatus: String {
         if status == "DOWN" { return "Temporarily down" }
+        if status == "UNKNOWN" { return "No wait time — offline" }
         guard isOperating else { return statusDisplay }
         guard let minutes = waitMinutes else { return "Open, no posted wait" }
         return minutes == 1 ? "1 minute wait" : "\(minutes) minute wait"
@@ -421,10 +423,12 @@ struct DisplayRide: Identifiable {
 
     /// A ride known from the daily catalog but absent from live data
     /// (park closed, or the API dropped it overnight) — shown as Closed.
-    init(catalogId: String, name: String, parkId: String, location: CLLocationCoordinate2D?) {
+    /// Pass `status: "UNKNOWN"` when there's no live data at all (no signal), rather than
+    /// claiming every ride is actually closed for the day.
+    init(catalogId: String, name: String, parkId: String, location: CLLocationCoordinate2D?, status: String = "CLOSED") {
         self.id = catalogId
         self.name = name
-        self.status = "CLOSED"
+        self.status = status
         self.waitMinutes = nil
         self.isOperating = false
         self.coordinate = location

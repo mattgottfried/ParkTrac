@@ -46,6 +46,13 @@ final class AppState {
         didSet { icloud.set(sortRidesAlphabetically, forKey: "sortRidesAlphabetically") }
     }
 
+    /// This trip's spending target per resort (`ParkGroup.rawValue`), in that resort's currency. 0 = not set.
+    var tripBudgets: [String: Double] {
+        didSet { icloud.set(tripBudgets, forKey: "tripBudgets") }
+    }
+    func tripBudget(for resort: ParkGroup) -> Double { tripBudgets[resort.rawValue] ?? 0 }
+    func setTripBudget(_ value: Double, for resort: ParkGroup) { tripBudgets[resort.rawValue] = value }
+
     /// Names shown on the two dining/hotel rating columns (stored as `mattRating` / `wifeRating`).
     var raterOneName: String {
         didSet { icloud.set(raterOneName, forKey: "raterOneName") }
@@ -210,6 +217,9 @@ final class AppState {
             ? kv.bool(forKey: "sortRidesAlphabetically")
             : ud.bool(forKey: "sortRidesAlphabetically")
 
+        self.tripBudgets = (kv.dictionary(forKey: "tripBudgets") as? [String: Double])
+            ?? (ud.dictionary(forKey: "tripBudgets") as? [String: Double]) ?? [:]
+
         self.raterOneName = kv.string(forKey: "raterOneName") ?? AppState.defaultRaterOneName
         self.raterTwoName = kv.string(forKey: "raterTwoName") ?? AppState.defaultRaterTwoName
 
@@ -294,6 +304,7 @@ final class AppState {
         if let raw = kv.string(forKey: "selectedResortRaw"), let r = ParkGroup(rawValue: raw) { selectedResort = r }
         if kv.object(forKey: "defaultMapIsSatellite") != nil { defaultMapIsSatellite = kv.bool(forKey: "defaultMapIsSatellite") }
         if kv.object(forKey: "sortRidesAlphabetically") != nil { sortRidesAlphabetically = kv.bool(forKey: "sortRidesAlphabetically") }
+        if let dict = kv.dictionary(forKey: "tripBudgets") as? [String: Double] { tripBudgets = dict }
         if let name = kv.string(forKey: "raterOneName") { raterOneName = name }
         if let name = kv.string(forKey: "raterTwoName") { raterTwoName = name }
         if let arr = kv.array(forKey: "wishList") as? [String] { wishList = Set(arr) }
