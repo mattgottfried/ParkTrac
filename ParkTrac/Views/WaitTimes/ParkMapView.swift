@@ -404,6 +404,7 @@ struct ParkMapView: View {
     @AppStorage("maxWaitFilter") private var maxWait: Int = 0
     @State private var rideAction: RideMenuAction?
     @State private var showTipBoard = false
+    @State private var showRestStop = false
     /// Bumped only when the user taps to refresh, so the success haptic doesn't fire on the 60s auto-refresh.
     @State private var userRefreshCount = 0
     /// Status per ride from the previous refresh, to spot rides that just went DOWN
@@ -455,6 +456,16 @@ struct ParkMapView: View {
                             .background(.regularMaterial, in: Circle())
                     }
                     .accessibilityLabel("Tip Board")
+                    // Rest stop: somewhere indoor and seated, no standby line
+                    Button {
+                        showRestStop = true
+                    } label: {
+                        Image(systemName: "figure.seated.side.air.distribution")
+                            .font(.body.weight(.medium))
+                            .padding(8)
+                            .background(.regularMaterial, in: Circle())
+                    }
+                    .accessibilityLabel("Find a rest stop")
                     // Car locator
                     let parked = ParkingService.shared.spot(for: appState.selectedResort) != nil
                     Button {
@@ -659,6 +670,12 @@ struct ParkMapView: View {
         .sheet(isPresented: $showTipBoard) {
             TipBoardView()
         }
+        .alert("Need a Break?", isPresented: $showRestStop) {
+            Button("OK") {}
+        } message: {
+            Text(restStopSuggestion.map(RestStopSuggestion.text)
+                 ?? "No indoor rest spot found right now — check back after the next refresh.")
+        }
         .sheet(item: $rideAction) { action in
             switch action {
             case .addToPlan(let ride):
@@ -801,6 +818,44 @@ struct ParkMapView: View {
 
     // MARK: - Bottom Panel
 
+    /// Minutes until rides start closing at the focused park, nil unless a single park is in
+    /// focus and its close is within `ClosingSoon.leadMinutes`.
+    private var closingSoonMinutes: Int? {
+        guard let park = viewModel.filterPark else { return nil }
+        return ClosingSoon.minutesUntilClose(schedule: viewModel.todaySchedule(for: park))
+    }
+
+    /// "Quietest around 9 AM, busiest around 2 PM" for the focused park, from community history.
+    private var quietestHourText: String? {
+        guard let park = viewModel.filterPark else { return nil }
+        let schedule = viewModel.todaySchedule(for: park)
+        guard let open = schedule.compactMap(\.openingDate).min(),
+              let close = schedule.compactMap(\.closingDate).max() else { return nil }
+        let cal = Calendar.current
+        let openHour = cal.component(.hour, from: open)
+        let closeHour = max(openHour, cal.component(.hour, from: close))
+        let waits = viewModel.allRides
+            .filter { $0.parkId == park.id }
+            .map { CommunityHistoryService.shared.waitsByHour(rideId: $0.id, parkId: park.id) }
+            .filter { !$0.isEmpty }
+        guard let result = QuietestHour.compute(rideWaitsByHour: waits, openHours: openHour...closeHour) else { return nil }
+        return QuietestHour.headline(quiet: result.quiet, busy: result.busy)
+    }
+
+    /// Somewhere indoor and seated right now — a show starting soon, else the shortest-wait
+    /// indoor ride. Uses whichever parks are in scope (the focused park, or the whole resort).
+    private var restStopSuggestion: RestStopSuggestion.Kind? {
+        let now = Date()
+        let shows = viewModel.currentShows.map { show -> (name: String, isOperating: Bool, startsInMinutes: Int?) in
+            let minutes = show.nextShowtime.map { Int($0.timeIntervalSince(now) / 60) }
+            return (show.name, show.isOperating, minutes)
+        }
+        let rides = viewModel.allRides
+            .filter { viewModel.filterPark == nil || $0.parkId == viewModel.filterPark?.id }
+            .map { (name: $0.name, isOperating: $0.isOperating, waitMinutes: $0.waitMinutes) }
+        return RestStopSuggestion.pick(shows: shows, rides: rides, resort: viewModel.selectedGroup)
+    }
+
     private var panelHeader: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 3) {
@@ -824,6 +879,18 @@ struct ParkMapView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Color.gray, in: Capsule())
+                }
+                if let minutes = closingSoonMinutes {
+                    Label(minutes <= 1 ? "Rides closing very soon" : "Rides closing in about \(minutes) min",
+                          systemImage: "clock.badge.exclamationmark.fill")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Color.orange, in: Capsule())
+                }
+                if let quietestHourText {
+                    Text(quietestHourText)
+                        .font(.caption2).foregroundStyle(.secondary)
                 }
                 if let refreshed = viewModel.lastRefreshed {
                     TimelineView(.periodic(from: .now, by: 30)) { ctx in
@@ -1191,6 +1258,7 @@ struct ParkMapView: View {
                                              resort: viewModel.selectedGroup,
                                              goodTime: GoodTimeService.shared.deal(for: ride.id),
                                              usual: GoodTimeService.shared.usual(for: ride.id),
+                                             trend: viewModel.waitTrends[ride.id],
                                              isMustDo: appState.wishList.contains(ride.id))
                                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14, style: .continuous))
                                     .onTapGesture { selectedRide = ride }

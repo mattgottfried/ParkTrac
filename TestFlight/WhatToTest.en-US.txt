@@ -1,47 +1,51 @@
 New since the last build (short version: TestFlight allows 4,000 characters)
 
-Wait Times: Easy Wins strip (shortest waits right now, ≤15 min) alongside Good Time to Ride deals; ride cards show "+15 vs usual" / "-10 vs usual" when a wait is notably off its usual for this hour.
+Wait Times: arrows on the wait tile show a ride's wait rising/falling since the last refresh. Orange "closing soon" banner + "Quietest around 9am, busiest around 2pm" line when a park is in focus. New seated-figure button suggests a nearby indoor rest stop (a show starting soon, or the shortest-wait indoor ride) — no standby line added. Easy Wins strip (≤15 min waits) alongside Good Time deals; "+15/-10 vs usual" on ride cards.
 
-My Day: "On this day" card — a nostalgic callback if you logged rides on this same date in a past year ("2 years ago today, you logged 6 rides, including Space Mountain × 3"). Best Park Today card for multi-resort trips — picks whichever resort looks least crowded today.
+My Day: "On this day" card (past-year same-date callback). Best Park Today for multi-resort trips (least crowded pick).
 
-Trip Planner: new "Vacation Calendar" — a day-by-day list of the whole trip, each day/resort showing plan items, dining count and whether a plan's saved; tap through to that day.
+Trip Planner: "Vacation Calendar" — day-by-day trip view with item/dining counts, saved-plan status, and a red "Blocked Out" flag on any day your annual pass blocks.
 
-Pass Savings: "Cost per visit" line (pass cost ÷ visits so far). Day Recap: "X per ride today" stat alongside spend.
+Spending: new "This Year" total alongside Today/This Trip. "Quick Snack" chips (Popcorn, Churro, Soda…) prefill a purchase — you still type the price. My Dining: mark a reservation as a Mobile Order with a pickup-by time; shows a live "N min left" countdown.
 
-Smart Planner: no invented dinners unless notes ask; plan a future day (60 days out), Save Plan → My Day; Change the Plan shows standby time and walking, with one-tap Less Walking/Must-Dos First/Shortest Waits and Apple Intelligence text requests; rain AND heat plan routes indoor rides into bad-weather hours.
+Ride Counter: "Your #1 ride" trophy stat. Stats → Recaps: "Year in Review" card (rides, days, trips, top ride, spend) alongside Day Recaps. Visit History: past weather (condition + high temp) shown for each logged day.
 
-Rope Drop Plan: My Day sunrise icon — times your Must-Dos from actual park opening, ordered by walk.
+Pass Savings: "Cost per visit". Day Recap: "X per ride today".
 
-Ride page: Wait Forecast with "you usually wait ~X"; forecasts use everyone's recorded waits.
+Smart Planner: no invented dinners unless notes ask; plan a future day (60 days out); Change the Plan shows standby time + walking with one-tap chips and Apple Intelligence text requests; rain AND heat plan routes indoor rides into bad-weather hours.
 
-Single Rider: busy rides (40+ min) suggest Single Rider (Universal) or a similar shorter ride; badge on cards/ride page/My Day picker; "Single Rider Only" filter at Universal resorts.
+Rope Drop Plan: My Day sunrise icon, times Must-Dos from actual opening.
+
+Ride page: Wait Forecast with "you usually wait ~X" from everyone's recorded waits.
+
+Single Rider: busy rides suggest Single Rider (Universal) or a shorter alternative; badge + filter.
 
 Add to My Day: one screen — pick rides/a show, then Anytime/Now/Best time/showtime/set time.
 
-Live Activities: resort colors, big countdowns, progress bars, 3-stop Next Up timeline, Done/Skip/"I'm On"/"Used It" buttons.
+Live Activities: resort colors, big countdowns, 3-stop Next Up timeline, Done/Skip/"I'm On"/"Used It".
 
-Alerts & stats: Must-Do down alerts; Crowd Calendar; Day recap (My Day → ✨), shareable.
+Alerts & stats: Must-Do down alerts; Crowd Calendar; shareable Day recap.
 
-Car locator: sections/rows match Disney/Universal apps (scroll wheel); auto-guesses from GPS.
+Car locator: sections/rows match Disney/Universal apps; auto-guesses from GPS.
 
-Ride photos: Rode It! has an optional photo step; Visit History shows a thumbnail.
+Ride photos: optional photo on Rode It!; Visit History thumbnail.
 
-Trip budget + pacing: Spending → "Set a Trip Budget" — a progress bar, and "~$X/day for N more days" with a Trip set.
+Trip budget + pacing: "Set a Trip Budget" progress bar, "~$X/day for N more days".
 
-Offline, no misleading waits: with no signal, rides show "No signal" instead of a fake wait or false "Closed".
+Offline: no signal shows "No signal", never a fake wait or false Closed.
 
-Lightning Lane: a paid Single Pass return logs its price into Spending automatically. Tip Board shows a "Worth it today?" card totaling minutes saved + real paid cost.
+Lightning Lane: paid Single Pass auto-logs its price. Tip Board "Worth it today?" totals minutes saved + real cost.
 
-Character meet tracker: Bucket List's new "Characters" tab, 22 Orlando characters.
+Character meet tracker: Bucket List "Characters" tab, 22 Orlando characters.
 
-Bucket List restaurant refresh: Wolfgang Puck Bar & Grill and Thunder Falls Terrace permanently closed — CLOSED banner, rating kept. Hot Dog Hall of Fame® closed; Fat One's Hot Dogs & Italian Ice added as a separate new entry.
+Bucket List refresh: Wolfgang Puck Bar & Grill and Thunder Falls Terrace closed (CLOSED banner, rating kept); Hot Dog Hall of Fame® closed, Fat One's added as a new entry.
 
-Data export: Settings → Data & Sync — CSV export for Bucket List restaurants/hotels/characters. Good backup before an update.
+Data export: Settings → Data & Sync CSV export — good backup before an update.
 
-Trip vs. last visit: Visit History shows "This Trip So Far" vs. the same day-count into your previous trip (needs 2+ trips logged).
+Trip vs. last visit: Visit History "This Trip So Far" vs. the same day-count into your previous trip.
 
-Tip Calculator: Settings → Tools — quick 15/18/20/25% or custom, split across your party.
+Tip Calculator: Settings → Tools, quick % or custom, split across your party.
 
 Fixed: upload rejected for Siri's "Plan my day" description mentioning Apple (rule 90626).
 
-Check overall: an Easy Wins ride vs. a usual-wait delta, "On this day" card (needs history on this date from a prior year), a multi-resort trip's Best Park Today, Vacation Calendar day drill-down, Pass Savings cost-per-visit, Day Recap cost-per-ride, plan a day, Rope Drop Plan, log a ride with a photo, car locator, a paid Lightning Lane, a character check-off, Bucket List changes, Settings export, a busy ride's Single Rider/alternate suggestion, Tip Calculator.
+Check overall: watch a wait trend arrow, a closing-soon banner, the rest-stop button, an Easy Wins/usual-delta ride, "On this day"/Best Park Today, Vacation Calendar's blockout flag, Spending's This Year total + a Quick Snack, a mobile order countdown, Ride Counter's #1 ride, a Year in Review card, Visit History's past weather, Pass Savings cost-per-visit, Day Recap cost-per-ride, plan a day, Rope Drop Plan, log a ride with a photo, car locator, a paid Lightning Lane, a character check-off, Bucket List changes, Settings export, Single Rider/alternate suggestion, Tip Calculator.

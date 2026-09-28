@@ -116,6 +116,14 @@ enum BudgetPacer {
     }
 }
 
+/// Total spend across every resort/trip this calendar year — separate from the per-resort
+/// Trip Budget, which resets per trip rather than tracking the whole year.
+enum YearToDateSpend {
+    static func total(purchases: [(amount: Double, date: Date)], year: Int, calendar: Calendar = .current) -> Double {
+        purchases.filter { calendar.component(.year, from: $0.date) == year }.map(\.amount).reduce(0, +)
+    }
+}
+
 // MARK: - Service
 
 @Observable

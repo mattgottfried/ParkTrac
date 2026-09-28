@@ -195,6 +195,9 @@ final class WaitTimesViewModel {
     var searchText = ""
     var lastRefreshed: Date?
 
+    /// Rising/falling arrow per ride vs. its wait on the previous refresh.
+    private(set) var waitTrends: [String: WaitTrend] = [:]
+
     /// Set when a park has no live data at all this session (no signal). The ride list still
     /// shows the roster, but with no wait times or status — showing a stale number would be
     /// misleading, so it isn't cached or reused across launches.
@@ -301,6 +304,9 @@ final class WaitTimesViewModel {
         isLoading = true
         errorMessage = nil
         isOffline = false
+        let previousWaits = Dictionary(uniqueKeysWithValues: allRides.compactMap { ride in
+            ride.waitMinutes.map { (ride.id, $0) }
+        })
         var successCount = 0
         await withTaskGroup(of: Bool.self) { group in
             for park in parks {
@@ -317,6 +323,13 @@ final class WaitTimesViewModel {
             errorMessage = "Couldn't refresh wait times. Check your connection."
         }
         rebuildAllRides()
+        if successCount > 0 {
+            waitTrends = Dictionary(uniqueKeysWithValues: allRides.compactMap { ride -> (String, WaitTrend)? in
+                guard let wait = ride.waitMinutes,
+                      let trend = WaitTrend.compute(previous: previousWaits[ride.id], current: wait) else { return nil }
+                return (ride.id, trend)
+            })
+        }
         if successCount > 0 {
             LightningLaneWatchService.shared.check(rides: allRides)
             ReopenWatchService.shared.check(rides: allRides)
@@ -426,6 +439,23 @@ final class WaitTimesViewModel {
     }
 
     deinit { stopAutoRefresh() }
+}
+
+// MARK: - Closing soon
+
+/// A "rides start closing soon" heads-up for the ride list, separate from `ParkingReminder`'s
+/// leave-by push notification — this is just an in-app banner while a single park is in focus.
+enum ClosingSoon {
+    static let leadMinutes = 45
+
+    /// Minutes until the latest regular (non-ticketed) close today; nil once it's passed,
+    /// too far off, or the schedule hasn't loaded.
+    static func minutesUntilClose(schedule: [ParkScheduleDay], now: Date = .now) -> Int? {
+        let closings = schedule.filter { !$0.isTicketedEvent }.compactMap(\.closingDate)
+        guard let closing = closings.max(), closing > now else { return nil }
+        let minutes = Int(closing.timeIntervalSince(now) / 60)
+        return minutes <= leadMinutes ? minutes : nil
+    }
 }
 
 // MARK: - Ride Sort

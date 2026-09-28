@@ -15,6 +15,8 @@ struct RideCardView: View {
     /// This ride's usual wait at this time (GoodTimeService) — used only for the "+15 vs usual"
     /// line when it isn't already a Good Time deal (that line says the same thing better).
     var usual: GoodTimeToRide.Usual? = nil
+    /// Rising/falling vs. the last refresh — a small corner arrow on the wait tile
+    var trend: WaitTrend? = nil
 
     /// Starred as a Must-Do (shown as a star beside the name)
     var isMustDo: Bool = false
@@ -92,7 +94,7 @@ struct RideCardView: View {
     // MARK: Wait tile
 
     private var waitTile: some View {
-        WaitTile(ride: ride, size: tileSize, numberSize: waitNumberSize)
+        WaitTile(ride: ride, size: tileSize, numberSize: waitNumberSize, trend: trend)
     }
 
     // MARK: Subtitle + details
@@ -200,6 +202,8 @@ struct WaitTile: View {
     var numberSize: CGFloat = 24
     /// Under the number: "min" on cards, "min wait" on the ride sheet
     var unit: String = "min"
+    /// Rising/falling since the last refresh — a small corner arrow, nil shows nothing
+    var trend: WaitTrend? = nil
 
     private var isDown: Bool { ride.status == "DOWN" }
 
@@ -247,6 +251,31 @@ struct WaitTile: View {
         .foregroundStyle(color)
         .frame(width: size, height: size)
         .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: size * 0.21, style: .continuous))
+        .overlay(alignment: .topTrailing) {
+            if let trend, ride.isOperating, ride.waitMinutes != nil {
+                Image(systemName: trend == .rising ? "arrow.up" : "arrow.down")
+                    .font(.system(size: size * 0.16, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(3)
+                    .background(trend == .rising ? Color.orange : Color.green, in: Circle())
+                    .offset(x: 4, y: -4)
+            }
+        }
         .accessibilityHidden(true)
+    }
+}
+
+/// Rising/falling since the last refresh — momentum only, no history required (contrast
+/// `GoodTimeToRide.Usual`, which compares to a longer-run typical wait).
+enum WaitTrend {
+    case rising, falling
+
+    /// nil with no prior reading, or a change under `threshold` (refresh noise, not a real trend).
+    static func compute(previous: Int?, current: Int, threshold: Int = 5) -> WaitTrend? {
+        guard let previous else { return nil }
+        let delta = current - previous
+        if delta >= threshold { return .rising }
+        if delta <= -threshold { return .falling }
+        return nil
     }
 }

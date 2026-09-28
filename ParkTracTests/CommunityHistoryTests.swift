@@ -40,4 +40,31 @@ final class CommunityHistoryTests: XCTestCase {
         XCTAssertEqual(profile[11], 70, "community next")
         XCTAssertEqual(profile[12], 60, "then live × park curve")
     }
+
+    // MARK: Quietest hour today
+
+    func testQuietestHourPicksLowAndHighAverages() {
+        let rides: [[Int: Int]] = [
+            [9: 10, 14: 60],
+            [9: 15, 14: 70],
+            [9: 20, 14: 50],
+        ]
+        let result = QuietestHour.compute(rideWaitsByHour: rides, openHours: 9...20)
+        XCTAssertEqual(result?.quiet, 9)
+        XCTAssertEqual(result?.busy, 14)
+    }
+
+    func testQuietestHourNilWithoutEnoughRidesReporting() {
+        let rides: [[Int: Int]] = [[9: 10], [9: 15]]
+        XCTAssertNil(QuietestHour.compute(rideWaitsByHour: rides, openHours: 9...20, minRides: 3))
+    }
+
+    func testQuietestHourNilOutsideOpenHours() {
+        let rides: [[Int: Int]] = [[6: 10], [6: 15], [6: 20]]
+        XCTAssertNil(QuietestHour.compute(rideWaitsByHour: rides, openHours: 9...20))
+    }
+
+    func testQuietestHourHeadline() {
+        XCTAssertEqual(QuietestHour.headline(quiet: 9, busy: 14), "Quietest around 9am, busiest around 2pm")
+    }
 }

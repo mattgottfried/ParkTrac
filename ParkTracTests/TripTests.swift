@@ -93,4 +93,16 @@ final class TripTests: XCTestCase {
     func testVacationCalendarSingleDayTrip() {
         XCTAssertEqual(VacationCalendar.days(start: day(11, 5), end: day(11, 5), calendar: cal).count, 1)
     }
+
+    // MARK: Year-to-date spend
+
+    func testYearToDateSpendSumsOnlyThatYear() {
+        let purchases = [(amount: 50.0, date: day(1, 5)), (amount: 30.0, date: day(11, 5)),
+                         (amount: 100.0, date: cal.date(from: DateComponents(year: 2025, month: 6, day: 1))!)]
+        XCTAssertEqual(YearToDateSpend.total(purchases: purchases, year: 2026, calendar: cal), 80)
+    }
+
+    func testYearToDateSpendZeroWithNoPurchases() {
+        XCTAssertEqual(YearToDateSpend.total(purchases: [], year: 2026, calendar: cal), 0)
+    }
 }

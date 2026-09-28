@@ -112,4 +112,40 @@ final class RideHeightTests: XCTestCase {
             resort: .disney)
         XCTAssertNil(kind)
     }
+
+    // MARK: Rest stop suggestion
+
+    func testRestStopPrefersAShowStartingSoon() {
+        let kind = RestStopSuggestion.pick(
+            shows: [(name: "Country Bear Jamboree", isOperating: true, startsInMinutes: 10)],
+            rides: [(name: "Living with the Land", isOperating: true, waitMinutes: 5)],
+            resort: .disney)
+        XCTAssertEqual(kind, .show(name: "Country Bear Jamboree", startsInMinutes: 10))
+    }
+
+    func testRestStopFallsBackToShortestIndoorRide() {
+        let kind = RestStopSuggestion.pick(
+            shows: [],
+            rides: [
+                (name: "Living with the Land", isOperating: true, waitMinutes: 5),
+                (name: "Jungle Cruise", isOperating: true, waitMinutes: 2),  // not indoor
+            ],
+            resort: .disney)
+        XCTAssertEqual(kind, .ride(name: "Living with the Land", waitMinutes: 5))
+    }
+
+    func testRestStopIgnoresShowsFartherOutThanTheLeadTime() {
+        let kind = RestStopSuggestion.pick(
+            shows: [(name: "Country Bear Jamboree", isOperating: true, startsInMinutes: 90)],
+            rides: [(name: "Living with the Land", isOperating: true, waitMinutes: 5)],
+            resort: .disney)
+        XCTAssertEqual(kind, .ride(name: "Living with the Land", waitMinutes: 5))
+    }
+
+    func testNoRestStopWhenNothingIndoorIsAvailable() {
+        XCTAssertNil(RestStopSuggestion.pick(
+            shows: [(name: "Country Bear Jamboree", isOperating: false, startsInMinutes: 10)],
+            rides: [(name: "Jungle Cruise", isOperating: true, waitMinutes: 2)],
+            resort: .disney))
+    }
 }

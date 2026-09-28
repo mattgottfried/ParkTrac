@@ -74,9 +74,17 @@ struct TripComparison: Equatable {
     var rideDifference: Int { currentRides - priorRidesByThisPoint }
 }
 
+/// The ride ridden most across all logs, ties broken by name for stable output (pure).
+enum MostRiddenRide {
+    static func pick(counts: [String: Int]) -> (name: String, count: Int)? {
+        counts.max { $0.value < $1.value || ($0.value == $1.value && $0.key > $1.key) }
+            .map { (name: $0.key, count: $0.value) }
+    }
+}
+
 // MARK: - "On this day" memories (pure)
 
-struct OnThisDayMemory: Equatable {
+struct OnThisDayMemory {
     let yearsAgo: Int
     let rideCount: Int
     let parks: [String]
