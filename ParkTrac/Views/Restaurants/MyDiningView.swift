@@ -196,6 +196,12 @@ private struct ReservationRow: View {
         return f
     }()
 
+    /// Only while the window's still open — a mobile order past pickup just shows its time like any other row.
+    private var countdownMinutes: Int? {
+        guard reservation.isMobileOrder, let end = reservation.pickupWindowEnd else { return nil }
+        return MobileOrderCountdown.minutesRemaining(windowEnd: end)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
@@ -207,11 +213,24 @@ private struct ReservationRow: View {
                     .foregroundStyle(.secondary)
             }
 
-            HStack(spacing: 12) {
-                // Party size
-                Label("\(reservation.partySize)", systemImage: "person.2.fill")
+            if let minutes = countdownMinutes, let end = reservation.pickupWindowEnd {
+                Label("Mobile order — pickup by \(end.formatted(date: .omitted, time: .shortened)) (\(minutes) min left)",
+                      systemImage: "bag.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(minutes <= 10 ? .orange : .blue)
+            } else if reservation.isMobileOrder {
+                Label("Mobile order", systemImage: "bag.fill")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 12) {
+                // Party size
+                if !reservation.isMobileOrder {
+                    Label("\(reservation.partySize)", systemImage: "person.2.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
 
                 // Confirmation number
                 if !reservation.confirmationNumber.isEmpty {
@@ -253,6 +272,8 @@ struct AddReservationSheet: View {
     @State private var partySize = 2
     @State private var confirmationNumber = ""
     @State private var notes = ""
+    @State private var isMobileOrder = false
+    @State private var pickupWindowEnd = Date().addingTimeInterval(30 * 60)
 
     var body: some View {
         NavigationStack {
@@ -274,9 +295,22 @@ struct AddReservationSheet: View {
                     }
                 }
 
-                Section("Details") {
-                    DatePicker("Date & Time", selection: $date, displayedComponents: [.date, .hourAndMinute])
-                    Stepper("Party of \(partySize)", value: $partySize, in: 1...20)
+                Section {
+                    Toggle("Mobile Order", isOn: $isMobileOrder.animation())
+                } footer: {
+                    Text("A quick-service pickup window instead of a table reservation.")
+                }
+
+                if isMobileOrder {
+                    Section("Details") {
+                        DatePicker("Order Placed", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                        DatePicker("Pickup By", selection: $pickupWindowEnd, displayedComponents: [.date, .hourAndMinute])
+                    }
+                } else {
+                    Section("Details") {
+                        DatePicker("Date & Time", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                        Stepper("Party of \(partySize)", value: $partySize, in: 1...20)
+                    }
                 }
 
                 Section("Confirmation") {
@@ -321,7 +355,9 @@ struct AddReservationSheet: View {
             date: date,
             partySize: partySize,
             confirmationNumber: confirmationNumber.trimmingCharacters(in: .whitespaces),
-            notes: notes.trimmingCharacters(in: .whitespaces)
+            notes: notes.trimmingCharacters(in: .whitespaces),
+            isMobileOrder: isMobileOrder,
+            pickupWindowEnd: isMobileOrder ? pickupWindowEnd : nil
         )
         context.insert(res)
         try? context.save()

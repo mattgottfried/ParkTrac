@@ -65,4 +65,43 @@ final class DayRecapTests: XCTestCase {
         XCTAssertEqual(DayRecapBuilder.days(logs: logs, resort: .disney, calendar: cal),
                        [cal.startOfDay(for: at(10)), cal.startOfDay(for: at(10, day: 9))])
     }
+
+    // MARK: Year in Review
+
+    private func on(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        cal.date(from: DateComponents(year: year, month: month, day: day, hour: 12))!
+    }
+
+    func testYearRecapAggregatesTheWholeYear() {
+        let yearLogs: [DayRecapBuilder.LogRow] = [
+            .init(name: "Space Mountain", posted: 40, actual: nil, at: on(2026, 1, 1), resort: wdw),
+            .init(name: "Space Mountain", posted: 40, actual: nil, at: on(2026, 1, 1), resort: wdw),
+            .init(name: "TRON", posted: 50, actual: nil, at: on(2026, 6, 15), resort: wdw),  // gap → new trip
+            .init(name: "Old", posted: 10, actual: nil, at: on(2025, 12, 31), resort: wdw),  // last year, excluded
+        ]
+        let purchases = [DayRecapBuilder.Purchase(amount: 25, date: on(2026, 1, 1), resort: wdw),
+                         DayRecapBuilder.Purchase(amount: 100, date: on(2025, 12, 31), resort: wdw)]
+        let recap = YearRecapBuilder.make(year: 2026, resort: .disney, logs: yearLogs, purchases: purchases, calendar: cal)
+        XCTAssertEqual(recap.rideCount, 3)
+        XCTAssertEqual(recap.uniqueRides, 2)
+        XCTAssertEqual(recap.daysVisited, 2)
+        XCTAssertEqual(recap.tripCount, 2)
+        XCTAssertEqual(recap.topRide?.name, "Space Mountain")
+        XCTAssertEqual(recap.topRide?.count, 2)
+        XCTAssertEqual(recap.spent, 25)
+    }
+
+    func testYearRecapEmptyYear() {
+        let recap = YearRecapBuilder.make(year: 2026, resort: .disney, logs: [], purchases: [], calendar: cal)
+        XCTAssertEqual(recap.rideCount, 0)
+        XCTAssertNil(recap.topRide)
+    }
+
+    func testYearsWithHistoryNewestFirst() {
+        let yearLogs: [DayRecapBuilder.LogRow] = [
+            .init(name: "A", posted: nil, actual: nil, at: on(2024, 3, 1), resort: wdw),
+            .init(name: "B", posted: nil, actual: nil, at: on(2026, 3, 1), resort: wdw),
+        ]
+        XCTAssertEqual(YearRecapBuilder.years(logs: yearLogs, resort: .disney, calendar: cal), [2026, 2024])
+    }
 }

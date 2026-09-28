@@ -64,4 +64,17 @@ final class VisitTripTests: XCTestCase {
         let trips = VisitTripGrouper.group([visitDay(2026, 1, 1, rides: ["A"])], calendar: cal)
         XCTAssertNil(VisitTripGrouper.compareLatestToPrevious(trips))
     }
+
+    // MARK: Most-ridden
+
+    func testMostRiddenPicksTheHighestCount() {
+        let top = MostRiddenRide.pick(counts: ["Space Mountain": 12, "Pirates": 5, "TRON": 12])
+        // Tie broken by name descending, for stable output
+        XCTAssertEqual(top?.name, "TRON")
+        XCTAssertEqual(top?.count, 12)
+    }
+
+    func testNoMostRiddenWithNoLogs() {
+        XCTAssertNil(MostRiddenRide.pick(counts: [:]))
+    }
 }

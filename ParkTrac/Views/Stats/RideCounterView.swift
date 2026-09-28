@@ -17,6 +17,10 @@ struct RideCounterView: View {
         return resortLogs.filter { $0.riddenAt >= startOfYear }.count
     }
 
+    private var topRide: (name: String, count: Int)? {
+        MostRiddenRide.pick(counts: Dictionary(resortLogs.map { ($0.rideName, 1) }, uniquingKeysWith: +))
+    }
+
     /// Group logs by rideName, sorted by count or recency
     private var rideGroups: [(name: String, parkName: String, count: Int, lastRidden: Date)] {
         var dict: [String: (parkName: String, count: Int, lastRidden: Date)] = [:]
@@ -61,6 +65,14 @@ struct RideCounterView: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                     .padding(.vertical, 4)
+
+                    if let topRide {
+                        Label("Your #1 ride: \(topRide.name) — \(topRide.count) time\(topRide.count == 1 ? "" : "s")",
+                              systemImage: "trophy.fill")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.orange)
+                            .listRowBackground(Color.clear)
+                    }
                 }
 
                 Section("All Rides") {

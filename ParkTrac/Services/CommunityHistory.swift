@@ -215,6 +215,31 @@ enum BestParkToday {
     }
 }
 
+/// Best/worst hour to be at a park today, from every operating ride's community typical wait
+/// per hour (`CommunityHistoryService.waitsByHour`) — a park-wide view, not a per-ride one.
+enum QuietestHour {
+    /// nil unless at least two hours each have `minRides` or more rides reporting (one ride's
+    /// odd hour shouldn't decide "the quietest hour"), and they aren't the same hour.
+    static func compute(rideWaitsByHour: [[Int: Int]], openHours: ClosedRange<Int>, minRides: Int = 3) -> (quiet: Int, busy: Int)? {
+        var sums: [Int: (total: Int, count: Int)] = [:]
+        for waits in rideWaitsByHour {
+            for (hour, wait) in waits where openHours.contains(hour) {
+                sums[hour, default: (0, 0)].total += wait
+                sums[hour, default: (0, 0)].count += 1
+            }
+        }
+        let averages = sums.filter { $0.value.count >= minRides }.mapValues { Double($0.total) / Double($0.count) }
+        guard averages.count >= 2,
+              let quiet = averages.min(by: { $0.value < $1.value }),
+              let busy = averages.max(by: { $0.value < $1.value }) else { return nil }
+        return (quiet: quiet.key, busy: busy.key)
+    }
+
+    static func headline(quiet: Int, busy: Int) -> String {
+        "Quietest around \(PlannerAI.hourLabel(quiet)), busiest around \(PlannerAI.hourLabel(busy))"
+    }
+}
+
 @MainActor
 @Observable
 final class CrowdHistoryService {

@@ -7,6 +7,7 @@ struct SpendingView: View {
     @Query(sort: \PurchaseLog.date, order: .reverse) private var allPurchases: [PurchaseLog]
 
     @State private var showAddSheet = false
+    @State private var addPurchasePrefill: String? = nil
     @State private var showBudgetSheet = false
     @State private var tripService = TripService.shared
 
@@ -18,6 +19,12 @@ struct SpendingView: View {
         resortPurchases.filter { Calendar.current.isDateInToday($0.date) }.map(\.amount).reduce(0, +)
     }
     private var tripTotal: Double { resortPurchases.map(\.amount).reduce(0, +) }
+    /// Same currency as `resortPurchases`, so no cross-currency summing — a separate year-over-year
+    /// view for an annual pass holder who's logged more than one year at this resort.
+    private var yearTotal: Double {
+        YearToDateSpend.total(purchases: resortPurchases.map { (amount: $0.amount, date: $0.date) },
+                              year: Calendar.current.component(.year, from: .now))
+    }
 
     private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
     /// Japan resorts log yen; show ≈ dollars beside it
@@ -27,6 +34,7 @@ struct SpendingView: View {
         "Food": .orange, "Merchandise": .blue, "Tickets": .purple,
         "Lightning Lane": .yellow, "Other": .gray
     ]
+    static let snackPresets = ["Popcorn", "Churro", "Soda", "Ice Cream", "Pretzel", "Turkey Leg"]
 
     var body: some View {
         // Pushed from the Stats tab's NavigationStack — don't nest another.
@@ -37,6 +45,8 @@ struct SpendingView: View {
                         spendStat(label: "Today", value: todayTotal, color: .blue)
                         Divider()
                         spendStat(label: "This Trip", value: tripTotal, color: .green)
+                        Divider()
+                        spendStat(label: "This Year", value: yearTotal, color: .purple)
                     }
                     .frame(height: 70)
                 }
@@ -69,11 +79,37 @@ struct SpendingView: View {
                     }
                 }
 
+                Section {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(Self.snackPresets, id: \.self) { snack in
+                                Button {
+                                    addPurchasePrefill = snack
+                                    showAddSheet = true
+                                } label: {
+                                    Text(snack)
+                                        .font(.caption.weight(.medium))
+                                        .padding(.horizontal, 10).padding(.vertical, 6)
+                                        .background(Color.orange.opacity(0.15), in: Capsule())
+                                        .foregroundStyle(.orange)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                } header: {
+                    Text("Quick Snack")
+                } footer: {
+                    Text("Fills in the item — you still type the price.")
+                }
+
                 Section("All Purchases") {
                     if resortPurchases.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("No purchases logged yet.").foregroundStyle(.secondary).font(.subheadline)
                             Button {
+                                addPurchasePrefill = nil
                                 showAddSheet = true
                             } label: {
                                 Label("Add Purchase", systemImage: "plus.circle.fill")
@@ -115,11 +151,14 @@ struct SpendingView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showAddSheet = true } label: { Image(systemName: "plus") }
+                    Button {
+                        addPurchasePrefill = nil
+                        showAddSheet = true
+                    } label: { Image(systemName: "plus") }
                         .accessibilityLabel("Add purchase")
                 }
             }
-            .sheet(isPresented: $showAddSheet) { AddPurchaseView(resort: resort) }
+            .sheet(isPresented: $showAddSheet) { AddPurchaseView(resort: resort, prefillNote: addPurchasePrefill) }
             .sheet(isPresented: $showBudgetSheet) { TripBudgetSheet(resort: appState.selectedResort) }
             .task { if showsDollars { await currency.refresh() } }
         }
@@ -235,6 +274,9 @@ struct TripBudgetSheet: View {
 
 struct AddPurchaseView: View {
     let resort: String
+    /// Prefills category + note (e.g. a snack quick-add) — the amount is always left blank
+    /// so the real price is typed in, never guessed.
+    var prefillNote: String? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @State private var amount = ""
@@ -246,6 +288,12 @@ struct AddPurchaseView: View {
     private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
     /// Japan resorts are logged in yen
     private var isYen: Bool { ParkGroup(rawValue: resort)?.currencyCode == "JPY" }
+
+    init(resort: String, prefillNote: String? = nil) {
+        self.resort = resort
+        self.prefillNote = prefillNote
+        _note = State(initialValue: prefillNote ?? "")
+    }
 
     var body: some View {
         NavigationStack {

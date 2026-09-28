@@ -116,6 +116,49 @@ extension RideLog {
     }
 }
 
+// MARK: - Year in Review (pure)
+
+/// One calendar year across every trip logged at a resort — a bigger, once-a-year sibling of
+/// `DayRecap`. Trip count reuses `VisitTripGrouper` (gaps between visit days infer trips);
+/// top ride reuses `MostRiddenRide`.
+struct YearRecap {
+    let year: Int
+    let resortName: String
+    let rideCount: Int
+    let uniqueRides: Int
+    let daysVisited: Int
+    let tripCount: Int
+    let topRide: (name: String, count: Int)?
+    let spent: Double
+    let currencyCode: String
+}
+
+enum YearRecapBuilder {
+    static func make(year: Int, resort: ParkGroup, logs: [DayRecapBuilder.LogRow],
+                     purchases: [DayRecapBuilder.Purchase], calendar: Calendar = .current) -> YearRecap {
+        let yearLogs = logs.filter { $0.resort == resort.rawValue && calendar.component(.year, from: $0.at) == year }
+        let dayKeys = Set(yearLogs.map { calendar.startOfDay(for: $0.at) })
+        let visitDays = dayKeys.map { VisitDay(id: $0, resort: resort.rawValue, entries: []) }
+        let trips = VisitTripGrouper.group(visitDays)
+        let spent = purchases
+            .filter { $0.resort == resort.rawValue && calendar.component(.year, from: $0.date) == year }
+            .map(\.amount).reduce(0, +)
+        return YearRecap(
+            year: year, resortName: resort.rawValue,
+            rideCount: yearLogs.count,
+            uniqueRides: Set(yearLogs.map(\.name)).count,
+            daysVisited: dayKeys.count,
+            tripCount: trips.count,
+            topRide: MostRiddenRide.pick(counts: Dictionary(yearLogs.map { ($0.name, 1) }, uniquingKeysWith: +)),
+            spent: spent, currencyCode: resort.currencyCode)
+    }
+
+    /// Years with at least one ride logged at the resort, newest first.
+    static func years(logs: [DayRecapBuilder.LogRow], resort: ParkGroup, calendar: Calendar = .current) -> [Int] {
+        Set(logs.filter { $0.resort == resort.rawValue }.map { calendar.component(.year, from: $0.at) }).sorted(by: >)
+    }
+}
+
 // MARK: - Steps (Core Motion — the phone keeps about a week)
 
 enum StepCounter {
@@ -327,6 +370,115 @@ struct RecapCard: View {
     }
 }
 
+// MARK: - Year in Review screen
+
+struct YearRecapView: View {
+    let year: Int
+    let resort: ParkGroup
+
+    @Query private var logs: [RideLog]
+    @Query private var purchases: [PurchaseLog]
+    @State private var shareImage: Image?
+
+    private var recap: YearRecap {
+        YearRecapBuilder.make(year: year, resort: resort, logs: logs.map(\.recapRow),
+                              purchases: purchases.map { DayRecapBuilder.Purchase(amount: $0.amount, date: $0.date, resort: $0.resort) })
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                YearRecapCard(recap: recap)
+
+                ShareLink(item: summaryText) {
+                    Label("Share Text", systemImage: "text.alignleft")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground))
+        .navigationTitle("\(String(year)) in Review")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var summaryText: String {
+        var lines = ["\(recap.resortName) — \(recap.year) in Review",
+                     "\(recap.rideCount) rides across \(recap.daysVisited) day\(recap.daysVisited == 1 ? "" : "s")"]
+        if recap.tripCount > 0 { lines.append("\(recap.tripCount) trip\(recap.tripCount == 1 ? "" : "s")") }
+        if let top = recap.topRide { lines.append("Top ride: \(top.name) × \(top.count)") }
+        if recap.spent > 0 {
+            lines.append("Spent \(recap.spent.formatted(.currency(code: recap.currencyCode)))")
+        }
+        return lines.joined(separator: "\n")
+    }
+}
+
+private struct YearRecapCard: View {
+    let recap: YearRecap
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(String(recap.year)) in Review")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.75))
+                Text(recap.resortName)
+                    .font(.title2.bold())
+                    .foregroundStyle(.white)
+            }
+
+            HStack(spacing: 10) {
+                stat("\(recap.rideCount)", "rides", icon: "figure.jumprope")
+                stat("\(recap.daysVisited)", "days", icon: "calendar")
+                stat("\(recap.tripCount)", "trips", icon: "airplane")
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                if let top = recap.topRide {
+                    Label("Top ride: \(top.name) × \(top.count)", systemImage: "trophy.fill")
+                        .font(.subheadline.weight(.medium)).foregroundStyle(.white)
+                }
+                Label("\(recap.uniqueRides) unique rides", systemImage: "list.star")
+                    .font(.subheadline.weight(.medium)).foregroundStyle(.white)
+                if recap.spent > 0 {
+                    Label("Spent \(recap.spent.formatted(.currency(code: recap.currencyCode)))",
+                          systemImage: "creditcard.fill")
+                        .font(.subheadline.weight(.medium)).foregroundStyle(.white)
+                }
+                if recap.rideCount == 0 {
+                    Label("No rides logged this year yet.", systemImage: "info.circle")
+                        .font(.subheadline.weight(.medium)).foregroundStyle(.white)
+                }
+            }
+
+            HStack {
+                Spacer()
+                Text("ThrillTrack").font(.caption2.weight(.bold)).foregroundStyle(.white.opacity(0.6))
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(colors: [Color.indigo, Color.purple], startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+
+    private func stat(_ value: String, _ label: String, icon: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Image(systemName: icon).font(.caption).foregroundStyle(.white.opacity(0.7))
+            Text(value).font(.title2.weight(.bold).monospacedDigit()).foregroundStyle(.white)
+                .lineLimit(1).minimumScaleFactor(0.6)
+            Text(label).font(.caption2).foregroundStyle(.white.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
 // MARK: - Past recaps (Stats)
 
 struct DayRecapListView: View {
@@ -336,10 +488,22 @@ struct DayRecapListView: View {
     var body: some View {
         let resort = appState.selectedResort
         let days = DayRecapBuilder.days(logs: logs.map(\.recapRow), resort: resort)
+        let years = YearRecapBuilder.years(logs: logs.map(\.recapRow), resort: resort)
         List {
             if days.isEmpty {
                 ContentUnavailableView("No Park Days Yet", systemImage: "sparkles",
                                        description: Text("Log rides with Rode It! and each day gets a recap here."))
+            }
+            if !years.isEmpty {
+                Section("Year in Review") {
+                    ForEach(years, id: \.self) { year in
+                        NavigationLink {
+                            YearRecapView(year: year, resort: resort)
+                        } label: {
+                            Label("\(String(year)) in Review", systemImage: "sparkles")
+                        }
+                    }
+                }
             }
             ForEach(days, id: \.self) { day in
                 NavigationLink {

@@ -192,6 +192,12 @@ struct VisitDayDetailView: View {
 
     @Environment(\.modelContext) private var context
     @State private var fullScreenPhoto: UIImage?
+    @State private var weatherService = HistoricalWeatherService.shared
+
+    private var resort: ParkGroup? { ParkGroup(rawValue: visit.resort) }
+    private var weather: HistoricalWeatherDay? {
+        resort.flatMap { weatherService.day(for: visit.id, resort: $0) }
+    }
 
     private var dateStr: String {
         let f = DateFormatter()
@@ -240,9 +246,20 @@ struct VisitDayDetailView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    if let weather {
+                        VStack(spacing: 2) {
+                            let info = HistoricalWeather.describe(weather.weatherCode)
+                            Image(systemName: info.icon).font(.title2).foregroundStyle(.orange)
+                            Text("\(Int(weather.highF.rounded()))°F")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
+                .task {
+                    if let resort { await weatherService.fetchIfNeeded(for: visit.id, resort: resort) }
+                }
             }
 
             if entriesByPark.isEmpty {

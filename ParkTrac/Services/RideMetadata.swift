@@ -259,6 +259,50 @@ enum AlternateRideSuggestion {
     }
 }
 
+// MARK: - Rest stop suggestion (pure)
+// Without a return-time pass, pacing a long day means finding somewhere to sit and cool off
+// without adding a standby wait. Indoor rides and shows (already tracked via `isIndoor`) are
+// the practical answer — no new geo data to maintain, no accessibility claim, just "here's
+// somewhere air-conditioned and seated you can go right now."
+
+enum RestStopSuggestion {
+    enum Kind: Equatable {
+        case show(name: String, startsInMinutes: Int)
+        case ride(name: String, waitMinutes: Int)
+    }
+
+    /// A show starting soon beats an indoor ride (guaranteed seated, no line to stand in);
+    /// among indoor rides, the shortest wait wins. nil if nothing indoor is available.
+    static func pick(shows: [(name: String, isOperating: Bool, startsInMinutes: Int?)],
+                     rides: [(name: String, isOperating: Bool, waitMinutes: Int?)],
+                     resort: ParkGroup, showLeadMinutes: Int = 30) -> Kind? {
+        let soonShow = shows
+            .compactMap { s -> (name: String, minutes: Int)? in
+                guard s.isOperating, let minutes = s.startsInMinutes, minutes <= showLeadMinutes else { return nil }
+                return (s.name, minutes)
+            }
+            .min { $0.minutes < $1.minutes }
+        if let soonShow { return .show(name: soonShow.name, startsInMinutes: soonShow.minutes) }
+
+        let indoorRide = rides
+            .compactMap { r -> (name: String, wait: Int)? in
+                guard r.isOperating, let wait = r.waitMinutes, isIndoor(name: r.name, resort: resort) else { return nil }
+                return (r.name, wait)
+            }
+            .min { $0.wait < $1.wait }
+        return indoorRide.map { .ride(name: $0.name, waitMinutes: $0.wait) }
+    }
+
+    static func text(_ kind: Kind) -> String {
+        switch kind {
+        case .show(let name, let minutes):
+            return minutes <= 1 ? "\(name) is starting now — seated, indoors." : "\(name) starts in \(minutes) min — seated, indoors."
+        case .ride(let name, let wait):
+            return wait == 0 ? "\(name) — walk on, indoors." : "\(name) — \(wait) min wait, indoors."
+        }
+    }
+}
+
 // MARK: - Ride Metadata Dictionary
 // Keyed by exact ride name as returned by the themeparks.wiki API.
 
