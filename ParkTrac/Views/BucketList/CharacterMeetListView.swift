@@ -279,10 +279,12 @@ private struct AddCharacterMeetSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Character") {
+                Section {
                     TextField("Name", text: $character)
                     TextField("Park", text: $park)
                     TextField("Location (optional)", text: $location)
+                } header: {
+                    Text("Character")
                 } footer: {
                     Text("Added to your \(resort) character checklist.")
                 }
