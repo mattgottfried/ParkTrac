@@ -8,6 +8,9 @@ struct SettingsView: View {
     @State private var showClearHistoryConfirm = false
     @Query private var allRideLogs: [RideLog]
     @Query private var allPurchases: [PurchaseLog]
+    @Query private var allBucketRestaurants: [BucketRestaurant]
+    @Query private var allHotelStays: [HotelStay]
+    @Query private var allCharacterMeets: [CharacterMeet]
     @AppStorage(GoodTimeService.alertsEnabledKey) private var goodTimeAlerts = true
     @AppStorage(RainForecastService.alertsEnabledKey) private var rainAlerts = true
     @AppStorage(HeatForecastService.alertsEnabledKey) private var heatAlerts = true
@@ -204,6 +207,18 @@ struct SettingsView: View {
                     ShareLink(item: DataExport.purchases(allPurchases),
                               preview: SharePreview("ThrillTrack Spending.csv")) {
                         Label("Export Spending (CSV)", systemImage: "square.and.arrow.up")
+                    }
+                    ShareLink(item: DataExport.bucketRestaurants(allBucketRestaurants, raterOneLabel: appState.raterOneLabel, raterTwoLabel: appState.raterTwoLabel),
+                              preview: SharePreview("ThrillTrack Bucket List - Restaurants.csv")) {
+                        Label("Export Bucket List Restaurants (CSV)", systemImage: "square.and.arrow.up")
+                    }
+                    ShareLink(item: DataExport.hotelStays(allHotelStays, raterOneLabel: appState.raterOneLabel, raterTwoLabel: appState.raterTwoLabel),
+                              preview: SharePreview("ThrillTrack Bucket List - Hotels.csv")) {
+                        Label("Export Bucket List Hotels (CSV)", systemImage: "square.and.arrow.up")
+                    }
+                    ShareLink(item: DataExport.characterMeets(allCharacterMeets),
+                              preview: SharePreview("ThrillTrack Bucket List - Characters.csv")) {
+                        Label("Export Character Checklist (CSV)", systemImage: "square.and.arrow.up")
                     }
                     Button(role: .destructive) {
                         showClearHistoryConfirm = true

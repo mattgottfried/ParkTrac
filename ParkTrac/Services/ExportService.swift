@@ -62,6 +62,46 @@ enum DataExport {
             fileName: "ThrillTrack Spending.csv",
             text: CSV.make(header: ["Date", "Resort", "Category", "Amount", "Note"], rows: rows))
     }
+
+    /// Ratings, visited status, notes and any CLOSED flag — everything but the photos
+    /// themselves, which don't fit in a CSV. `raterOneLabel`/`raterTwoLabel` name the two rating
+    /// columns (`AppState.raterOneLabel`/`raterTwoLabel` — default "Matt" / "Heather").
+    static func bucketRestaurants(_ restaurants: [BucketRestaurant], raterOneLabel: String, raterTwoLabel: String) -> CSVFile {
+        let rows = restaurants.sorted { $0.name < $1.name }.map { r in
+            [r.name, r.park, r.resort, r.category, r.isVisited ? "Yes" : "No",
+             r.visitDate.map { CSV.timestamp.string(from: $0) } ?? "",
+             r.mattRating > 0 ? String(format: "%.1f", r.mattRating) : "",
+             r.wifeRating > 0 ? String(format: "%.1f", r.wifeRating) : "",
+             r.isClosed ? "Yes" : "No", r.notes]
+        }
+        return CSVFile(
+            fileName: "ThrillTrack Bucket List - Restaurants.csv",
+            text: CSV.make(header: ["Name", "Park", "Resort", "Category", "Visited", "Visit Date",
+                                    raterOneLabel, raterTwoLabel, "Closed", "Notes"], rows: rows))
+    }
+
+    static func hotelStays(_ hotels: [HotelStay], raterOneLabel: String, raterTwoLabel: String) -> CSVFile {
+        let rows = hotels.sorted { $0.hotelName < $1.hotelName }.map { h in
+            [h.hotelName, h.resort, h.tier, h.isVisited ? "Yes" : "No",
+             h.checkIn.map { CSV.timestamp.string(from: $0) } ?? "",
+             h.checkOut.map { CSV.timestamp.string(from: $0) } ?? "", h.roomType,
+             h.mattRating > 0 ? String(h.mattRating) : "", h.wifeRating > 0 ? String(h.wifeRating) : "", h.notes]
+        }
+        return CSVFile(
+            fileName: "ThrillTrack Bucket List - Hotels.csv",
+            text: CSV.make(header: ["Hotel", "Resort", "Tier", "Visited", "Check-In", "Check-Out",
+                                    "Room Type", raterOneLabel, raterTwoLabel, "Notes"], rows: rows))
+    }
+
+    static func characterMeets(_ characters: [CharacterMeet]) -> CSVFile {
+        let rows = characters.sorted { $0.character < $1.character }.map { c in
+            [c.character, c.park, c.resort, c.location, c.isMet ? "Yes" : "No",
+             c.metDate.map { CSV.timestamp.string(from: $0) } ?? "", c.notes]
+        }
+        return CSVFile(
+            fileName: "ThrillTrack Bucket List - Characters.csv",
+            text: CSV.make(header: ["Character", "Park", "Resort", "Location", "Met", "Date", "Notes"], rows: rows))
+    }
 }
 
 // MARK: - Day summary

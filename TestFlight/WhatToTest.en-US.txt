@@ -35,4 +35,6 @@ Bucket List restaurant refresh: fixed a few closed/changed restaurants.
 - Hot Dog Hall of Fame® (CityWalk) closed; Fat One's Hot Dogs & Italian Ice (Joey Fatone's spot, same location) is added as a new entry — it's a different restaurant, not a rename, so the old one keeps its own rating and CLOSED banner.
 - Check: if you'd rated any of these three, open Bucket List → Restaurants and confirm your rating is still there.
 
-Check overall: plan a day, watch Next Up, open ride pages, add to My Day, log a ride with a photo, try the car locator, set a trip budget, book a paid Lightning Lane, check off a character, look at the Bucket List restaurant changes.
+Data export: Settings → Data & Sync now has CSV export for Bucket List restaurants, hotels and characters (ratings/visited/notes), alongside the existing ride log and spending exports. Good to run before any update, as a backup.
+
+Check overall: plan a day, watch Next Up, open ride pages, add to My Day, log a ride with a photo, try the car locator, set a trip budget, book a paid Lightning Lane, check off a character, look at the Bucket List restaurant changes, export your Bucket List from Settings.
