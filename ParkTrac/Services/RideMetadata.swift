@@ -245,12 +245,12 @@ enum AlternateRideSuggestion {
                         candidates: [(name: String, waitMinutes: Int?, isOperating: Bool)],
                         resort: ParkGroup) -> Kind? {
         guard isOperating, let wait = waitMinutes, wait >= busyThresholdMinutes else { return nil }
-        if hasSingleRider(name: rideName, resort: resort) { return .singleRider }
-        guard let info = info(for: rideName, resort: resort) else { return nil }
+        if RideMetadata.hasSingleRider(name: rideName, resort: resort) { return .singleRider }
+        guard let info = RideMetadata.info(for: rideName, resort: resort) else { return nil }
         let best = candidates
             .compactMap { c -> (name: String, wait: Int)? in
                 guard c.isOperating, let cw = c.waitMinutes, cw < wait - 15, cw <= wait / 2,
-                      let cInfo = info(for: c.name, resort: resort), cInfo.type == info.type else { return nil }
+                      let cInfo = RideMetadata.info(for: c.name, resort: resort), cInfo.type == info.type else { return nil }
                 return (c.name, cw)
             }
             .min { $0.wait < $1.wait }
@@ -286,7 +286,7 @@ enum RestStopSuggestion {
 
         let indoorRide = rides
             .compactMap { r -> (name: String, wait: Int)? in
-                guard r.isOperating, let wait = r.waitMinutes, isIndoor(name: r.name, resort: resort) else { return nil }
+                guard r.isOperating, let wait = r.waitMinutes, RideMetadata.isIndoor(name: r.name, resort: resort) else { return nil }
                 return (r.name, wait)
             }
             .min { $0.wait < $1.wait }
