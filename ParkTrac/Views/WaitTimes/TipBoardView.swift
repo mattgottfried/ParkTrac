@@ -10,6 +10,7 @@ struct TipBoardView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var rows: [TipBoard.Row] = []
+    @State private var llValue: LightningLaneValue.Summary?
 
     private var goodNow: [TipBoard.Row] { rows.filter(\.isGoodNow) }
     private var others: [TipBoard.Row] { rows.filter { !$0.isGoodNow } }
@@ -17,6 +18,11 @@ struct TipBoardView: View {
     var body: some View {
         NavigationStack {
             List {
+                if let llValue, !llValue.isEmpty {
+                    Section {
+                        lightningLaneValueCard(llValue)
+                    }
+                }
                 if rows.isEmpty {
                     ContentUnavailableView {
                         Label("No Picks Yet", systemImage: "star")
@@ -47,6 +53,27 @@ struct TipBoardView: View {
             .task { rebuild() }
             .onChange(of: viewModel.lastRefreshed) { _, _ in rebuild() }
         }
+    }
+
+    /// "Worth it today?" — real minutes saved and any real paid cost across your picks' current
+    /// Lightning Lane returns. No made-up verdict, just the numbers.
+    private func lightningLaneValueCard(_ value: LightningLaneValue.Summary) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label("Lightning Lane Today", systemImage: "bolt.fill")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(.yellow)
+            Text("~\(value.totalMinutesSaved) min saved across \(value.rides.count) ride\(value.rides.count == 1 ? "" : "s") right now")
+                .font(.subheadline)
+            if value.hasPaidRides {
+                Text("Includes \(value.totalCost, format: .currency(code: appState.selectedResort.currencyCode)) in Individual Lightning Lane")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Text("Based on today's standby waits vs. a typical \(LightningLaneValue.assumedLLWaitMinutes)-minute Lightning Lane wait — updates as waits change.")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
     }
 
     @ViewBuilder
@@ -98,7 +125,7 @@ struct TipBoardView: View {
         let planIds = Set(ItineraryService.shared.active(for: resort)?.rides.map(\.id) ?? [])
         let ids = appState.wishList.union(planIds)
         let rides = viewModel.allRides.filter { ids.contains($0.id) }
-        guard !rides.isEmpty else { rows = []; return }
+        guard !rides.isEmpty else { rows = []; llValue = nil; return }
 
         let parks = viewModel.parksByGroup[resort] ?? []
         let planRides = PlanInputs.planRides(rides, parks: parks, fallbackParkName: parks.first?.name ?? "",
@@ -124,5 +151,8 @@ struct TipBoardView: View {
             if a.isMustDo != b.isMustDo { return a.isMustDo }
             return a.name < b.name
         }
+        llValue = LightningLaneValue.summary(rides: rides.map {
+            (name: $0.name, standbyWait: $0.isOperating ? $0.waitMinutes : nil, multiPass: $0.multiPass, singlePass: $0.singlePass)
+        })
     }
 }

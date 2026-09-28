@@ -8,6 +8,7 @@ struct SpendingView: View {
 
     @State private var showAddSheet = false
     @State private var showBudgetSheet = false
+    @State private var tripService = TripService.shared
 
     private var resort: String { appState.selectedResort.rawValue }
     private var resortPurchases: [PurchaseLog] { allPurchases.filter { $0.resort == resort && !UndoDeleteCenter.shared.isHidden($0) } }
@@ -144,6 +145,12 @@ struct SpendingView: View {
         return f >= 1 ? .red : f >= 0.8 ? .orange : .green
     }
 
+    /// Only when the Trip Planner has dates that cover the selected resort and haven't ended.
+    private var pacing: BudgetPacing? {
+        guard let trip = tripService.trip, trip.resorts.contains(appState.selectedResort) else { return nil }
+        return BudgetPacer.pace(budget: budget, spent: tripTotal, today: .now, tripEnd: trip.endDate)
+    }
+
     private var budgetProgress: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
@@ -175,6 +182,11 @@ struct SpendingView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+            }
+            if let pacing {
+                Text("\(pacing.perDay, format: .currency(code: appState.selectedResort.currencyCode))/day for \(pacing.remainingDays) more day\(pacing.remainingDays == 1 ? "" : "s")")
+                    .font(.caption2)
+                    .foregroundStyle(pacing.perDay < 0 ? .red : .secondary)
             }
         }
         .padding(.vertical, 4)

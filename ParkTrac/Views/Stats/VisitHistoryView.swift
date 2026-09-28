@@ -44,6 +44,10 @@ struct VisitHistoryView: View {
         return Double(resortLogs.count) / Double(visitDays.count)
     }
 
+    /// Trips are inferred from the dates actually logged — no explicit trip boundary exists.
+    private var trips: [VisitTrip] { VisitTripGrouper.group(visitDays) }
+    private var tripComparison: TripComparison? { VisitTripGrouper.compareLatestToPrevious(trips) }
+
     var body: some View {
         List {
             if visitDays.isEmpty {
@@ -71,6 +75,12 @@ struct VisitHistoryView: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                     .padding(.vertical, 4)
+                }
+
+                if let comparison = tripComparison, let trip = trips.last, trip.dayCount > 0 {
+                    Section {
+                        tripComparisonCard(comparison, dayCount: trip.dayCount)
+                    }
                 }
 
                 // Visits by year
@@ -106,6 +116,33 @@ struct VisitHistoryView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    /// "This trip so far" vs. the same number of days into the trip before it — inferred from
+    /// gaps in the logged dates, since there's no explicit trip boundary.
+    private func tripComparisonCard(_ comparison: TripComparison, dayCount: Int) -> some View {
+        let dayWord = dayCount == 1 ? "day" : "days"
+        return VStack(alignment: .leading, spacing: 6) {
+            Label("This Trip So Far", systemImage: "arrow.left.arrow.right")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(.blue)
+            Text("\(comparison.currentRides) rides in \(dayCount) \(dayWord)"
+                + (comparison.newRideNames.isEmpty ? "" : " (\(comparison.newRideNames.count) new)"))
+                .font(.subheadline)
+            HStack(spacing: 4) {
+                Image(systemName: comparison.rideDifference >= 0 ? "arrow.up.right" : "arrow.down.right")
+                    .foregroundStyle(comparison.rideDifference >= 0 ? Color.green : Color.orange)
+                Text("\(comparison.priorRidesByThisPoint) by this point last trip")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            if !comparison.newRideNames.isEmpty {
+                Text("New this trip: \(NameList.format(comparison.newRideNames, maxShown: 4))")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

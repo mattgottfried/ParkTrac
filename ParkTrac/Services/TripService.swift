@@ -76,6 +76,29 @@ enum TripCountdown: Equatable {
     }
 }
 
+// MARK: - Budget pacing (pure)
+// "~$113/day left" — the remaining Trip Budget spread over the trip's remaining days, so
+// overspending shows up as a shrinking daily number rather than only on the last day.
+
+struct BudgetPacing: Equatable {
+    let remainingBudget: Double
+    /// Includes today
+    let remainingDays: Int
+    var perDay: Double { remainingDays > 0 ? remainingBudget / Double(remainingDays) : remainingBudget }
+}
+
+enum BudgetPacer {
+    /// nil when there's no budget set or the trip has already ended.
+    static func pace(budget: Double, spent: Double, today: Date, tripEnd: Date, calendar: Calendar = .current) -> BudgetPacing? {
+        guard budget > 0 else { return nil }
+        let todayStart = calendar.startOfDay(for: today)
+        let endStart = calendar.startOfDay(for: tripEnd)
+        guard endStart >= todayStart else { return nil }
+        let days = (calendar.dateComponents([.day], from: todayStart, to: endStart).day ?? 0) + 1
+        return BudgetPacing(remainingBudget: budget - spent, remainingDays: days)
+    }
+}
+
 // MARK: - Service
 
 @Observable
