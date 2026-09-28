@@ -21,6 +21,7 @@ struct DayPlannerView: View {
     @State private var plannerRequest: String?
     /// Smart Planner opened for a future day (Coming Up → Plan a Future Day)
     @State private var plannerDay: Date?
+    @State private var crowdHistory = CrowdHistoryService.shared
 
     /// True when pushed onto another NavigationStack (e.g. from Stats) — skips wrapping in our own.
     private let embedded: Bool
@@ -120,8 +121,50 @@ struct DayPlannerView: View {
         }
     }
 
+    /// A callback to a past visit on this same date — a nice thing to notice on a repeat AP trip.
+    private var onThisDay: OnThisDayMemory? {
+        OnThisDayMemories.find(logs: rideLogs, resort: resort)
+    }
+
+    private func onThisDayText(_ memory: OnThisDayMemory) -> String {
+        let yearWord = memory.yearsAgo == 1 ? "One year ago today" : "\(memory.yearsAgo) years ago today"
+        var text = "\(yearWord), you logged \(memory.rideCount) ride\(memory.rideCount == 1 ? "" : "s")"
+        if let park = memory.parks.first, memory.parks.count == 1 { text += " at \(park)" }
+        if let repeatRide = memory.repeatRide { text += ", including \(repeatRide.name) × \(repeatRide.count)" }
+        return text + "."
+    }
+
+    /// Which of a multi-resort trip's resorts looks least crowded today.
+    @ViewBuilder
+    private func bestParkTodayCard(_ trip: Trip) -> some View {
+        if let best = BestParkToday.pick(resorts: trip.resorts, level: { resort in
+            guard let data = crowdHistory.days(for: resort) else { return nil }
+            return CrowdHistory.level(for: .now, resort: resort, data: data)
+        }) {
+            Section {
+                Label("\(best.resort.shortName) looks \(best.level.rawValue.lowercased()) today — the quieter pick of your trip",
+                      systemImage: best.level.systemImage)
+                    .font(.subheadline)
+                    .foregroundStyle(best.level.color)
+            }
+            .task {
+                for resort in trip.resorts { await crowdHistory.refreshIfNeeded(resort: resort) }
+            }
+        }
+    }
+
     private var content: some View {
         List {
+            if let memory = onThisDay {
+                Section {
+                    Label(onThisDayText(memory), systemImage: "clock.arrow.circlepath")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            if let trip = TripService.shared.trip, trip.resorts.count > 1 {
+                bestParkTodayCard(trip)
+            }
             // Genie-style live plan (started from the Smart Planner)
             if let plan = ItineraryService.shared.active(for: appState.selectedResort) {
                 Section {

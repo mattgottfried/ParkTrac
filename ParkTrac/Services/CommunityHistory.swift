@@ -191,6 +191,28 @@ enum CrowdHistory {
         let parts = data.parks.compactMap { park in park.days[key].map { "\(park.name) \(Int($0.rounded()))" } }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
+
+    static func rank(_ level: CrowdLevel) -> Int {
+        switch level {
+        case .ghost: return 0
+        case .low: return 1
+        case .moderate: return 2
+        case .high: return 3
+        case .veryHigh: return 4
+        }
+    }
+}
+
+/// For a trip covering more than one resort (e.g. Disney + Universal the same week), which one
+/// looks least crowded today — a spontaneous-AP-visit question the Trip Planner's per-resort
+/// Crowd Calendar doesn't answer on its own.
+enum BestParkToday {
+    /// nil when there's only one resort to begin with (nothing to compare) or no data for any of them.
+    static func pick(resorts: [ParkGroup], level: (ParkGroup) -> CrowdLevel?) -> (resort: ParkGroup, level: CrowdLevel)? {
+        guard resorts.count > 1 else { return nil }
+        let scored = resorts.compactMap { r -> (resort: ParkGroup, level: CrowdLevel)? in level(r).map { (r, $0) } }
+        return scored.min { CrowdHistory.rank($0.level) < CrowdHistory.rank($1.level) }
+    }
 }
 
 @MainActor

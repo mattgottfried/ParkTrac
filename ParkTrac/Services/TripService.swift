@@ -47,6 +47,23 @@ struct Trip: Codable, Equatable {
 
 // MARK: - Countdown (pure)
 
+/// Every calendar day of a trip, start to end inclusive — the Vacation Calendar's rows.
+enum VacationCalendar {
+    static func days(start: Date, end: Date, calendar: Calendar = .current) -> [Date] {
+        let first = calendar.startOfDay(for: start)
+        let last = calendar.startOfDay(for: max(start, end))
+        guard first <= last else { return [first] }
+        var day = first
+        var days: [Date] = []
+        while day <= last {
+            days.append(day)
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        return days
+    }
+}
+
 enum TripCountdown: Equatable {
     case upcoming(days: Int)
     case during(day: Int, of: Int)

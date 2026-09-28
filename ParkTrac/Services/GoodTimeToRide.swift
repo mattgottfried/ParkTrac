@@ -113,10 +113,14 @@ final class GoodTimeService {
 
     /// Deals keyed by ride id
     private(set) var deals: [String: GoodTimeToRide.Deal] = [:]
+    /// Every operating ride's "usual" wait, not just ones that qualify as a deal — for the
+    /// "+15 vs usual" delta shown on ride cards.
+    private(set) var usuals: [String: GoodTimeToRide.Usual] = [:]
 
     private init() {}
 
     func deal(for rideId: String) -> GoodTimeToRide.Deal? { deals[rideId] }
+    func usual(for rideId: String) -> GoodTimeToRide.Usual? { usuals[rideId] }
 
     /// Recompute from recorded history. `mustDo` rides also get a notification (once per ride per day).
     @MainActor
@@ -124,6 +128,7 @@ final class GoodTimeService {
         let operating = rides.filter { $0.isOperating && $0.waitMinutes != nil }
         guard !operating.isEmpty else {
             deals = [:]
+            usuals = [:]
             return
         }
         // 14 days is plenty for "usual at this time" and keeps the fetch small
@@ -138,16 +143,19 @@ final class GoodTimeService {
         }
 
         var next: [String: GoodTimeToRide.Deal] = [:]
+        var nextUsuals: [String: GoodTimeToRide.Usual] = [:]
         let hour = Calendar.current.component(.hour, from: .now)
         for ride in operating {
             let community = CommunityHistoryService.shared.waitsByHour(rideId: ride.id, parkId: ride.parkId)[hour]
-            let usual = GoodTimeToRide.usual(samples: byRide[ride.id] ?? [], community: community)
+            guard let usual = GoodTimeToRide.usual(samples: byRide[ride.id] ?? [], community: community) else { continue }
+            nextUsuals[ride.id] = usual
             if let deal = GoodTimeToRide.deal(rideId: ride.id, wait: ride.waitMinutes,
                                               isOperating: ride.isOperating, usual: usual) {
                 next[ride.id] = deal
             }
         }
         deals = next
+        usuals = nextUsuals
 
         guard notify, Self.alertsEnabled else { return }
         for ride in operating where mustDo.contains(ride.id) {
@@ -183,5 +191,25 @@ final class GoodTimeService {
 
     private static func markNotified(rideId: String) {
         UserDefaults.standard.set(Date.now, forKey: notifiedKey(rideId))
+    }
+}
+
+// MARK: - Easy Wins (pure)
+// Shortest absolute waits right now, regardless of Must-Do status or whether it's a "deal"
+// (a ride can have a short line without ever having a long "usual" to compare against) — quick
+// things to knock out while waiting for a Must-Do to get shorter, or filling a gap in the day.
+
+enum EasyWins {
+    static let maxWaitMinutes = 15
+
+    static func pick(rides: [DisplayRide], excluding: Set<String> = [], limit: Int = 6) -> [DisplayRide] {
+        rides
+            .filter { ride in
+                guard ride.isOperating, let wait = ride.waitMinutes, !excluding.contains(ride.id) else { return false }
+                return wait <= maxWaitMinutes
+            }
+            .sorted { ($0.waitMinutes ?? Int.max) < ($1.waitMinutes ?? Int.max) }
+            .prefix(limit)
+            .map { $0 }
     }
 }

@@ -42,6 +42,12 @@ final class DayRecapTests: XCTestCase {
         XCTAssertEqual(recap.mostRidden?.name, "TRON")
         XCTAssertEqual(recap.mostRidden?.count, 2)
         XCTAssertEqual(recap.spent, 12.5)
+        XCTAssertEqual(recap.costPerRide, 12.5 / 4)
+    }
+
+    func testNoCostPerRideWithoutSpendOrRides() {
+        let recap = DayRecapBuilder.make(date: at(9), resort: .disney, logs: [], purchases: [], calendar: cal)
+        XCTAssertNil(recap.costPerRide)
     }
 
     func testBestRideFallsBackToShortestPosted() {

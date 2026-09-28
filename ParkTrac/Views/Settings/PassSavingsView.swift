@@ -1,6 +1,15 @@
 import SwiftUI
 import SwiftData
 
+/// "Your pass costs $9.40 per visit so far" — the pass price amortized across how many times
+/// it's actually been used this year (each logged `VisitSaving` is one park entry it covered).
+enum PassSavingsCalculator {
+    static func costPerVisit(passCost: Double, visits: Int) -> Double? {
+        guard passCost > 0, visits > 0 else { return nil }
+        return passCost / Double(visits)
+    }
+}
+
 struct PassSavingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
@@ -305,6 +314,16 @@ struct PassSavingsView: View {
                 .frame(height: 8)
                 Text("\(Int(progress * 100))% of \(passCost, format: .currency(code: "USD")) pass cost recovered")
                     .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+
+        if let perVisit = PassSavingsCalculator.costPerVisit(passCost: passCost, visits: visitCount) {
+            HStack {
+                Label("Cost per visit", systemImage: "divide.circle.fill")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text(perVisit, format: .currency(code: "USD"))
+                    .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             }
         }
 

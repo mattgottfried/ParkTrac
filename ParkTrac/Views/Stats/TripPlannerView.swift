@@ -51,6 +51,11 @@ struct TripPlannerView: View {
             TextField("Trip name", text: binding(\.name, trip))
             DatePicker("Starts", selection: binding(\.startDate, trip), displayedComponents: .date)
             DatePicker("Ends", selection: binding(\.endDate, trip), in: trip.startDate..., displayedComponents: .date)
+            NavigationLink {
+                VacationCalendarView(trip: trip)
+            } label: {
+                Label("Vacation Calendar", systemImage: "calendar")
+            }
         } header: {
             Text("Trip")
         }

@@ -25,6 +25,13 @@ struct DayRecap: Equatable {
     var rideCount: Int { rides.count }
     var uniqueRides: Int { Set(rides.map(\.name)).count }
 
+    /// Today's spend divided by rides ridden — a fun stat, not a precise one (spend includes
+    /// food/merch/tickets, not just per-ride costs).
+    var costPerRide: Double? {
+        guard spent > 0, rideCount > 0 else { return nil }
+        return spent / Double(rideCount)
+    }
+
     /// Minutes spent in line: timed waits where you timed them, else the posted wait
     var minutesInLine: Int { rides.reduce(0) { $0 + ($1.actual ?? $1.posted ?? 0) } }
 
@@ -274,6 +281,10 @@ struct RecapCard: View {
                 if recap.steps != nil && recap.spent > 0 {
                     line(icon: "creditcard.fill",
                          text: "Spent \(recap.spent.formatted(.currency(code: recap.currencyCode)))")
+                }
+                if let perRide = recap.costPerRide {
+                    line(icon: "divide.circle.fill",
+                         text: "\(perRide.formatted(.currency(code: recap.currencyCode))) per ride today")
                 }
                 if recap.rides.isEmpty {
                     line(icon: "info.circle", text: "Log rides with Rode It! and they'll show up here.")
