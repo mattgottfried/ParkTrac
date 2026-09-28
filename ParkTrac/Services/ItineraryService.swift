@@ -209,6 +209,43 @@ enum TipBoard {
     }
 }
 
+// MARK: - Lightning Lane value (pure)
+// "Worth it today?" — how much standby time your picks' Lightning Lane returns would save
+// right now, and what any paid Individual Lightning Lane (Single Pass) returns actually cost.
+// Deliberately doesn't guess at a Multi Pass day-price (there's no live price for the bundle,
+// only for Single Pass) or render a yes/no verdict — just the real numbers, so the guest judges.
+
+enum LightningLaneValue {
+    struct RideSaving: Equatable {
+        let name: String
+        let minutesSaved: Int
+        /// Paid Individual Lightning Lane price; nil when it's a Multi Pass return (no per-ride price)
+        let cost: Double?
+    }
+
+    struct Summary: Equatable {
+        let rides: [RideSaving]
+        var totalMinutesSaved: Int { rides.reduce(0) { $0 + $1.minutesSaved } }
+        var totalCost: Double { rides.compactMap(\.cost).reduce(0, +) }
+        var hasPaidRides: Bool { rides.contains { $0.cost != nil } }
+        var isEmpty: Bool { rides.isEmpty }
+    }
+
+    /// Once you're called back for a Lightning Lane return the line is short, not zero — this
+    /// is what gets subtracted from the standby wait to estimate minutes actually saved.
+    static let assumedLLWaitMinutes = 5
+
+    static func summary(rides: [(name: String, standbyWait: Int?, multiPass: LightningLaneInfo?, singlePass: LightningLaneInfo?)]) -> Summary {
+        let entries: [RideSaving] = rides.compactMap { r in
+            guard let wait = r.standbyWait, wait > assumedLLWaitMinutes else { return nil }
+            guard r.multiPass?.isAvailable == true || r.singlePass?.isAvailable == true else { return nil }
+            let cost = r.singlePass?.isAvailable == true ? r.singlePass?.amount : nil
+            return RideSaving(name: r.name, minutesSaved: wait - assumedLLWaitMinutes, cost: cost)
+        }
+        return Summary(rides: entries)
+    }
+}
+
 // MARK: - Interest suggestions (pure)
 
 enum InterestSuggestions {

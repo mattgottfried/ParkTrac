@@ -155,4 +155,32 @@ final class GenieTests: XCTestCase {
                                   bestHour: nil, bestWait: nil, isMustDo: false)
         XCTAssertFalse(closed.isGoodNow)
     }
+
+    // MARK: Lightning Lane value
+
+    private func llInfo(_ json: String) throws -> LightningLaneInfo {
+        try XCTUnwrap(LightningLaneInfo(JSONDecoder().decode(ReturnTimeQueue.self, from: Data(json.utf8))))
+    }
+
+    func testLightningLaneValueCountsMinutesAndPaidCost() throws {
+        let multi = try llInfo(#"{"state":"AVAILABLE","returnStart":"2026-09-26T13:00:00Z"}"#)
+        let single = try llInfo(#"{"state":"AVAILABLE","returnStart":"2026-09-26T13:00:00Z","price":{"amount":1500,"currency":"USD","formatted":"$15.00"}}"#)
+        let summary = LightningLaneValue.summary(rides: [
+            (name: "Free Return", standbyWait: 65, multiPass: multi, singlePass: nil),
+            (name: "Paid Return", standbyWait: 50, multiPass: nil, singlePass: single),
+            (name: "No LL", standbyWait: 40, multiPass: nil, singlePass: nil),
+            (name: "Too short to matter", standbyWait: 3, multiPass: multi, singlePass: nil),
+        ])
+        XCTAssertEqual(summary.rides.count, 2, "only rides with an available LL return and a wait worth counting")
+        XCTAssertEqual(summary.totalMinutesSaved, (65 - 5) + (50 - 5))
+        XCTAssertEqual(summary.totalCost, 15.0)
+        XCTAssertTrue(summary.hasPaidRides)
+    }
+
+    func testLightningLaneValueEmptyWhenNothingAvailable() {
+        let summary = LightningLaneValue.summary(rides: [(name: "Closed", standbyWait: nil, multiPass: nil, singlePass: nil)])
+        XCTAssertTrue(summary.isEmpty)
+        XCTAssertEqual(summary.totalMinutesSaved, 0)
+        XCTAssertFalse(summary.hasPaidRides)
+    }
 }

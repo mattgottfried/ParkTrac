@@ -1,40 +1,43 @@
 New since the last build (short version: TestFlight allows 4,000 characters)
 
 Smart Planner
-- No more invented dinners: meals/breaks only when your notes ask ("snack break at 3").
-- Plan a future day (Day picker, 60 days out). Save Plan → My Day → Coming Up; the morning of, it becomes your live Next Up plan.
-- Change the Plan: shows total walking; one-tap Less Walking/Must-Dos First/Shortest Waits; with Apple Intelligence, type requests.
-- Rain AND heat plan: indoor rides move into likely-rain or hottest hours, with a heads-up note and a notification ~30 min before (Settings → Rain/Heat Heads-Up).
+- No more invented dinners: meals/breaks only when notes ask ("snack break at 3").
+- Plan a future day (Day picker, 60 days out); Save Plan → My Day → Coming Up.
+- Change the Plan: total walking shown; one-tap Less Walking/Must-Dos First/Shortest Waits; Apple Intelligence text requests.
+- Rain AND heat plan: indoor rides move into rainy/hottest hours, with a heads-up + notification (Settings → Rain/Heat Heads-Up).
 
-Wait Times: new ride cards (colored wait tile, Must-Do star); drag/tap the panel header to expand/shrink; my-location button; pull-to-refresh replaced by a tappable "N min ago" pill; shows open a show page with reminders.
+Wait Times: new ride cards; drag/tap panel header to expand/shrink; my-location button; pull-to-refresh replaced by a tappable "N min ago" pill; shows open a show page with reminders.
 
-Ride page: new layout (wait tile, 4 buttons); Wait Forecast replaces Predictions ("Go now"/"Shorter at 8pm", hourly bars); "you usually wait ~X" after timed rides; forecasts now use everyone's recorded waits (day one, not just your own history).
+Ride page: new layout; Wait Forecast replaces Predictions ("Go now"/"Shorter at 8pm", hourly bars); "you usually wait ~X"; forecasts use everyone's recorded waits (day one).
 
-Add to My Day: one screen — pick several rides/a show, then Anytime/Now/Best time/showtime/set time.
+Add to My Day: one screen — pick rides/a show, then Anytime/Now/Best time/showtime/set time.
 
-Live Activities: resort colors, big countdowns, progress bars, a 3-stop Next Up timeline, and Done/Skip/"I'm On"/"Used It" buttons.
+Live Activities: resort colors, big countdowns, progress bars, a 3-stop Next Up timeline, Done/Skip/"I'm On"/"Used It" buttons.
 
-Alerts & stats: Must-Do down alerts; Crowd Calendar uses measured waits + predicts 2 weeks out; Day recap (My Day → ✨) with rides/steps/spending, shareable.
+Alerts & stats: Must-Do down alerts; Crowd Calendar (measured + 2-week predicted); Day recap (My Day → ✨), shareable.
 
-Car locator: sections/rows match the Disney/Universal apps (scroll wheel); opening it guesses your section and row from GPS automatically. Lot maps: Magic Kingdom, Animal Kingdom, EPCOT, Hollywood Studios, Epic Universe. Unmapped lots learn from saved spots. Check: section/row should fill in ("Guessed from…"); tell me if one's wrong.
+Car locator: sections/rows match Disney/Universal apps (scroll wheel); auto-guesses section/row from GPS. Lot maps: Magic Kingdom, Animal Kingdom, EPCOT, Hollywood Studios, Epic Universe.
 
-Fixed: the upload rejected for Siri's "Plan my day" description mentioning Apple (App Store rule 90626).
+Fixed: upload rejected for Siri's "Plan my day" description mentioning Apple (rule 90626).
 
 Ride photos: Rode It! has an optional photo step; Visit History shows a thumbnail.
 
 Trip budget: Spending → "Set a Trip Budget" — a progress bar tracks spend against it.
 
-Offline, no more misleading wait times: with no signal, rides show "No signal" instead of a fake wait or false "Closed".
+Offline, no misleading waits: with no signal, rides show "No signal" instead of a fake wait or false "Closed".
 
-Lightning Lane cost auto-log: booking a paid Single Pass logs its return AND price into Spending automatically.
+Lightning Lane cost auto-log: a paid Single Pass return now logs its price into Spending automatically.
 
-Character meet tracker: Bucket List's new "Characters" tab — a checklist (met/date/notes/photo), 22 Orlando characters seeded.
+Character meet tracker: Bucket List's new "Characters" tab (met/date/notes/photo), 22 Orlando characters.
 
-Bucket List restaurant refresh: fixed a few closed/changed restaurants.
-- Wolfgang Puck Bar & Grill (Disney Springs) and Thunder Falls Terrace (Islands of Adventure) permanently closed — they now show a red CLOSED banner instead of vanishing, so any rating you gave them is kept.
-- Hot Dog Hall of Fame® (CityWalk) closed; Fat One's Hot Dogs & Italian Ice (Joey Fatone's spot, same location) is added as a new entry — it's a different restaurant, not a rename, so the old one keeps its own rating and CLOSED banner.
-- Check: if you'd rated any of these three, open Bucket List → Restaurants and confirm your rating is still there.
+Bucket List restaurant refresh: Wolfgang Puck Bar & Grill (Disney Springs) and Thunder Falls Terrace (Islands of Adventure) permanently closed — CLOSED banner, rating kept, not deleted. Hot Dog Hall of Fame® (CityWalk) closed; Fat One's Hot Dogs & Italian Ice added as a separate new entry (different restaurant, not a rename). Check: if you'd rated any of these, confirm the rating's still there.
 
-Data export: Settings → Data & Sync now has CSV export for Bucket List restaurants, hotels and characters (ratings/visited/notes), alongside the existing ride log and spending exports. Good to run before any update, as a backup.
+Data export: Settings → Data & Sync — CSV export for Bucket List restaurants/hotels/characters, alongside ride log/spending. Good backup before an update.
 
-Check overall: plan a day, watch Next Up, open ride pages, add to My Day, log a ride with a photo, try the car locator, set a trip budget, book a paid Lightning Lane, check off a character, look at the Bucket List restaurant changes, export your Bucket List from Settings.
+"Worth it today?": Tip Board now shows a card totaling minutes your picks' Lightning Lane returns would save right now, plus real cost of any paid Individual LL. No verdict, just the numbers.
+
+Trip vs. last visit: Visit History shows "This Trip So Far" — ride count (+ new rides) vs. the same day-count into your previous trip. Needs 2+ trips logged.
+
+Budget pacing: with a Trip + Trip Budget set, Spending shows "~$X/day for N more days".
+
+Check overall: plan a day, add to My Day, log a ride with a photo, try the car locator, book a paid Lightning Lane, check off a character, look at Bucket List changes, export from Settings, check Tip Board's LL card and Visit History's trip comparison.

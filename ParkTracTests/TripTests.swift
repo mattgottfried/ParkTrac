@@ -53,4 +53,31 @@ final class TripTests: XCTestCase {
         XCTAssertEqual(CurrencyConverter.dollarsText(yen: 1500, yenPerDollar: 150), "≈ $10.00")
         XCTAssertEqual(CurrencyConverter.dollarsText(yen: 30000, yenPerDollar: 150), "≈ $200")
     }
+
+    // MARK: Budget pacing
+
+    func testPaceSpreadsRemainingBudgetOverRemainingDays() throws {
+        // Trip runs day(11,5)...day(11,12) — today is day 3 of 8, so 6 days including today are left
+        let pacing = try XCTUnwrap(BudgetPacer.pace(budget: 600, spent: 150, today: day(11, 7), tripEnd: day(11, 12), calendar: cal))
+        XCTAssertEqual(pacing.remainingDays, 6)
+        XCTAssertEqual(pacing.remainingBudget, 450)
+        XCTAssertEqual(pacing.perDay, 75)
+    }
+
+    func testPaceOnTheLastDay() throws {
+        let pacing = try XCTUnwrap(BudgetPacer.pace(budget: 600, spent: 500, today: day(11, 12), tripEnd: day(11, 12), calendar: cal))
+        XCTAssertEqual(pacing.remainingDays, 1)
+        XCTAssertEqual(pacing.perDay, 100)
+    }
+
+    func testPaceGoesNegativeWhenOverspent() throws {
+        let pacing = try XCTUnwrap(BudgetPacer.pace(budget: 600, spent: 700, today: day(11, 10), tripEnd: day(11, 12), calendar: cal))
+        XCTAssertEqual(pacing.remainingBudget, -100)
+        XCTAssertLessThan(pacing.perDay, 0)
+    }
+
+    func testNoPacingAfterTripEndsOrWithNoBudget() {
+        XCTAssertNil(BudgetPacer.pace(budget: 600, spent: 100, today: day(11, 13), tripEnd: day(11, 12), calendar: cal))
+        XCTAssertNil(BudgetPacer.pace(budget: 0, spent: 100, today: day(11, 7), tripEnd: day(11, 12), calendar: cal))
+    }
 }
