@@ -139,6 +139,8 @@ The user config must stay **unnamed** — naming it changes the store URL and or
 
 **Dining log**: `MyDiningView` (reached from the Stats tab) is the active dining log — reservations (`DiningReservation`) plus visited `BucketRestaurant`s. There is no separate `Restaurant` model (the legacy one was removed).
 
+**Data export** (`Services/ExportService.swift`, Settings → Data & Sync): `DataExport.rideLog` / `.purchases` / `.bucketRestaurants` / `.hotelStays` / `.characterMeets` each build a `CSVFile` (`Transferable`) for a `ShareLink` — ratings/visited/notes/dates, not photos (don't fit a CSV). `bucketRestaurants`/`hotelStays` take `raterOneLabel`/`raterTwoLabel` for the two rating columns' headers. Useful as a backup before an update that touches these models' schema, even though CloudKit-backed SwiftData migrates a new optional/defaulted field without touching existing data.
+
 ### Key Models
 
 | File | Type | Purpose |
