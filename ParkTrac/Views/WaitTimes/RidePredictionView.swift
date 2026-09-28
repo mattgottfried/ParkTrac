@@ -279,7 +279,7 @@ struct RidePredictionView: View {
     @ViewBuilder
     private func dataSourceLabel(_ source: PredictionDataSource) -> some View {
         switch source {
-        case .personalHistory(let count):
+        case .personalHistory:
             HStack(spacing: 4) {
                 Image(systemName: "person.fill").font(.caption2)
                 Text("From your visits")
