@@ -10,6 +10,7 @@ actor BucketListService {
     func seedIfNeeded(context: ModelContext) async {
         await seedRestaurants(context: context)
         await seedHotels(context: context)
+        await seedCharacters(context: context)
     }
 
     @MainActor
@@ -48,6 +49,21 @@ actor BucketListService {
                 tier: seed.tier
             )
             context.insert(hotel)
+        }
+
+        try? context.save()
+    }
+
+    @MainActor
+    private func seedCharacters(context: ModelContext) async {
+        let existing = (try? context.fetch(FetchDescriptor<CharacterMeet>())) ?? []
+        let existingKeys = Set(existing.map { "\($0.character)|\($0.park)" })
+
+        for seed in allCharacterAppearances {
+            let key = "\(seed.character)|\(seed.park)"
+            guard !existingKeys.contains(key) else { continue }
+            let meet = CharacterMeet(character: seed.character, park: seed.park, resort: seed.resort, location: seed.location)
+            context.insert(meet)
         }
 
         try? context.save()

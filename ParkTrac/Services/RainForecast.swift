@@ -106,12 +106,18 @@ final class RainForecastService {
             inFlight.insert(resort)
             defer { inFlight.remove(resort) }
             let c = resort.weatherCoordinate
+            // Heat heads-up (HeatForecast.swift) rides along on this same request — one extra
+            // `hourly` field, not a second fetch — see that type's doc comment.
             let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(c.lat)&longitude=\(c.lon)"
-                + "&hourly=precipitation_probability&timezone=auto&forecast_days=1"
+                + "&hourly=precipitation_probability,apparent_temperature&temperature_unit=fahrenheit"
+                + "&timezone=auto&forecast_days=1"
             if let url = URL(string: urlString) {
                 let result = try? await URLSession.shared.data(from: url)
-                if let result, let chances = RainForecast.parse(result.0, today: day) {
-                    entries[resort] = Entry(fetchedAt: now, day: day, chances: chances)
+                if let result {
+                    if let chances = RainForecast.parse(result.0, today: day) {
+                        entries[resort] = Entry(fetchedAt: now, day: day, chances: chances)
+                    }
+                    HeatForecastService.shared.ingest(resort: resort, data: result.0, day: day, now: now)
                 }
             }
         }

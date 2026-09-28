@@ -38,4 +38,10 @@ Trip budget: Spending → "Set a Trip Budget" — a progress bar (green/orange/r
 
 Offline, no more misleading wait times: with no signal, rides show "No signal" instead of a fake wait or a false "Closed", with a gray "Offline" banner. Check: Airplane Mode at a park, open Wait Times.
 
-Check overall: plan a day, watch Next Up on the Lock Screen, open ride pages, add to My Day, log a ride with a photo, try the car locator, set a trip budget.
+Lightning Lane cost auto-log: booking a paid Single Pass now has its own "I Booked It" button — logs the return AND the price into Spending automatically. Check: book a paid LL return, confirm it shows up in Spending under "Lightning Lane".
+
+Heat heads-up: same idea as rain — the hottest hours of the day push indoor rides into that window in the Smart Planner/Next Up, with a heads-up note and a notification ~30 min before (Settings → Heat Heads-Up).
+
+Character meet tracker: Bucket List has a new "Characters" tab — a checklist (met, date, notes, photo) seeded with 22 Orlando characters. Check: mark one met with a photo, confirm it shows in the list.
+
+Check overall: plan a day, watch Next Up on the Lock Screen, open ride pages, add to My Day, log a ride with a photo, try the car locator, set a trip budget, book a paid Lightning Lane, check off a character.

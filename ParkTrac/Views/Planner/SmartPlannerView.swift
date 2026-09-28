@@ -354,6 +354,9 @@ struct SmartPlannerView: View {
                 if !isFuture, let rain = RainForecastService.shared.headline(for: appState.selectedResort) {
                     RainHeadsUp(text: rain)
                 }
+                if !isFuture, let heat = HeatForecastService.shared.headline(for: appState.selectedResort) {
+                    HeatHeadsUp(text: heat)
+                }
             }
 
             changeSection
@@ -491,8 +494,10 @@ struct SmartPlannerView: View {
                                                                 pinCurrentHour: !isFuture),
                             isIndoor: RideMetadata.isIndoor(name: ride.name, resort: appState.selectedResort))
         }
-        // Rain: outdoor rides move out of the wet hours
-        let wetHours: Set<Int> = isFuture ? [] : RainForecastService.shared.wetHours(for: appState.selectedResort)
+        // Rain and heat: outdoor rides move out of the wet/hot hours (same fix either way — get inside)
+        let wetHours: Set<Int> = isFuture ? [] :
+            RainForecastService.shared.wetHours(for: appState.selectedResort)
+                .union(HeatForecastService.shared.hotHours(for: appState.selectedResort))
 
         // Fixed: chosen shows, today's dining reservations, meals/breaks from the request
         var fixed = shows.compactMap { show -> FixedEvent? in

@@ -209,6 +209,9 @@ struct LightningLaneInfo: Equatable {
     let returnEnd: Date?
     /// Single Pass price, e.g. "$15.00" (nil for Multi Pass)
     let price: String?
+    /// Numeric Single Pass price in the resort's currency, e.g. 15.0 (nil for Multi Pass or unpriced) —
+    /// for auto-logging the purchase, not for display (use `price`, which keeps the API's own formatting).
+    let amount: Double?
 
     var isAvailable: Bool { state == .available && returnStart != nil }
 
@@ -237,10 +240,11 @@ struct LightningLaneInfo: Equatable {
         }
         returnStart = Self.date(queue.returnStart)
         returnEnd = Self.date(queue.returnEnd)
+        amount = queue.price?.amount.map { $0 / 100 }
         if let formatted = queue.price?.formatted, !formatted.isEmpty {
             price = formatted
-        } else if let cents = queue.price?.amount {
-            price = (cents / 100).formatted(.currency(code: queue.price?.currency ?? "USD"))
+        } else if let amount {
+            price = amount.formatted(.currency(code: queue.price?.currency ?? "USD"))
         } else {
             price = nil
         }

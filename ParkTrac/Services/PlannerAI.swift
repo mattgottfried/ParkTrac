@@ -120,7 +120,7 @@ enum PlannerAI {
         Set times:
         \(fixed.isEmpty ? "none" : fixed.joined(separator: "\n"))
 
-        Rain likely: \(input.rainHours.isEmpty ? "no" : input.rainHours.sorted().map(hourLabel).joined(separator: ", ") + " — put indoor rides then")
+        Rain or heat expected: \(input.rainHours.isEmpty ? "no" : input.rainHours.sorted().map(hourLabel).joined(separator: ", ") + " — put indoor rides then")
         Interests: \(input.interests.isEmpty ? "none given" : input.interests.joined(separator: ", "))
         Guest's notes: \(notes.isEmpty ? "none" : notes)
         """
