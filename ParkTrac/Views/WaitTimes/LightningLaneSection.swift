@@ -21,6 +21,7 @@ struct LightningLaneSection: View {
     @State private var windowStart: Date = LightningLaneSection.defaultStart()
     @State private var windowEnd: Date = LightningLaneSection.defaultEnd()
     @State private var editing = false
+    @State private var costToast: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -33,6 +34,30 @@ struct LightningLaneSection: View {
             }
             if let single = ride.singlePass {
                 row(title: single.price.map { "\(names.paid) · \($0)" } ?? names.paid, info: single)
+                if single.isAvailable && loggedReturn == nil {
+                    Button {
+                        logBookedSingle()
+                    } label: {
+                        Label(
+                            single.price.map { "I Booked It — \($0)" } ?? "I Booked It",
+                            systemImage: "checkmark.circle.fill"
+                        )
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    Text("Logs the return here and the cost in Spending.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if let costToast {
+                Label(costToast, systemImage: "dollarsign.circle.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.green)
+                    .transition(.opacity)
             }
 
             // Already booked → no need to keep watching
@@ -105,6 +130,28 @@ struct LightningLaneSection: View {
             rideId: ride.id, rideName: ride.name, parkName: parkName,
             returnStart: start, returnEnd: multi.returnEnd,
             resort: resort, passLabel: names.free, context: context)
+    }
+
+    /// Logs the paid Single Pass return, and auto-logs its price into Spending so the trip
+    /// budget reflects real Lightning Lane spend without typing it in by hand.
+    private func logBookedSingle() {
+        guard let single = ride.singlePass, single.isAvailable, let start = single.returnStart else { return }
+        ReturnTimeLogger.logLightningLaneNow(
+            rideId: ride.id, rideName: ride.name, parkName: parkName,
+            returnStart: start, returnEnd: single.returnEnd,
+            resort: resort, passLabel: names.paid, context: context)
+        if let amount = single.amount, amount > 0 {
+            let purchase = PurchaseLog(
+                amount: amount, category: "Lightning Lane", resort: resort.rawValue,
+                note: "\(ride.name) — \(names.paid)", isAPEligible: false)
+            context.insert(purchase)
+            try? context.save()
+            let text = single.price ?? amount.formatted(.currency(code: resort.currencyCode))
+            withAnimation { costToast = "\(text) logged to Spending" }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                withAnimation { costToast = nil }
+            }
+        }
     }
 
     // MARK: Rows

@@ -26,6 +26,9 @@ struct NextUpCard: View {
                 if let rain = RainForecastService.shared.headline(for: resort) {
                     RainHeadsUp(text: rain)
                 }
+                if let heat = HeatForecastService.shared.headline(for: resort) {
+                    HeatHeadsUp(text: heat)
+                }
 
                 if let stop = itineraries.nextStop {
                     VStack(alignment: .leading, spacing: 3) {
@@ -145,6 +148,20 @@ struct RainHeadsUp: View {
             .foregroundStyle(.blue)
             .padding(.horizontal, 10).padding(.vertical, 5)
             .background(Color.blue.opacity(0.12), in: Capsule())
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// Same shape as `RainHeadsUp`, for the hottest hours of the day (`HeatForecastService`).
+struct HeatHeadsUp: View {
+    let text: String
+
+    var body: some View {
+        Label("\(text) · indoor rides planned then", systemImage: "sun.max.fill")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.orange)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(Color.orange.opacity(0.12), in: Capsule())
             .fixedSize(horizontal: false, vertical: true)
     }
 }

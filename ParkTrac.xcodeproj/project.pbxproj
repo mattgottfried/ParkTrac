@@ -20,6 +20,7 @@
 		AA0000000000000000000041 /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000040 /* StarRatingView.swift */; };
 		AA0000000000000000000043 /* BucketListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000042 /* BucketListView.swift */; };
 		AA0000000000000000000045 /* BucketRestaurantListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000044 /* BucketRestaurantListView.swift */; };
+		AA00000000000000000001C1 /* CharacterMeetListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001C2 /* CharacterMeetListView.swift */; };
 		AA0000000000000000000047 /* HotelListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000046 /* HotelListView.swift */; };
 		AA0000000000000000000049 /* BucketRestaurantDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000048 /* BucketRestaurantDetailView.swift */; };
 		AA000000000000000000004B /* HotelDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000004A /* HotelDetailView.swift */; };
@@ -48,6 +49,7 @@
 		AA0000000000000000000109 /* BadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000108 /* BadgesView.swift */; };
 		AA0000000000000000000111 /* ParkHoursHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000110 /* ParkHoursHeaderView.swift */; };
 		AA0000000000000000000113 /* RideLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000112 /* RideLog.swift */; };
+		AA00000000000000000001BF /* CharacterMeet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001C0 /* CharacterMeet.swift */; };
 		AA0000000000000000000115 /* DiningReservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000114 /* DiningReservation.swift */; };
 		AA0000000000000000000117 /* CrowdCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000116 /* CrowdCalendarService.swift */; };
 		AA0000000000000000000119 /* CrowdCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000118 /* CrowdCalendarView.swift */; };
@@ -69,6 +71,7 @@
 		AA00000000000000000001A6 /* DayPlanBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A7 /* DayPlanBuilder.swift */; };
 		AA00000000000000000001B2 /* CommunityHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001B3 /* CommunityHistory.swift */; };
 		AA00000000000000000001B4 /* RainForecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001B5 /* RainForecast.swift */; };
+		AA00000000000000000001BD /* HeatForecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001BE /* HeatForecast.swift */; };
 		AA00000000000000000001A8 /* PlannerAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001A9 /* PlannerAI.swift */; };
 		AA00000000000000000001AA /* SiriIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001AB /* SiriIntents.swift */; };
 		AA00000000000000000001AC /* ItineraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001AD /* ItineraryService.swift */; };
@@ -167,6 +170,7 @@
 		AA0000000000000000000040 /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000042 /* BucketListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketListView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000044 /* BucketRestaurantListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketRestaurantListView.swift; sourceTree = "<group>"; };
+		AA00000000000000000001C2 /* CharacterMeetListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterMeetListView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000046 /* HotelListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotelListView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000048 /* BucketRestaurantDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketRestaurantDetailView.swift; sourceTree = "<group>"; };
 		AA000000000000000000004A /* HotelDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotelDetailView.swift; sourceTree = "<group>"; };
@@ -196,6 +200,7 @@
 		AA0000000000000000000108 /* BadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000110 /* ParkHoursHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkHoursHeaderView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000112 /* RideLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLog.swift; sourceTree = "<group>"; };
+		AA00000000000000000001C0 /* CharacterMeet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterMeet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000114 /* DiningReservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiningReservation.swift; sourceTree = "<group>"; };
 		AA0000000000000000000116 /* CrowdCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrowdCalendarService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000118 /* CrowdCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrowdCalendarView.swift; sourceTree = "<group>"; };
@@ -217,6 +222,7 @@
 		AA00000000000000000001A7 /* DayPlanBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPlanBuilder.swift; sourceTree = "<group>"; };
 		AA00000000000000000001B3 /* CommunityHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityHistory.swift; sourceTree = "<group>"; };
 		AA00000000000000000001B5 /* RainForecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainForecast.swift; sourceTree = "<group>"; };
+		AA00000000000000000001BE /* HeatForecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatForecast.swift; sourceTree = "<group>"; };
 		AA00000000000000000001A9 /* PlannerAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerAI.swift; sourceTree = "<group>"; };
 		AA00000000000000000001AB /* SiriIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriIntents.swift; sourceTree = "<group>"; };
 		AA00000000000000000001AD /* ItineraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryService.swift; sourceTree = "<group>"; };
@@ -359,6 +365,7 @@
 				AA0000000000000000000054 /* DowntimeRecord.swift */,
 				AA0000000000000000000104 /* BadgeDefinition.swift */,
 				AA0000000000000000000112 /* RideLog.swift */,
+				AA00000000000000000001C0 /* CharacterMeet.swift */,
 				AA0000000000000000000114 /* DiningReservation.swift */,
 				AA000000000000000000011E /* RideAlert.swift */,
 				AA0000000000000000000120 /* PlanItem.swift */,
@@ -398,6 +405,7 @@
 				AA00000000000000000001A7 /* DayPlanBuilder.swift */,
 				AA00000000000000000001B3 /* CommunityHistory.swift */,
 				AA00000000000000000001B5 /* RainForecast.swift */,
+				AA00000000000000000001BE /* HeatForecast.swift */,
 				AA00000000000000000001A9 /* PlannerAI.swift */,
 				AA00000000000000000001AB /* SiriIntents.swift */,
 				AA00000000000000000001AD /* ItineraryService.swift */,
@@ -473,6 +481,7 @@
 			children = (
 				AA0000000000000000000042 /* BucketListView.swift */,
 				AA0000000000000000000044 /* BucketRestaurantListView.swift */,
+				AA00000000000000000001C2 /* CharacterMeetListView.swift */,
 				AA0000000000000000000046 /* HotelListView.swift */,
 				AA0000000000000000000048 /* BucketRestaurantDetailView.swift */,
 				AA000000000000000000004A /* HotelDetailView.swift */,
@@ -721,6 +730,7 @@
 				AA0000000000000000000041 /* StarRatingView.swift in Sources */,
 				AA0000000000000000000043 /* BucketListView.swift in Sources */,
 				AA0000000000000000000045 /* BucketRestaurantListView.swift in Sources */,
+				AA00000000000000000001C1 /* CharacterMeetListView.swift in Sources */,
 				AA0000000000000000000047 /* HotelListView.swift in Sources */,
 				AA0000000000000000000049 /* BucketRestaurantDetailView.swift in Sources */,
 				AA000000000000000000004B /* HotelDetailView.swift in Sources */,
@@ -739,6 +749,7 @@
 				AA0000000000000000000109 /* BadgesView.swift in Sources */,
 				AA0000000000000000000111 /* ParkHoursHeaderView.swift in Sources */,
 				AA0000000000000000000113 /* RideLog.swift in Sources */,
+				AA00000000000000000001BF /* CharacterMeet.swift in Sources */,
 				AA0000000000000000000115 /* DiningReservation.swift in Sources */,
 				AA0000000000000000000117 /* CrowdCalendarService.swift in Sources */,
 				AA0000000000000000000119 /* CrowdCalendarView.swift in Sources */,
@@ -763,6 +774,7 @@
 				AA00000000000000000001A6 /* DayPlanBuilder.swift in Sources */,
 				AA00000000000000000001B2 /* CommunityHistory.swift in Sources */,
 				AA00000000000000000001B4 /* RainForecast.swift in Sources */,
+				AA00000000000000000001BD /* HeatForecast.swift in Sources */,
 				AA00000000000000000001A8 /* PlannerAI.swift in Sources */,
 				AA00000000000000000001AA /* SiriIntents.swift in Sources */,
 				AA00000000000000000001AC /* ItineraryService.swift in Sources */,

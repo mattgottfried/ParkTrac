@@ -57,6 +57,6 @@ final class RainPlanTests: XCTestCase {
             shows: [], dining: [], start: at9, end: nil, notes: "", rainHours: [16, 15])
         let text = PlannerAI.prompt(input, calendar: cal)
         XCTAssertTrue(text.contains("- Haunted Mansion (indoor): expected wait"), text)
-        XCTAssertTrue(text.contains("Rain likely: 3pm, 4pm — put indoor rides then"), text)
+        XCTAssertTrue(text.contains("Rain or heat expected: 3pm, 4pm — put indoor rides then"), text)
     }
 }

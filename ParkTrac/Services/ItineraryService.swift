@@ -448,7 +448,8 @@ final class ItineraryService {
 
         live = it.aiOrder.isEmpty
             ? DayPlanBuilder.build(rides: planRides, fixed: fixed, start: now, end: close, from: location,
-                                   wetHours: RainForecastService.shared.wetHours(for: resort))
+                                   wetHours: RainForecastService.shared.wetHours(for: resort)
+                                       .union(HeatForecastService.shared.hotHours(for: resort)))
             : DayPlanBuilder.build(ordered: planRides, fixed: fixed, start: now, end: close, from: location)
         liveUpdatedAt = now
 

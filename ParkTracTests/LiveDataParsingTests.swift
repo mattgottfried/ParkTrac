@@ -31,7 +31,9 @@ final class LiveDataParsingTests: XCTestCase {
 
         let single = try XCTUnwrap(ride.singlePass)
         XCTAssertEqual(single.price, "$15.00")
+        XCTAssertEqual(single.amount, 15.0)
         XCTAssertNil(single.returnEnd)
+        XCTAssertNil(multi.amount, "Multi Pass has no price")
     }
 
     func testNoLightningLaneQueues() throws {

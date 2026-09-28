@@ -3,6 +3,7 @@ import SwiftUI
 enum BucketTab: String, CaseIterable {
     case restaurants = "Restaurants"
     case hotels = "Hotels"
+    case characters = "Characters"
 }
 
 /// Shared filter/sort options for the restaurant and hotel checklists
@@ -38,6 +39,8 @@ struct BucketListView: View {
                     BucketRestaurantListView()
                 case .hotels:
                     HotelListView()
+                case .characters:
+                    CharacterMeetListView()
                 }
             }
             .navigationTitle("Bucket List")

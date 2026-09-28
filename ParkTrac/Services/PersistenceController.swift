@@ -33,6 +33,7 @@ enum PersistenceController {
         Guest.self,
         WaitTimerLog.self,
         VisitSaving.self,
+        CharacterMeet.self,
     ]
 
     static let telemetryModels: [any PersistentModel.Type] = [

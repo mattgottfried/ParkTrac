@@ -10,6 +10,7 @@ struct SettingsView: View {
     @Query private var allPurchases: [PurchaseLog]
     @AppStorage(GoodTimeService.alertsEnabledKey) private var goodTimeAlerts = true
     @AppStorage(RainForecastService.alertsEnabledKey) private var rainAlerts = true
+    @AppStorage(HeatForecastService.alertsEnabledKey) private var heatAlerts = true
     @AppStorage(LiveActivityManager.parkDayEnabledKey) private var parkDayActivity = true
     @AppStorage(MustDoDownService.enabledKey) private var mustDoDownAlerts = true
     @AppStorage(LaunchResort.askKey) private var askResortOnLaunch = true
@@ -139,6 +140,9 @@ struct SettingsView: View {
                     .onChange(of: mustDoDownAlerts) { _, _ in InstantAlertsService.shared.watchesChanged() }
                     Toggle(isOn: $rainAlerts) {
                         Label("Rain Heads-Up", systemImage: "cloud.rain")
+                    }
+                    Toggle(isOn: $heatAlerts) {
+                        Label("Heat Heads-Up", systemImage: "sun.max")
                     }
                     Toggle(isOn: $parkDayActivity) {
                         Label("Next Up on Lock Screen", systemImage: "sparkles")
