@@ -1,14 +1,16 @@
 New since the last build (short version: TestFlight allows 4,000 characters)
 
-Wait Times: arrows on the wait tile show a ride's wait rising/falling since the last refresh. Orange "closing soon" banner + "Quietest around 9am, busiest around 2pm" line when a park is in focus. New seated-figure button suggests a nearby indoor rest stop (a show starting soon, or the shortest-wait indoor ride) — no standby line added. Easy Wins strip (≤15 min waits) alongside Good Time deals; "+15/-10 vs usual" on ride cards.
+Smart Planner & My Day: both now flag free gaps ≥20 min between plan stops and suggest a nearby short-wait ride to fill them ("25 min free — try Jungle Cruise, 10m wait"). My Day shows a live "You've stood in line ~Xm today" line (ticks live while a wait timer runs).
 
-My Day: "On this day" card (past-year same-date callback). Best Park Today for multi-resort trips (least crowded pick).
+Wait Times: a park in focus shows a tappable "Park Bingo: 14 of 42 this trip" line — every ride at that park ridden since your current trip started, with a checklist sheet. Ride page adds best-effort Loud/Dark/Sudden-moments chips next to height/thrill (sourced from Disney's published sensory guide, not exhaustive). Arrows on the wait tile show rising/falling since the last refresh; orange "closing soon" banner + "Quietest around 9am, busiest around 2pm" line when a park's in focus; seated-figure button suggests a nearby indoor rest stop; Easy Wins strip (≤15 min waits); "+15/-10 vs usual" on ride cards.
 
-Trip Planner: "Vacation Calendar" — day-by-day trip view with item/dining counts, saved-plan status, and a red "Blocked Out" flag on any day your annual pass blocks.
+My Day: "On this day" card (past-year same-date callback). Best Park Today for multi-resort trips.
 
-Spending: new "This Year" total alongside Today/This Trip. "Quick Snack" chips (Popcorn, Churro, Soda…) prefill a purchase — you still type the price. My Dining: mark a reservation as a Mobile Order with a pickup-by time; shows a live "N min left" countdown.
+Trip Planner: "Vacation Calendar" — day-by-day trip view with item/dining counts and a red "Blocked Out" flag on any day your annual pass blocks.
 
-Ride Counter: "Your #1 ride" trophy stat. Stats → Recaps: "Year in Review" card (rides, days, trips, top ride, spend) alongside Day Recaps. Visit History: past weather (condition + high temp) shown for each logged day.
+Spending: new "This Year" total alongside Today/This Trip. "Quick Snack" chips prefill a purchase — you still type the price. My Dining: mark a reservation as a Mobile Order with a pickup-by time and a live "N min left" countdown.
+
+Ride Counter: "Your #1 ride" trophy stat. Stats → Recaps: "Year in Review" card alongside Day Recaps. Visit History: past weather shown for each logged day.
 
 Pass Savings: "Cost per visit". Day Recap: "X per ride today".
 
@@ -22,7 +24,7 @@ Single Rider: busy rides suggest Single Rider (Universal) or a shorter alternati
 
 Add to My Day: one screen — pick rides/a show, then Anytime/Now/Best time/showtime/set time.
 
-Live Activities: resort colors, big countdowns, 3-stop Next Up timeline, Done/Skip/"I'm On"/"Used It".
+Live Activities: resort colors, big countdowns, 3-stop timeline, Done/Skip/"I'm On"/"Used It".
 
 Alerts & stats: Must-Do down alerts; Crowd Calendar; shareable Day recap.
 
@@ -30,22 +32,22 @@ Car locator: sections/rows match Disney/Universal apps; auto-guesses from GPS.
 
 Ride photos: optional photo on Rode It!; Visit History thumbnail.
 
-Trip budget + pacing: "Set a Trip Budget" progress bar, "~$X/day for N more days".
+Trip budget + pacing: "Set a Trip Budget" bar, "~$X/day for N more days".
 
 Offline: no signal shows "No signal", never a fake wait or false Closed.
 
 Lightning Lane: paid Single Pass auto-logs its price. Tip Board "Worth it today?" totals minutes saved + real cost.
 
-Character meet tracker: Bucket List "Characters" tab, 22 Orlando characters.
+Character tracker: Bucket List "Characters" tab, 22 Orlando characters.
 
-Bucket List refresh: Wolfgang Puck Bar & Grill and Thunder Falls Terrace closed (CLOSED banner, rating kept); Hot Dog Hall of Fame® closed, Fat One's added as a new entry.
+Bucket List refresh: Wolfgang Puck Bar & Grill and Thunder Falls Terrace closed (rating kept); Hot Dog Hall of Fame® closed, Fat One's added.
 
-Data export: Settings → Data & Sync CSV export — good backup before an update.
+Data export: Settings → Data & Sync CSV, good backup before an update.
 
-Trip vs. last visit: Visit History "This Trip So Far" vs. the same day-count into your previous trip.
+Trip vs. last visit: Visit History "This Trip So Far" vs. the same day-count into your last trip.
 
-Tip Calculator: Settings → Tools, quick % or custom, split across your party.
+Tip Calculator: Settings → Tools, quick % or custom.
 
-Fixed: upload rejected for Siri's "Plan my day" description mentioning Apple (rule 90626).
+Fixed: upload rejected for Siri's description mentioning Apple (rule 90626); a Swift build error.
 
-Check overall: watch a wait trend arrow, a closing-soon banner, the rest-stop button, an Easy Wins/usual-delta ride, "On this day"/Best Park Today, Vacation Calendar's blockout flag, Spending's This Year total + a Quick Snack, a mobile order countdown, Ride Counter's #1 ride, a Year in Review card, Visit History's past weather, Pass Savings cost-per-visit, Day Recap cost-per-ride, plan a day, Rope Drop Plan, log a ride with a photo, car locator, a paid Lightning Lane, a character check-off, Bucket List changes, Settings export, Single Rider/alternate suggestion, Tip Calculator.
+Check overall: a plan gap suggestion (Smart Planner + My Day), the live standing-time line, Park Bingo, a ride's sensory chips, a wait trend arrow, closing-soon banner, rest-stop button, Easy Wins/usual-delta, "On this day"/Best Park Today, Vacation Calendar's blockout flag, Spending's This Year + Quick Snack, a mobile order countdown, Ride Counter's #1 ride, Year in Review, Visit History weather, Pass Savings cost-per-visit, Day Recap cost-per-ride, Rope Drop Plan, car locator, a paid Lightning Lane, Bucket List changes, Settings export, Single Rider, Tip Calculator.

@@ -126,12 +126,55 @@ struct DayPlannerView: View {
         OnThisDayMemories.find(logs: rideLogs, resort: resort)
     }
 
+    private var todaysTimedRides: [(posted: Int?, actual: Int?)] {
+        rideLogs
+            .filter { $0.resort == resort && Calendar.current.isDateInToday($0.riddenAt) }
+            .map { (posted: $0.waitMinutes, actual: $0.actualWaitMinutes) }
+    }
+
+    /// Only shown once there's something to report — a quiet morning with no rides yet stays silent.
+    private var standingTimeText: String? {
+        let minutes = StandingTime.minutes(today: todaysTimedRides, activeTimerStart: appState.activeTimerStart)
+        guard minutes > 0 else { return nil }
+        let text = minutes >= 60 ? "\(minutes / 60)h \(minutes % 60)m" : "\(minutes)m"
+        return "You've stood in line \(text) today"
+    }
+
     private func onThisDayText(_ memory: OnThisDayMemory) -> String {
         let yearWord = memory.yearsAgo == 1 ? "One year ago today" : "\(memory.yearsAgo) years ago today"
         var text = "\(yearWord), you logged \(memory.rideCount) ride\(memory.rideCount == 1 ? "" : "s")"
         if let park = memory.parks.first, memory.parks.count == 1 { text += " at \(park)" }
         if let repeatRide = memory.repeatRide { text += ", including \(repeatRide.name) × \(repeatRide.count)" }
         return text + "."
+    }
+
+    /// Free time between two consecutive live-plan stops, with a nearby short-wait ride suggested
+    /// to fill it — reuses `PlanGapFinder`, same as the Smart Planner's own result list.
+    @ViewBuilder
+    private func liveGapRow(after stop: PlannedStop, before next: PlannedStop, plannedStops: [PlannedStop]) -> some View {
+        let gap = PlanGapFinder.Gap(start: stop.end, end: next.start)
+        if gap.minutes >= PlanGapFinder.minGapMinutes {
+            let plannedIds = Set(plannedStops.compactMap(\.rideId))
+            let candidates = waitTimesVM.allRides
+                .filter { $0.isOperating && !plannedIds.contains($0.id) }
+                .compactMap { ride -> (name: String, waitMinutes: Int)? in
+                    ride.waitMinutes.map { (ride.name, $0) }
+                }
+            let suggestion = PlanGapFinder.fill(gap: gap, candidates: candidates)
+            HStack(spacing: 12) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.caption).foregroundStyle(.blue)
+                    .frame(width: 64, alignment: .leading)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(gap.minutes) min free")
+                        .font(.caption.weight(.semibold)).foregroundStyle(.blue)
+                    if let suggestion {
+                        Text("Try \(suggestion.name) — ~\(suggestion.waitMinutes)m wait")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
     }
 
     /// Which of a multi-resort trip's resorts looks least crowded today.
@@ -162,6 +205,23 @@ struct DayPlannerView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            if appState.activeTimerStart != nil {
+                Section {
+                    TimelineView(.periodic(from: .now, by: 30)) { _ in
+                        if let text = standingTimeText {
+                            Label(text, systemImage: "hourglass")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            } else if let text = standingTimeText {
+                Section {
+                    Label(text, systemImage: "hourglass")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
             if let trip = TripService.shared.trip, trip.resorts.count > 1 {
                 bestParkTodayCard(trip)
             }
@@ -178,7 +238,8 @@ struct DayPlannerView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    ForEach(Array((ItineraryService.shared.live?.stops ?? []).enumerated()), id: \.offset) { _, stop in
+                    let liveStops = ItineraryService.shared.live?.stops ?? []
+                    ForEach(Array(liveStops.enumerated()), id: \.offset) { index, stop in
                         HStack(spacing: 12) {
                             Text(stop.start, style: .time)
                                 .font(.caption.weight(.semibold))
@@ -197,6 +258,10 @@ struct DayPlannerView: View {
                                 Button("Done") { ItineraryService.shared.markDone(rideId) }.tint(.green)
                                 Button("Skip") { ItineraryService.shared.skip(rideId) }.tint(.gray)
                             }
+                        }
+
+                        if index < liveStops.count - 1 {
+                            liveGapRow(after: stop, before: liveStops[index + 1], plannedStops: liveStops)
                         }
                     }
                     if let unscheduled = ItineraryService.shared.live?.unscheduled, !unscheduled.isEmpty {

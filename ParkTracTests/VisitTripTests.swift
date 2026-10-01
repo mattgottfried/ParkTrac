@@ -77,4 +77,36 @@ final class VisitTripTests: XCTestCase {
     func testNoMostRiddenWithNoLogs() {
         XCTAssertNil(MostRiddenRide.pick(counts: [:]))
     }
+
+    // MARK: Standing time
+
+    func testStandingTimeSumsCompletedRides() {
+        let today: [(posted: Int?, actual: Int?)] = [(posted: 40, actual: 35), (posted: 20, actual: nil)]
+        XCTAssertEqual(StandingTime.minutes(today: today), 55, "actual wins when timed, else posted")
+    }
+
+    func testStandingTimeAddsTheRunningTimer() {
+        let now = Date()
+        let start = now.addingTimeInterval(-12 * 60)
+        XCTAssertEqual(StandingTime.minutes(today: [], activeTimerStart: start, now: now), 12)
+    }
+
+    func testStandingTimeZeroWithNothingLogged() {
+        XCTAssertEqual(StandingTime.minutes(today: []), 0)
+    }
+
+    // MARK: Park Bingo
+
+    func testParkBingoSplitsRiddenFromRemaining() {
+        let roster = ["Space Mountain", "Big Thunder", "TRON", "Haunted Mansion"]
+        let progress = ParkBingo.progress(roster: roster, riddenThisTrip: ["TRON", "Big Thunder"])
+        XCTAssertEqual(progress.ridden, ["Big Thunder", "TRON"])
+        XCTAssertEqual(progress.remaining, ["Haunted Mansion", "Space Mountain"])
+    }
+
+    func testParkBingoIgnoresRidesNotOnTheRoster() {
+        let progress = ParkBingo.progress(roster: ["Space Mountain"], riddenThisTrip: ["Some Other Park's Ride"])
+        XCTAssertEqual(progress.ridden, [])
+        XCTAssertEqual(progress.remaining, ["Space Mountain"])
+    }
 }

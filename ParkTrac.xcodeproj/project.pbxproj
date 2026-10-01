@@ -15,6 +15,7 @@
 		AA000000000000000000002D /* WaitTimesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002C /* WaitTimesViewModel.swift */; };
 		AA000000000000000000002F /* ParkMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002E /* ParkMapView.swift */; };
 		AA0000000000000000000033 /* RideCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000032 /* RideCardView.swift */; };
+		AA00000000000000000001CB /* ParkBingoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001CC /* ParkBingoSheet.swift */; };
 		AA0000000000000000000035 /* RideDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000034 /* RideDetailSheet.swift */; };
 		AA0000000000000000000037 /* RidePredictionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000036 /* RidePredictionView.swift */; };
 		AA0000000000000000000041 /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000040 /* StarRatingView.swift */; };
@@ -169,6 +170,7 @@
 		AA000000000000000000002C /* WaitTimesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimesViewModel.swift; sourceTree = "<group>"; };
 		AA000000000000000000002E /* ParkMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkMapView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000032 /* RideCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideCardView.swift; sourceTree = "<group>"; };
+		AA00000000000000000001CC /* ParkBingoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkBingoSheet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000034 /* RideDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideDetailSheet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000036 /* RidePredictionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidePredictionView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000040 /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
@@ -459,6 +461,7 @@
 			children = (
 				AA000000000000000000002E /* ParkMapView.swift */,
 				AA0000000000000000000032 /* RideCardView.swift */,
+				AA00000000000000000001CC /* ParkBingoSheet.swift */,
 				AA0000000000000000000034 /* RideDetailSheet.swift */,
 				AA0000000000000000000195 /* LightningLaneSection.swift */,
 				AA00000000000000000000F8 /* ParkComparisonView.swift */,
@@ -736,6 +739,7 @@
 				AA000000000000000000002D /* WaitTimesViewModel.swift in Sources */,
 				AA000000000000000000002F /* ParkMapView.swift in Sources */,
 				AA0000000000000000000033 /* RideCardView.swift in Sources */,
+				AA00000000000000000001CB /* ParkBingoSheet.swift in Sources */,
 				AA0000000000000000000035 /* RideDetailSheet.swift in Sources */,
 				AA0000000000000000000037 /* RidePredictionView.swift in Sources */,
 				AA00000000000000000000F1 /* MyDiningView.swift in Sources */,

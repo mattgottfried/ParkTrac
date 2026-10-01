@@ -384,6 +384,8 @@ struct ParkMapView: View {
     @Environment(\.scenePhase) private var scenePhaseValue
     @Environment(\.modelContext) private var modelContext
     @Environment(WaitTimesViewModel.self) private var viewModel
+    @Query(sort: \RideLog.riddenAt) private var allRideLogs: [RideLog]
+    @State private var showParkBingo = false
     @State private var locationService = LocationService()
     @State private var recenterRequest = 0
     @State private var showLocationDenied = false
@@ -670,6 +672,11 @@ struct ParkMapView: View {
         .sheet(isPresented: $showTipBoard) {
             TipBoardView()
         }
+        .sheet(isPresented: $showParkBingo) {
+            if let park = viewModel.filterPark, let bingo = parkBingo {
+                ParkBingoSheet(parkName: park.name, ridden: bingo.ridden, remaining: bingo.remaining)
+            }
+        }
         .alert("Need a Break?", isPresented: $showRestStop) {
             Button("OK") {}
         } message: {
@@ -856,6 +863,26 @@ struct ParkMapView: View {
         return RestStopSuggestion.pick(shows: shows, rides: rides, resort: viewModel.selectedGroup)
     }
 
+    /// Ride names at the focused park ridden since the current trip started (not lifetime) —
+    /// trips are inferred from gaps between logged days, same as Visit History.
+    private var currentTripRiddenNames: Set<String> {
+        guard let park = viewModel.filterPark else { return [] }
+        let cal = Calendar.current
+        let resortLogs = allRideLogs.filter { $0.resort == viewModel.selectedGroup.rawValue }
+        var byDay: [Date: [RideLog]] = [:]
+        for log in resortLogs { byDay[cal.startOfDay(for: log.riddenAt), default: []].append(log) }
+        let visitDays = byDay.map { VisitDay(id: $0.key, resort: viewModel.selectedGroup.rawValue, entries: $0.value) }
+        guard let trip = VisitTripGrouper.group(visitDays).last else { return [] }
+        return Set(trip.days.flatMap { $0.entries.filter { $0.parkName == park.name }.map(\.rideName) })
+    }
+
+    private var parkBingo: (ridden: [String], remaining: [String])? {
+        guard let park = viewModel.filterPark else { return nil }
+        let roster = viewModel.rideRoster(for: park)
+        guard !roster.isEmpty else { return nil }
+        return ParkBingo.progress(roster: roster, riddenThisTrip: currentTripRiddenNames)
+    }
+
     private var panelHeader: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 3) {
@@ -891,6 +918,17 @@ struct ParkMapView: View {
                 if let quietestHourText {
                     Text(quietestHourText)
                         .font(.caption2).foregroundStyle(.secondary)
+                }
+                if let bingo = parkBingo {
+                    Button {
+                        showParkBingo = true
+                    } label: {
+                        Label("Park Bingo: \(bingo.ridden.count) of \(bingo.ridden.count + bingo.remaining.count) this trip",
+                              systemImage: "checklist")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.purple)
+                    }
+                    .buttonStyle(.plain)
                 }
                 if let refreshed = viewModel.lastRefreshed {
                     TimelineView(.periodic(from: .now, by: 30)) { ctx in
