@@ -179,8 +179,7 @@ struct VisitHistoryView: View {
         HStack(spacing: 4) {
             Image(systemName: spend.perDayDifference <= 0 ? "arrow.down.right" : "arrow.up.right")
                 .foregroundStyle(spend.perDayDifference <= 0 ? Color.green : Color.orange)
-            Text("\(spend.currentPerDay, format: .currency(code: appState.selectedResort.currencyCode))/day so far, vs. "
-                + "\(spend.previousPerDay, format: .currency(code: appState.selectedResort.currencyCode))/day last trip")
+            Text("\(spend.currentPerDay, format: .currency(code: appState.selectedResort.currencyCode))/day so far, vs. \(spend.previousPerDay, format: .currency(code: appState.selectedResort.currencyCode))/day last trip")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
