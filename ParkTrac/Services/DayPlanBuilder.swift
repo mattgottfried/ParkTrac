@@ -76,6 +76,38 @@ struct DayPlan: Equatable {
     var totalWaitMinutes: Int { stops.filter { $0.kind == "ride" }.reduce(0) { $0 + $1.waitMinutes } }
 }
 
+// MARK: - Plan gap finder (pure)
+// A built plan can still have dead time between stops (walking doesn't fill a 40-minute dining
+// window). Rather than leave it unexplained, flag it and suggest a nearby short-wait ride to fill
+// it — the same instinct as Easy Wins, applied to the planner's own schedule.
+
+enum PlanGapFinder {
+    /// Below this, it's just normal buffer time, not worth flagging.
+    static let minGapMinutes = 20
+    /// Minutes to leave for walking to the filler ride and back.
+    static let roundTripBuffer = 10
+
+    struct Gap {
+        let start: Date
+        let end: Date
+        var minutes: Int { Int(end.timeIntervalSince(start) / 60) }
+    }
+
+    /// `stops` as (start, end) pairs, already in chronological order.
+    static func gaps(stops: [(start: Date, end: Date)], minGapMinutes: Int = minGapMinutes) -> [Gap] {
+        zip(stops, stops.dropFirst())
+            .map { Gap(start: $0.end, end: $1.start) }
+            .filter { $0.minutes >= minGapMinutes }
+    }
+
+    /// The shortest-wait candidate that still leaves room to walk there and back within the gap.
+    static func fill(gap: Gap, candidates: [(name: String, waitMinutes: Int)]) -> (name: String, waitMinutes: Int)? {
+        candidates
+            .filter { $0.waitMinutes + roundTripBuffer <= gap.minutes }
+            .min { $0.waitMinutes < $1.waitMinutes }
+    }
+}
+
 // MARK: - Per-ride wait profile
 
 enum RideProfile {

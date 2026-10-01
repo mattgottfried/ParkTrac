@@ -303,6 +303,56 @@ enum RestStopSuggestion {
     }
 }
 
+// MARK: - Sensory heads-up (pure)
+// Picking a ride without surprises — loud noises, darkness, or a sudden drop/launch/turn — is
+// useful for anyone pacing a day without a return-time pass, not just a formal accessibility
+// need. Best-effort and NOT exhaustive: sourced from Disney's own published Sensory Experience
+// Guide descriptions and widely-documented ride descriptions (Oct 2026), covering only the most
+// commonly-flagged attractions. No claim is made about any ride not listed here — absence just
+// means it wasn't researched, not that it's quiet. Always defer to the parks' own live sensory
+// guides (Disney/Universal apps) for anything safety-relevant.
+
+struct SensoryFlags: OptionSet {
+    let rawValue: Int
+    static let loud = SensoryFlags(rawValue: 1 << 0)
+    static let dark = SensoryFlags(rawValue: 1 << 1)
+    /// A sudden drop, launch, or turn — not just "fast," but a jump-scare-style moment.
+    static let suddenMoment = SensoryFlags(rawValue: 1 << 2)
+
+    var labels: [String] {
+        var out: [String] = []
+        if contains(.loud) { out.append("Loud") }
+        if contains(.dark) { out.append("Dark") }
+        if contains(.suddenMoment) { out.append("Sudden moments") }
+        return out
+    }
+}
+
+enum RideSensory {
+    private static let table: [String: SensoryFlags] = {
+        let entries: [String: SensoryFlags] = [
+            "Space Mountain": [.dark, .suddenMoment],
+            "Rock 'n' Roller Coaster Starring Aerosmith": [.loud, .dark, .suddenMoment],
+            "Guardians of the Galaxy: Cosmic Rewind": [.loud, .dark],
+            "TRON Lightcycle / Run": [.loud, .dark],
+            "The Twilight Zone Tower of Terror": [.dark, .suddenMoment],
+            "DINOSAUR": [.loud, .dark, .suddenMoment],
+            "Haunted Mansion": [.dark],
+            "Avatar Flight of Passage": [.dark],
+            "Expedition Everest - Legend of the Forbidden Mountain": [.dark, .suddenMoment],
+            "Revenge of the Mummy": [.loud, .dark],
+            "Harry Potter and the Escape from Gringotts": [.dark, .suddenMoment],
+        ]
+        return Dictionary(uniqueKeysWithValues: entries.map { (RideMetadata.normalize($0.key), $0.value) })
+    }()
+
+    static func flags(for name: String) -> SensoryFlags {
+        let key = RideMetadata.normalize(name)
+        if let exact = table[key] { return exact }
+        return table.first(where: { $0.key.count >= 10 && key.contains($0.key) })?.value ?? []
+    }
+}
+
 // MARK: - Ride Metadata Dictionary
 // Keyed by exact ride name as returned by the themeparks.wiki API.
 

@@ -468,7 +468,18 @@ struct RideDetailSheet: View {
                 if RideMetadata.hasSingleRider(name: ride.name, resort: parkGroup) {
                     infoChip(label: "Single Rider", systemImage: "person.fill", color: .blue)
                 }
+                ForEach(RideSensory.flags(for: ride.name).labels, id: \.self) { label in
+                    infoChip(label: label, systemImage: sensoryIcon(label), color: .secondary)
+                }
             }
+        }
+    }
+
+    private func sensoryIcon(_ label: String) -> String {
+        switch label {
+        case "Loud": return "speaker.wave.3.fill"
+        case "Dark": return "moon.fill"
+        default: return "exclamationmark.triangle.fill"
         }
     }
 

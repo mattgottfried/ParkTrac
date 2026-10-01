@@ -369,7 +369,7 @@ struct SmartPlannerView: View {
                 }
             }
 
-            ForEach(schedule) { slot in
+            ForEach(Array(schedule.enumerated()), id: \.element.id) { index, slot in
                 HStack(spacing: 12) {
                     VStack(spacing: 2) {
                         Text(slot.startTime, style: .time)
@@ -401,6 +401,10 @@ struct SmartPlannerView: View {
                     waitBadge(slot)
                 }
                 .padding(.vertical, 2)
+
+                if index < schedule.count - 1 {
+                    gapRow(after: slot, before: schedule[index + 1])
+                }
             }
 
             Section {
@@ -778,6 +782,34 @@ struct SmartPlannerView: View {
 
     private func slotEndTime(_ slot: ScheduledSlot) -> Date {
         slot.startTime.addingTimeInterval(Double(slot.totalDurationMinutes) * 60)
+    }
+
+    /// Free time between two consecutive stops, with a nearby short-wait ride suggested to fill it.
+    @ViewBuilder
+    private func gapRow(after slot: ScheduledSlot, before next: ScheduledSlot) -> some View {
+        let gap = PlanGapFinder.Gap(start: slotEndTime(slot), end: next.startTime)
+        if gap.minutes >= PlanGapFinder.minGapMinutes {
+            let plannedIds = Set(schedule.compactMap(\.rideId))
+            let candidates = lastRides
+                .filter { !plannedIds.contains($0.id) }
+                .map { (name: $0.name, waitMinutes: $0.wait(at: gap.start)) }
+            let suggestion = PlanGapFinder.fill(gap: gap, candidates: candidates)
+            HStack(spacing: 12) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.caption).foregroundStyle(.blue)
+                    .frame(width: 52, alignment: .trailing)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(gap.minutes) min free")
+                        .font(.caption.weight(.semibold)).foregroundStyle(.blue)
+                    if let suggestion {
+                        Text("Try \(suggestion.name) — ~\(suggestion.waitMinutes)m wait")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+            }
+            .padding(.vertical, 2)
+        }
     }
 
     private func kindIcon(_ kind: String) -> String {

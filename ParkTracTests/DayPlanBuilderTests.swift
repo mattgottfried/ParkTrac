@@ -137,4 +137,31 @@ final class DayPlanBuilderTests: XCTestCase {
         ], unscheduled: [])
         XCTAssertEqual(plan.totalWaitMinutes, 60)
     }
+
+    // MARK: Plan gap finder
+
+    func testFindsAGapBetweenConsecutiveStops() {
+        let stops = [(start: at(10), end: at(10, 30)), (start: at(11, 15), end: at(11, 45))]
+        let gaps = PlanGapFinder.gaps(stops: stops)
+        XCTAssertEqual(gaps.count, 1)
+        XCTAssertEqual(gaps[0].minutes, 45)
+    }
+
+    func testNoGapBelowTheMinimum() {
+        let stops = [(start: at(10), end: at(10, 30)), (start: at(10, 40), end: at(11))]
+        XCTAssertTrue(PlanGapFinder.gaps(stops: stops).isEmpty)
+    }
+
+    func testFillPicksTheShortestWaitThatLeavesRoomToWalkBackAndForth() {
+        let gap = PlanGapFinder.Gap(start: at(10), end: at(10, 30))  // 30 min
+        let candidates = [(name: "A", waitMinutes: 25), (name: "B", waitMinutes: 10), (name: "C", waitMinutes: 5)]
+        let fill = PlanGapFinder.fill(gap: gap, candidates: candidates)
+        XCTAssertEqual(fill?.name, "C")
+    }
+
+    func testNoFillWhenNothingLeavesEnoughRoundTripTime() {
+        let gap = PlanGapFinder.Gap(start: at(10), end: at(10, 20))  // 20 min
+        let candidates = [(name: "A", waitMinutes: 15)]  // 15 + 10 buffer > 20
+        XCTAssertNil(PlanGapFinder.fill(gap: gap, candidates: candidates))
+    }
 }

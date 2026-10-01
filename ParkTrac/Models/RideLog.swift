@@ -74,6 +74,28 @@ struct TripComparison: Equatable {
     var rideDifference: Int { currentRides - priorRidesByThisPoint }
 }
 
+/// Minutes spent standing in line *today*: completed rides (the timed actual wait, else the
+/// posted one) plus the currently running wait-timer, if any — a live, running number, unlike
+/// `DayRecap.minutesInLine` which is only read after the fact.
+enum StandingTime {
+    static func minutes(today: [(posted: Int?, actual: Int?)], activeTimerStart: Date? = nil, now: Date = .now) -> Int {
+        let completed = today.reduce(0) { $0 + ($1.actual ?? $1.posted ?? 0) }
+        let live = activeTimerStart.map { max(0, Int(now.timeIntervalSince($0) / 60)) } ?? 0
+        return completed + live
+    }
+}
+
+/// A checklist challenge — every ride in a park, ridden this trip (not lifetime), matched by name
+/// against the park's actual roster so a bingo only ever counts rides that exist there.
+enum ParkBingo {
+    static func progress(roster: [String], riddenThisTrip: Set<String>) -> (ridden: [String], remaining: [String]) {
+        let rosterSet = Set(roster)
+        let ridden = rosterSet.intersection(riddenThisTrip).sorted()
+        let remaining = rosterSet.subtracting(riddenThisTrip).sorted()
+        return (ridden, remaining)
+    }
+}
+
 /// The ride ridden most across all logs, ties broken by name for stable output (pure).
 enum MostRiddenRide {
     static func pick(counts: [String: Int]) -> (name: String, count: Int)? {

@@ -148,4 +148,20 @@ final class RideHeightTests: XCTestCase {
             rides: [(name: "Jungle Cruise", isOperating: true, waitMinutes: 2)],
             resort: .disney))
     }
+
+    // MARK: Sensory heads-up
+
+    func testSensoryFlagsForAKnownRide() {
+        let flags = RideSensory.flags(for: "Space Mountain")
+        XCTAssertEqual(flags.labels, ["Dark", "Sudden moments"])
+    }
+
+    func testSensoryFlagsMatchAnApiNameVariant() {
+        XCTAssertTrue(RideSensory.flags(for: "Rock 'n' Roller Coaster Starring Aerosmith Presented by Firehouse Rocks")
+            .contains(.loud))
+    }
+
+    func testNoSensoryFlagsForAnUnresearchedRide() {
+        XCTAssertTrue(RideSensory.flags(for: "Dumbo the Flying Elephant").isEmpty)
+    }
 }
