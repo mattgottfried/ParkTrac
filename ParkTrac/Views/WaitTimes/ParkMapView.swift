@@ -673,8 +673,8 @@ struct ParkMapView: View {
             TipBoardView()
         }
         .sheet(isPresented: $showParkBingo) {
-            if let park = viewModel.filterPark, let bingo = parkBingo {
-                ParkBingoSheet(parkName: park.name, ridden: bingo.ridden, remaining: bingo.remaining)
+            if let bingo = parkBingo {
+                ParkBingoSheet(title: bingo.title, ridden: bingo.ridden, remaining: bingo.remaining, byType: typeBingo)
             }
         }
         .alert("Need a Break?", isPresented: $showRestStop) {
@@ -863,24 +863,38 @@ struct ParkMapView: View {
         return RestStopSuggestion.pick(shows: shows, rides: rides, resort: viewModel.selectedGroup)
     }
 
-    /// Ride names at the focused park ridden since the current trip started (not lifetime) —
-    /// trips are inferred from gaps between logged days, same as Visit History.
-    private var currentTripRiddenNames: Set<String> {
-        guard let park = viewModel.filterPark else { return [] }
+    /// Ride names ridden since the current trip started (not lifetime) — trips are inferred from
+    /// gaps between logged days, same as Visit History. `parkName` nil = every park at the resort.
+    private func currentTripRiddenNames(parkName: String?) -> Set<String> {
         let cal = Calendar.current
         let resortLogs = allRideLogs.filter { $0.resort == viewModel.selectedGroup.rawValue }
         var byDay: [Date: [RideLog]] = [:]
         for log in resortLogs { byDay[cal.startOfDay(for: log.riddenAt), default: []].append(log) }
         let visitDays = byDay.map { VisitDay(id: $0.key, resort: viewModel.selectedGroup.rawValue, entries: $0.value) }
         guard let trip = VisitTripGrouper.group(visitDays).last else { return [] }
-        return Set(trip.days.flatMap { $0.entries.filter { $0.parkName == park.name }.map(\.rideName) })
+        let entries = trip.days.flatMap(\.entries)
+        let scoped = parkName.map { name in entries.filter { $0.parkName == name } } ?? entries
+        return Set(scoped.map(\.rideName))
     }
 
-    private var parkBingo: (ridden: [String], remaining: [String])? {
-        guard let park = viewModel.filterPark else { return nil }
+    /// Park Bingo when a single park is in focus, else Resort Bingo across every park in the group.
+    private var parkBingo: (title: String, ridden: [String], remaining: [String])? {
+        let park = viewModel.filterPark
         let roster = viewModel.rideRoster(for: park)
         guard !roster.isEmpty else { return nil }
-        return ParkBingo.progress(roster: roster, riddenThisTrip: currentTripRiddenNames)
+        let title = park?.name ?? "\(viewModel.selectedGroup.rawValue) (All Parks)"
+        let progress = ParkBingo.progress(roster: roster, riddenThisTrip: currentTripRiddenNames(parkName: park?.name))
+        return (title, progress.ridden, progress.remaining)
+    }
+
+    /// Breakdown of the current Bingo scope by ride type ("Coasters: 3 of 7") — only rides with
+    /// known metadata are categorized.
+    private var typeBingo: [(type: RideType, ridden: Int, total: Int)] {
+        guard let bingo = parkBingo else { return [] }
+        let typed = (bingo.ridden + bingo.remaining).compactMap { name -> (name: String, type: RideType)? in
+            RideMetadata.info(for: name, resort: viewModel.selectedGroup).map { (name, $0.type) }
+        }
+        return TypeBingo.progress(roster: typed, riddenThisTrip: Set(bingo.ridden))
     }
 
     private var panelHeader: some View {
@@ -923,7 +937,7 @@ struct ParkMapView: View {
                     Button {
                         showParkBingo = true
                     } label: {
-                        Label("Park Bingo: \(bingo.ridden.count) of \(bingo.ridden.count + bingo.remaining.count) this trip",
+                        Label("\(viewModel.filterPark == nil ? "Resort" : "Park") Bingo: \(bingo.ridden.count) of \(bingo.ridden.count + bingo.remaining.count) this trip",
                               systemImage: "checklist")
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(.purple)
@@ -1088,6 +1102,115 @@ struct ParkMapView: View {
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("\(ride.name), \(ride.waitMinutes ?? 0) minute wait")
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.bottom, 6)
+            }
+        }
+    }
+
+    /// Short wait and a short walk from here right now — Easy Wins narrowed by actual distance.
+    private var nearbyShortStrip: some View {
+        let excludeIds = Set(GoodTimeService.shared.ranked(rides: displayedRides, mustDo: appState.wishList).map(\.ride.id))
+            .union(EasyWins.pick(rides: displayedRides, excluding: []).map(\.id))
+        let candidates = displayedRides.map { ride in
+            (id: ride.id, waitMinutes: ride.waitMinutes, isOperating: ride.isOperating, walkMinutes: walkMinutes(to: ride))
+        }
+        let pickedIds = NearbyShort.pick(rides: candidates, excluding: excludeIds)
+        let byId = Dictionary(displayedRides.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let picks = pickedIds.compactMap { byId[$0] }
+        return Group {
+            if !picks.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "figure.walk").foregroundStyle(.teal)
+                        Text("Nearby & Short").foregroundStyle(.primary)
+                    }
+                    .font(.subheadline.weight(.bold))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(picks) { ride in
+                                Button { selectedRide = ride } label: {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(ride.name)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundStyle(.primary)
+                                            .lineLimit(2)
+                                            .multilineTextAlignment(.leading)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                        Spacer(minLength: 0)
+                                        HStack(spacing: 6) {
+                                            Text("\(ride.waitMinutes ?? 0) min")
+                                                .font(.title3.weight(.bold))
+                                                .foregroundStyle(.teal)
+                                            if let walk = walkMinutes(to: ride) {
+                                                Label("\(walk)m", systemImage: "figure.walk")
+                                                    .font(.caption2).foregroundStyle(.secondary)
+                                            }
+                                        }
+                                    }
+                                    .frame(width: 140, alignment: .leading)
+                                    .frame(minHeight: 78)
+                                    .padding(12)
+                                    .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .stroke(Color.teal.opacity(0.4), lineWidth: 1.5))
+                                    .shadow(color: .black.opacity(0.08), radius: 3, y: 1)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("\(ride.name), \(ride.waitMinutes ?? 0) minute wait, \(walkMinutes(to: ride).map(String.init) ?? "unknown") minute walk")
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.bottom, 6)
+            }
+        }
+    }
+
+    /// A quick list of currently-down rides, so you don't walk over to one that's broken.
+    private var downRidesStrip: some View {
+        let downRides = displayedRides.filter { $0.status == "DOWN" }
+        return Group {
+            if !downRides.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        Text("Down Right Now").foregroundStyle(.primary)
+                    }
+                    .font(.subheadline.weight(.bold))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(downRides) { ride in
+                                Button { selectedRide = ride } label: {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(ride.name)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundStyle(.primary)
+                                            .lineLimit(2)
+                                            .multilineTextAlignment(.leading)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                        Spacer(minLength: 0)
+                                        Label("Down", systemImage: "exclamationmark.triangle.fill")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.orange)
+                                    }
+                                    .frame(width: 140, alignment: .leading)
+                                    .frame(minHeight: 78)
+                                    .padding(12)
+                                    .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .stroke(Color.orange.opacity(0.4), lineWidth: 1.5))
+                                    .shadow(color: .black.opacity(0.08), radius: 3, y: 1)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("\(ride.name), currently down")
                             }
                         }
                         .padding(.vertical, 2)
@@ -1287,8 +1410,10 @@ struct ParkMapView: View {
                     ScrollView {
                         LazyVStack(spacing: 8) {
                             NextUpCard(resort: viewModel.selectedGroup)
+                            downRidesStrip
                             goodTimeStrip
                             easyWinsStrip
+                            nearbyShortStrip
                             ForEach(displayedRides) { ride in
                                 RideCardView(ride: ride, theme: theme, walkMinutes: walkMinutes(to: ride),
                                              returnPassShort: viewModel.selectedGroup.returnPassNames.short,

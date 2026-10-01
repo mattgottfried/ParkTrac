@@ -254,8 +254,12 @@ final class WaitTimesViewModel {
     var rides: [DisplayRide] { allRides }
 
     /// Every ride at a park (minus non-ride attractions like castles/trails), for Park Bingo.
-    func rideRoster(for park: ParkEntity) -> [String] {
-        allRides.filter { $0.parkId == park.id && !blockedAttractions.contains($0.name) }.map(\.name)
+    /// Pass nil for the whole resort's roster across every park in the current group.
+    func rideRoster(for park: ParkEntity? = nil) -> [String] {
+        allRides
+            .filter { park == nil || $0.parkId == park?.id }
+            .filter { !blockedAttractions.contains($0.name) }
+            .map(\.name)
     }
 
     /// Map annotations: operating rides only (no closed/blocked markers on map)

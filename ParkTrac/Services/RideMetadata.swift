@@ -303,6 +303,26 @@ enum RestStopSuggestion {
     }
 }
 
+// MARK: - Ride-type completion challenge (pure)
+// "Ride every coaster this trip" — the same bingo mechanic as `ParkBingo`, bucketed by `RideType`
+// instead of by park. Only rides with known metadata can be categorized; others are left out of
+// the challenge entirely (not counted as unridden against a type they aren't in).
+
+enum TypeBingo {
+    static func progress(roster: [(name: String, type: RideType)], riddenThisTrip: Set<String>)
+        -> [(type: RideType, ridden: Int, total: Int)] {
+        var byType: [RideType: (ridden: Int, total: Int)] = [:]
+        for r in roster {
+            var entry = byType[r.type] ?? (ridden: 0, total: 0)
+            entry.total += 1
+            if riddenThisTrip.contains(r.name) { entry.ridden += 1 }
+            byType[r.type] = entry
+        }
+        return byType.map { (type: $0.key, ridden: $0.value.ridden, total: $0.value.total) }
+            .sorted { $0.type.rawValue < $1.type.rawValue }
+    }
+}
+
 // MARK: - Sensory heads-up (pure)
 // Picking a ride without surprises — loud noises, darkness, or a sudden drop/launch/turn — is
 // useful for anyone pacing a day without a return-time pass, not just a formal accessibility

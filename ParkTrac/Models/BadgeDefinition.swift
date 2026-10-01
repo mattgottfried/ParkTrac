@@ -10,6 +10,41 @@ struct BadgeDefinition: Identifiable {
     let isEarned: ([BucketRestaurant], [HotelStay], [RideLog]) -> Bool
 }
 
+// MARK: - Standby-avoidance badge rules (pure)
+// Everything a standby-wait-avoiding AP holder already does without a return-time pass — ride
+// at rope drop, ride late, favor short waits, beat the posted sign — earns its own badge, built
+// only from fields RideLog already has (no new schema).
+
+enum StandbyBadgeRules {
+    static let shortWaitThreshold = 15
+    static let earlyBirdHour = 9
+    static let nightOwlHour = 21
+    static let beatTheWaitMargin = 20
+    static let shortWaitStreakCount = 10
+
+    static func isEarlyBird(rides: [(riddenAt: Date, waitMinutes: Int?)], calendar: Calendar = .current) -> Bool {
+        rides.contains { ride in
+            calendar.component(.hour, from: ride.riddenAt) < earlyBirdHour
+                && (ride.waitMinutes ?? Int.max) <= shortWaitThreshold
+        }
+    }
+
+    static func isNightOwl(rides: [Date], calendar: Calendar = .current) -> Bool {
+        rides.contains { calendar.component(.hour, from: $0) >= nightOwlHour }
+    }
+
+    static func hasShortWaitStreak(waitMinutes: [Int?]) -> Bool {
+        waitMinutes.filter { ($0 ?? Int.max) <= shortWaitThreshold }.count >= shortWaitStreakCount
+    }
+
+    static func hasBeatTheWait(rides: [(posted: Int?, actual: Int?)]) -> Bool {
+        rides.contains { ride in
+            guard let posted = ride.posted, let actual = ride.actual else { return false }
+            return posted - actual >= beatTheWaitMargin
+        }
+    }
+}
+
 // MARK: - All Badges
 
 let allBadges: [BadgeDefinition] = [
@@ -244,6 +279,48 @@ let allBadges: [BadgeDefinition] = [
             var counts: [String: Int] = [:]
             for log in rides { counts[log.rideId, default: 0] += 1 }
             return counts.values.contains { $0 >= 10 }
+        }
+    ),
+
+    // MARK: Standby-avoidance badges
+    BadgeDefinition(
+        id: "early_bird",
+        title: "Early Bird",
+        description: "Rode something short before 9 AM.",
+        howToEarn: "Log a ride with Rode It! before 9 AM with a 15 min or shorter wait \u{2014} classic rope drop timing.",
+        systemImage: "sunrise.fill",
+        color: .orange,
+        isEarned: { _, _, rides in
+            StandbyBadgeRules.isEarlyBird(rides: rides.map { (riddenAt: $0.riddenAt, waitMinutes: $0.waitMinutes) })
+        }
+    ),
+    BadgeDefinition(
+        id: "night_owl",
+        title: "Night Owl",
+        description: "Rode something after 9 PM.",
+        howToEarn: "Log a ride with Rode It! at 9 PM or later.",
+        systemImage: "moon.stars.fill",
+        color: .indigo,
+        isEarned: { _, _, rides in StandbyBadgeRules.isNightOwl(rides: rides.map(\.riddenAt)) }
+    ),
+    BadgeDefinition(
+        id: "short_wait_streak",
+        title: "Short Wait Streak",
+        description: "Logged 10 rides with a 15 min or shorter wait.",
+        howToEarn: "Log 10 rides with Rode It! where the wait was 15 minutes or less.",
+        systemImage: "bolt.fill",
+        color: .green,
+        isEarned: { _, _, rides in StandbyBadgeRules.hasShortWaitStreak(waitMinutes: rides.map(\.waitMinutes)) }
+    ),
+    BadgeDefinition(
+        id: "beat_the_wait",
+        title: "Beat the Wait",
+        description: "Timed a ride that beat its posted wait by 20+ minutes.",
+        howToEarn: "Use the wait stopwatch on a ride where your actual wait came in 20+ minutes under the posted sign.",
+        systemImage: "stopwatch.fill",
+        color: .teal,
+        isEarned: { _, _, rides in
+            StandbyBadgeRules.hasBeatTheWait(rides: rides.map { (posted: $0.waitMinutes, actual: $0.actualWaitMinutes) })
         }
     ),
 ]

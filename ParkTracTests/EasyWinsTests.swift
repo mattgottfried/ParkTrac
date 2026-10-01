@@ -28,3 +28,31 @@ final class EasyWinsTests: XCTestCase {
         XCTAssertEqual(EasyWins.pick(rides: rides, limit: 3).count, 3)
     }
 }
+
+/// Nearby & Short: Easy Wins narrowed by actual walking distance.
+final class NearbyShortTests: XCTestCase {
+    private typealias Candidate = (id: String, waitMinutes: Int?, isOperating: Bool, walkMinutes: Int?)
+
+    func testPicksNearestFirstAmongQualifyingRides() {
+        let rides: [Candidate] = [
+            ("A", 15, true, 4), ("B", 10, true, 2), ("C", 15, true, 2),
+        ]
+        // B and C tie on walk distance (2 min); C's shorter wait breaks the tie.
+        XCTAssertEqual(NearbyShort.pick(rides: rides), ["C", "B", "A"])
+    }
+
+    func testExcludesTooFarOrTooLongAWait() {
+        let rides: [Candidate] = [("Far", 5, true, 20), ("Busy", 60, true, 2)]
+        XCTAssertTrue(NearbyShort.pick(rides: rides).isEmpty)
+    }
+
+    func testExcludesRidesWithNoKnownWalkTime() {
+        let rides: [Candidate] = [("Unknown", 5, true, nil)]
+        XCTAssertTrue(NearbyShort.pick(rides: rides).isEmpty)
+    }
+
+    func testExcludesGivenIdsAndDownRides() {
+        let rides: [Candidate] = [("A", 5, true, 2), ("B", 5, false, 2)]
+        XCTAssertTrue(NearbyShort.pick(rides: rides, excluding: ["A"]).isEmpty)
+    }
+}

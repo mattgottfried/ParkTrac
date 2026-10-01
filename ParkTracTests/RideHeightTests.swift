@@ -164,4 +164,23 @@ final class RideHeightTests: XCTestCase {
     func testNoSensoryFlagsForAnUnresearchedRide() {
         XCTAssertTrue(RideSensory.flags(for: "Dumbo the Flying Elephant").isEmpty)
     }
+
+    // MARK: Ride-type completion challenge
+
+    func testTypeBingoGroupsAndCountsByType() {
+        let roster: [(name: String, type: RideType)] = [
+            ("Space Mountain", .coaster), ("Big Thunder", .coaster), ("Haunted Mansion", .darkRide),
+        ]
+        let progress = TypeBingo.progress(roster: roster, riddenThisTrip: ["Space Mountain"])
+        let coaster = progress.first { $0.type == .coaster }
+        let darkRide = progress.first { $0.type == .darkRide }
+        XCTAssertEqual(coaster?.ridden, 1)
+        XCTAssertEqual(coaster?.total, 2)
+        XCTAssertEqual(darkRide?.ridden, 0)
+        XCTAssertEqual(darkRide?.total, 1)
+    }
+
+    func testTypeBingoEmptyWithNoRoster() {
+        XCTAssertTrue(TypeBingo.progress(roster: [], riddenThisTrip: []).isEmpty)
+    }
 }
