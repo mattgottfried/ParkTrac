@@ -124,6 +124,38 @@ enum YearToDateSpend {
     }
 }
 
+/// This trip's spend-per-day so far vs. the previous trip's, over the same day-count — the money
+/// counterpart to `VisitTripGrouper.compareLatestToPrevious`.
+struct SpendComparison: Equatable {
+    let currentPerDay: Double
+    let previousPerDay: Double
+    var perDayDifference: Double { currentPerDay - previousPerDay }
+}
+
+enum SpendPaceComparer {
+    /// Purchases are matched to a trip by falling within its first-to-Nth-visit-day calendar span.
+    static func compare(trips: [VisitTrip], purchases: [(amount: Double, date: Date)],
+                        calendar: Calendar = .current) -> SpendComparison? {
+        guard trips.count >= 2, let current = trips.last else { return nil }
+        let previous = trips[trips.count - 2]
+        let previousThroughSamePoint = previous.days.prefix(current.dayCount)
+        guard current.dayCount > 0, let previousNthDay = previousThroughSamePoint.last,
+              let currentStart = current.days.first?.id, let previousStart = previous.days.first?.id else { return nil }
+
+        func spend(from start: Date, through end: Date) -> Double {
+            guard let dayAfterEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: end)) else { return 0 }
+            return purchases
+                .filter { $0.date >= calendar.startOfDay(for: start) && $0.date < dayAfterEnd }
+                .map(\.amount).reduce(0, +)
+        }
+
+        let currentSpend = spend(from: currentStart, through: current.lastDay)
+        let previousSpend = spend(from: previousStart, through: previousNthDay.id)
+        return SpendComparison(currentPerDay: currentSpend / Double(current.dayCount),
+                               previousPerDay: previousSpend / Double(previousThroughSamePoint.count))
+    }
+}
+
 // MARK: - Service
 
 @Observable

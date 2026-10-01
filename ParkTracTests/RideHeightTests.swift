@@ -183,4 +183,19 @@ final class RideHeightTests: XCTestCase {
     func testTypeBingoEmptyWithNoRoster() {
         XCTAssertTrue(TypeBingo.progress(roster: [], riddenThisTrip: []).isEmpty)
     }
+
+    // MARK: Thrill-level completion challenge
+
+    func testThrillBingoOrdersFamilyToExtreme() {
+        let roster: [(name: String, level: ThrillLevel)] = [
+            ("A", .extreme), ("B", .family), ("C", .thrilling),
+        ]
+        let progress = ThrillBingo.progress(roster: roster, riddenThisTrip: ["A"])
+        XCTAssertEqual(progress.map(\.level), [.family, .thrilling, .extreme])
+        XCTAssertEqual(progress.first { $0.level == .extreme }?.ridden, 1)
+    }
+
+    func testThrillBingoEmptyWithNoRoster() {
+        XCTAssertTrue(ThrillBingo.progress(roster: [], riddenThisTrip: []).isEmpty)
+    }
 }

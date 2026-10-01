@@ -31,4 +31,20 @@ final class MustDoDownTests: XCTestCase {
         let json = String(decoding: try JSONEncoder().encode(w), as: UTF8.self)
         XCTAssertTrue(json.contains(#""kind":"down""#), json)
     }
+
+    // MARK: Ride comeback message
+
+    func testComebackMessageIncludesDowntimeAndFlagsAShortReset() {
+        let message = RideComeback.message(wait: 15, downtimeMinutes: 23)
+        XCTAssertEqual(message, "Your Must-Do is running again after 23 min down — posted wait 15 min — reset short!.")
+    }
+
+    func testComebackMessageWithoutAShortReset() {
+        let message = RideComeback.message(wait: 60, downtimeMinutes: 23)
+        XCTAssertEqual(message, "Your Must-Do is running again after 23 min down — posted wait 60 min.")
+    }
+
+    func testComebackMessageFallsBackWithNoExtraData() {
+        XCTAssertEqual(RideComeback.message(wait: nil, downtimeMinutes: nil), "Your Must-Do is running again.")
+    }
 }

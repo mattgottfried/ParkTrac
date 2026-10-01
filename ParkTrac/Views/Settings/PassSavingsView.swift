@@ -8,6 +8,16 @@ enum PassSavingsCalculator {
         guard passCost > 0, visits > 0 else { return nil }
         return passCost / Double(visits)
     }
+
+    /// Visits still needed to fully recover the pass cost, extrapolating from the average savings
+    /// per visit so far. nil once already broken even, or without enough data (no visits, or no
+    /// savings yet) to extrapolate from.
+    static func visitsToBreakEven(passCost: Double, totalSavings: Double, visits: Int) -> Int? {
+        guard passCost > totalSavings, visits > 0 else { return nil }
+        let avgPerVisit = totalSavings / Double(visits)
+        guard avgPerVisit > 0 else { return nil }
+        return Int(((passCost - totalSavings) / avgPerVisit).rounded(.up))
+    }
 }
 
 struct PassSavingsView: View {
@@ -323,6 +333,16 @@ struct PassSavingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Text(perVisit, format: .currency(code: "USD"))
+                    .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            }
+        }
+
+        if let visitsLeft = PassSavingsCalculator.visitsToBreakEven(passCost: passCost, totalSavings: totalSavings, visits: visitCount) {
+            HStack {
+                Label("To break even", systemImage: "flag.checkered")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text("~\(visitsLeft) more visit\(visitsLeft == 1 ? "" : "s")")
                     .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             }
         }

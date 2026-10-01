@@ -323,6 +323,25 @@ enum TypeBingo {
     }
 }
 
+// MARK: - Thrill-level completion challenge (pure)
+// "Ride every Extreme thrill ride this trip" — same bingo mechanic as `TypeBingo`, bucketed by
+// `ThrillLevel` and ordered family → extreme rather than alphabetically.
+
+enum ThrillBingo {
+    static func progress(roster: [(name: String, level: ThrillLevel)], riddenThisTrip: Set<String>)
+        -> [(level: ThrillLevel, ridden: Int, total: Int)] {
+        var byLevel: [ThrillLevel: (ridden: Int, total: Int)] = [:]
+        for r in roster {
+            var entry = byLevel[r.level] ?? (ridden: 0, total: 0)
+            entry.total += 1
+            if riddenThisTrip.contains(r.name) { entry.ridden += 1 }
+            byLevel[r.level] = entry
+        }
+        let order: [ThrillLevel] = [.family, .moderate, .thrilling, .extreme]
+        return order.compactMap { level in byLevel[level].map { (level: level, ridden: $0.ridden, total: $0.total) } }
+    }
+}
+
 // MARK: - Sensory heads-up (pure)
 // Picking a ride without surprises — loud noises, darkness, or a sudden drop/launch/turn — is
 // useful for anyone pacing a day without a return-time pass, not just a formal accessibility

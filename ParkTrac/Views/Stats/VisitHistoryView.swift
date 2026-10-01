@@ -4,6 +4,7 @@ import SwiftData
 struct VisitHistoryView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RideLog.riddenAt, order: .reverse) private var allLogs: [RideLog]
+    @Query private var allPurchases: [PurchaseLog]
 
     private var resortLogs: [RideLog] {
         allLogs.filter { $0.resort == appState.selectedResort.rawValue && !UndoDeleteCenter.shared.isHidden($0) }
@@ -39,6 +40,17 @@ struct VisitHistoryView: View {
         return counts.max { $0.value < $1.value }?.key
     }
 
+    /// By rides logged (not days visited, like `mostVisitedPark` above) — reuses `MostRiddenRide`'s
+    /// generic "highest count" logic against park names instead of ride names.
+    private var mostRiddenPark: (name: String, count: Int)? {
+        MostRiddenRide.pick(counts: Dictionary(resortLogs.map { ($0.parkName, 1) }, uniquingKeysWith: +))
+    }
+
+    /// Consecutive years (ending at the most recent one with a logged visit) — "5 years running."
+    private var annualStreak: Int {
+        AnnualStreak.count(years: Set(resortLogs.map { Calendar.current.component(.year, from: $0.riddenAt) }))
+    }
+
     private var avgRidesPerVisit: Double? {
         guard !visitDays.isEmpty else { return nil }
         return Double(resortLogs.count) / Double(visitDays.count)
@@ -47,6 +59,12 @@ struct VisitHistoryView: View {
     /// Trips are inferred from the dates actually logged — no explicit trip boundary exists.
     private var trips: [VisitTrip] { VisitTripGrouper.group(visitDays) }
     private var tripComparison: TripComparison? { VisitTripGrouper.compareLatestToPrevious(trips) }
+    private var spendComparison: SpendComparison? {
+        let purchases = allPurchases
+            .filter { $0.resort == appState.selectedResort.rawValue }
+            .map { (amount: $0.amount, date: $0.date) }
+        return SpendPaceComparer.compare(trips: trips, purchases: purchases)
+    }
 
     var body: some View {
         List {
@@ -75,11 +93,23 @@ struct VisitHistoryView: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                     .padding(.vertical, 4)
+
+                    if let park = mostRiddenPark {
+                        Label("Most rides at \(park.name) — \(park.count)", systemImage: "map.fill")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    if annualStreak >= 2 {
+                        Label("\(annualStreak) years running", systemImage: "flame.fill")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
                 }
 
                 if let comparison = tripComparison, let trip = trips.last, trip.dayCount > 0 {
                     Section {
                         tripComparisonCard(comparison, dayCount: trip.dayCount)
+                        if let spend = spendComparison {
+                            spendComparisonRow(spend)
+                        }
                     }
                 }
 
@@ -143,6 +173,18 @@ struct VisitHistoryView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func spendComparisonRow(_ spend: SpendComparison) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: spend.perDayDifference <= 0 ? "arrow.down.right" : "arrow.up.right")
+                .foregroundStyle(spend.perDayDifference <= 0 ? Color.green : Color.orange)
+            Text("\(spend.currentPerDay, format: .currency(code: appState.selectedResort.currencyCode))/day so far, vs. "
+                + "\(spend.previousPerDay, format: .currency(code: appState.selectedResort.currencyCode))/day last trip")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.top, 2)
     }
 }
 

@@ -78,6 +78,35 @@ final class VisitTripTests: XCTestCase {
         XCTAssertNil(MostRiddenRide.pick(counts: [:]))
     }
 
+    // MARK: Rest reminder
+
+    func testNudgesAfterAStreakOfBackToBackRides() {
+        let now = Date()
+        let times = [now.addingTimeInterval(-45 * 60), now.addingTimeInterval(-30 * 60),
+                     now.addingTimeInterval(-15 * 60), now]
+        XCTAssertTrue(RestReminder.shouldNudge(todaysRideTimes: times, now: now))
+    }
+
+    func testNoNudgeBelowTheStreakThreshold() {
+        let now = Date()
+        let times = [now.addingTimeInterval(-10 * 60), now]
+        XCTAssertFalse(RestReminder.shouldNudge(todaysRideTimes: times, now: now))
+    }
+
+    func testNoNudgeWhenAGapBrokeTheStreak() {
+        let now = Date()
+        let times = [now.addingTimeInterval(-120 * 60), now.addingTimeInterval(-90 * 60),
+                     now.addingTimeInterval(-15 * 60), now]
+        XCTAssertFalse(RestReminder.shouldNudge(todaysRideTimes: times, now: now), "a 30-min gap resets the streak")
+    }
+
+    func testNoNudgeWhenTheStreakEndedAWhileAgo() {
+        let old = Date().addingTimeInterval(-3 * 3600)
+        let times = [old.addingTimeInterval(-45 * 60), old.addingTimeInterval(-30 * 60),
+                     old.addingTimeInterval(-15 * 60), old]
+        XCTAssertFalse(RestReminder.shouldNudge(todaysRideTimes: times), "stale streak, not timely anymore")
+    }
+
     // MARK: Standing time
 
     func testStandingTimeSumsCompletedRides() {
@@ -108,5 +137,47 @@ final class VisitTripTests: XCTestCase {
         let progress = ParkBingo.progress(roster: ["Space Mountain"], riddenThisTrip: ["Some Other Park's Ride"])
         XCTAssertEqual(progress.ridden, [])
         XCTAssertEqual(progress.remaining, ["Space Mountain"])
+    }
+
+    // MARK: Annual streak
+
+    func testAnnualStreakCountsConsecutiveYears() {
+        XCTAssertEqual(AnnualStreak.count(years: [2022, 2023, 2024, 2025, 2026], through: 2026), 5)
+    }
+
+    func testAnnualStreakStopsAtAGap() {
+        XCTAssertEqual(AnnualStreak.count(years: [2020, 2024, 2025, 2026], through: 2026), 3)
+    }
+
+    func testAnnualStreakZeroWithNoHistory() {
+        XCTAssertEqual(AnnualStreak.count(years: [], through: 2026), 0)
+    }
+
+    func testAnnualStreakCountsBackFromLastVisitedYearNotThisYear() {
+        // Hasn't visited yet this year (2026), but visited every year through 2025.
+        XCTAssertEqual(AnnualStreak.count(years: [2023, 2024, 2025], through: 2026), 3)
+    }
+
+    // MARK: Spend pace vs. last trip
+
+    func testSpendComparisonOverTheSameDayCount() {
+        // Previous trip: 3 days (Jan 1-3), $40 the first two days ($20/day)
+        let previous = [visitDay(2026, 1, 1, rides: ["A"]), visitDay(2026, 1, 2, rides: ["B"]),
+                        visitDay(2026, 1, 3, rides: ["C"])]
+        // Current trip: 2 days so far (June 1-2), $100 total ($50/day)
+        let current = [visitDay(2026, 6, 1, rides: ["D"]), visitDay(2026, 6, 2, rides: ["E"])]
+        let trips = VisitTripGrouper.group(previous + current, calendar: cal)
+        let purchases: [(amount: Double, date: Date)] = [
+            (10, day(2026, 1, 1)), (30, day(2026, 1, 2)), (1000, day(2026, 1, 3)),  // day 3 is past the 2-day cutoff
+            (50, day(2026, 6, 1)), (50, day(2026, 6, 2)),
+        ]
+        let comparison = try! XCTUnwrap(SpendPaceComparer.compare(trips: trips, purchases: purchases, calendar: cal))
+        XCTAssertEqual(comparison.previousPerDay, 20)
+        XCTAssertEqual(comparison.currentPerDay, 50)
+    }
+
+    func testNoSpendComparisonWithFewerThanTwoTrips() {
+        let trips = VisitTripGrouper.group([visitDay(2026, 1, 1, rides: ["A"])], calendar: cal)
+        XCTAssertNil(SpendPaceComparer.compare(trips: trips, purchases: [], calendar: cal))
     }
 }

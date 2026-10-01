@@ -458,12 +458,31 @@ enum ClosingSoon {
     static let leadMinutes = 45
 
     /// Minutes until the latest regular (non-ticketed) close today; nil once it's passed,
-    /// too far off, or the schedule hasn't loaded.
-    static func minutesUntilClose(schedule: [ParkScheduleDay], now: Date = .now) -> Int? {
+    /// too far off (beyond `leadMinutes`), or the schedule hasn't loaded.
+    static func minutesUntilClose(schedule: [ParkScheduleDay], now: Date = .now, leadMinutes: Int = leadMinutes) -> Int? {
         let closings = schedule.filter { !$0.isTicketedEvent }.compactMap(\.closingDate)
         guard let closing = closings.max(), closing > now else { return nil }
         let minutes = Int(closing.timeIntervalSince(now) / 60)
         return minutes <= leadMinutes ? minutes : nil
+    }
+}
+
+/// A "one last ride?" wrap-up as the park's about to close — short waits on rides not yet
+/// logged today, so a last pick doesn't need a long new line.
+enum ParkWrapUp {
+    static let leadMinutes = 30
+    static let maxWaitMinutes = 20
+
+    static func picks(rides: [(id: String, waitMinutes: Int?, isOperating: Bool)], riddenTodayIds: Set<String>,
+                      limit: Int = 6) -> [String] {
+        rides
+            .filter { r in
+                guard r.isOperating, let wait = r.waitMinutes, !riddenTodayIds.contains(r.id) else { return false }
+                return wait <= maxWaitMinutes
+            }
+            .sorted { ($0.waitMinutes ?? Int.max) < ($1.waitMinutes ?? Int.max) }
+            .prefix(limit)
+            .map(\.id)
     }
 }
 

@@ -32,4 +32,28 @@ final class ClosingSoonTests: XCTestCase {
         let party = schedule(closing: "2026-10-11T01:00:00-04:00", type: "TICKETED_EVENT")
         XCTAssertEqual(ClosingSoon.minutesUntilClose(schedule: [regular, party], now: now), 30)
     }
+
+    func testCustomLeadWindow() {
+        let now = ISO8601DateFormatter().date(from: "2026-10-10T21:35:00-04:00")!
+        let closing = "2026-10-10T22:00:00-04:00"
+        // 25 min out: within a 30-min lead, outside the default 45-min one would still include it,
+        // but a tighter 20-min lead should exclude it.
+        XCTAssertEqual(ClosingSoon.minutesUntilClose(schedule: [schedule(closing: closing)], now: now, leadMinutes: 30), 25)
+        XCTAssertNil(ClosingSoon.minutesUntilClose(schedule: [schedule(closing: closing)], now: now, leadMinutes: 20))
+    }
+}
+
+/// "One last ride?" wrap-up as the park's about to close.
+final class ParkWrapUpTests: XCTestCase {
+    private typealias Candidate = (id: String, waitMinutes: Int?, isOperating: Bool)
+
+    func testPicksShortWaitsNotYetRiddenToday() {
+        let rides: [Candidate] = [("A", 10, true), ("B", 15, true), ("C", 5, true)]
+        XCTAssertEqual(ParkWrapUp.picks(rides: rides, riddenTodayIds: ["C"]), ["A", "B"])
+    }
+
+    func testExcludesLongWaitsAndDownRides() {
+        let rides: [Candidate] = [("A", 60, true), ("B", 10, false)]
+        XCTAssertTrue(ParkWrapUp.picks(rides: rides, riddenTodayIds: []).isEmpty)
+    }
 }
