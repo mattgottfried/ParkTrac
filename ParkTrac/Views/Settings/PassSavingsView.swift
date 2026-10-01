@@ -20,15 +20,47 @@ enum PassSavingsCalculator {
     }
 }
 
+/// Pass-period bookkeeping: tapping "I Renewed" snapshots the ending period's cost into a
+/// `PassPeriod` row, and `AppState`'s cost/expiry/tier fields move on to represent the new,
+/// still-open period. Lifetime numbers (below) are unaffected by renewing; "this pass year"
+/// numbers reset to start counting from the renewal date.
+enum PassPeriodStats {
+    /// The current (ongoing) period's start for a resort — the end of its most recent past
+    /// period, or nil with no renewal history yet (lifetime and this-period are then identical).
+    static func currentPeriodStart(pastPeriods: [(resort: String, endDate: Date)], resort: String) -> Date? {
+        pastPeriods.filter { $0.resort == resort }.map(\.endDate).max()
+    }
+
+    /// Every pass ever paid for this resort — past periods' costs plus the current, still-open one.
+    static func lifetimeCost(pastPeriods: [(resort: String, cost: Double)], resort: String, currentCost: Double) -> Double {
+        pastPeriods.filter { $0.resort == resort }.map(\.cost).reduce(0, +) + currentCost
+    }
+}
+
+/// Everything `savingsSummaryCard` needs for one resort, one scope (lifetime or this pass year).
+private struct PassScopeNumbers {
+    let visitSavings: Double
+    let parkingSavings: Double
+    let parkingCount: Int
+    let merchSpend: Double
+    let foodSpend: Double
+    let discountSavings: Double
+    let totalSavings: Double
+    let visitCount: Int
+}
+
 struct PassSavingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \VisitSaving.date, order: .reverse) private var allSavings: [VisitSaving]
     @Query(sort: \PurchaseLog.date, order: .reverse) private var allPurchases: [PurchaseLog]
+    @Query private var pastPeriods: [PassPeriod]
 
     @State private var showAddVisit = false
     @State private var editingDisneyCost = false
     @State private var editingUniversalCost = false
+    @State private var showRenewDisney = false
+    @State private var showRenewUniversal = false
 
     // MARK: - Discount rates per pass tier
     // Source: Official Disney/Universal passholder discount pages (verified May 2026)
@@ -54,70 +86,50 @@ struct PassSavingsView: View {
         }
     }
 
+    // MARK: - Pass periods
+
+    private var pastPeriodEndDates: [(resort: String, endDate: Date)] {
+        pastPeriods.map { (resort: $0.resort, endDate: $0.endDate) }
+    }
+    private var pastPeriodCosts: [(resort: String, cost: Double)] {
+        pastPeriods.map { (resort: $0.resort, cost: $0.cost) }
+    }
+
+    /// nil = no renewal history yet, so "this pass year" and "lifetime" are the same thing.
+    private func periodStart(_ resort: ParkGroup) -> Date? {
+        PassPeriodStats.currentPeriodStart(pastPeriods: pastPeriodEndDates, resort: resort.rawValue)
+    }
+
+    private func lifetimeCost(_ resort: ParkGroup, currentCost: Double) -> Double {
+        PassPeriodStats.lifetimeCost(pastPeriods: pastPeriodCosts, resort: resort.rawValue, currentCost: currentCost)
+    }
+
     // MARK: - Savings calculations
 
-    private var disneyVisitSavings: Double {
-        allSavings.filter { $0.resort == ParkGroup.disney.rawValue }.map(\.gateValue).reduce(0, +)
+    /// `since` nil = lifetime; otherwise only visits/purchases on or after that date (this pass year).
+    private func numbers(resort: ParkGroup, since: Date?, merchRate: Double, foodRate: Double) -> PassScopeNumbers {
+        func inScope(_ entryResort: String, _ date: Date) -> Bool {
+            guard entryResort == resort.rawValue else { return false }
+            guard let since else { return true }
+            return date >= since
+        }
+        let savings = allSavings.filter { inScope($0.resort, $0.date) }
+        let purchases = allPurchases.filter { inScope($0.resort, $0.date) }
+        let visitSavings = savings.map(\.gateValue).reduce(0, +)
+        let parkingSavings = savings.map(\.parkingValue).reduce(0, +)
+        let parkingCount = savings.filter { $0.parkingValue > 0 }.count
+        // Only purchases marked AP eligible count toward discount savings.
+        let merchSpend = purchases.filter { $0.category == "Merchandise" && $0.isAPEligible }.map(\.amount).reduce(0, +)
+        let foodSpend = purchases.filter { $0.category == "Food" && $0.isAPEligible }.map(\.amount).reduce(0, +)
+        // Amounts entered are post-discount (what the user actually paid):
+        // to recover the original discount amount, savings = paid × rate / (1 − rate).
+        let merch = merchRate > 0 ? merchSpend * merchRate / (1 - merchRate) : 0
+        let food = foodRate > 0 ? foodSpend * foodRate / (1 - foodRate) : 0
+        let discountSavings = merch + food
+        return PassScopeNumbers(visitSavings: visitSavings, parkingSavings: parkingSavings, parkingCount: parkingCount,
+                                merchSpend: merchSpend, foodSpend: foodSpend, discountSavings: discountSavings,
+                                totalSavings: visitSavings + parkingSavings + discountSavings, visitCount: savings.count)
     }
-
-    private var universalVisitSavings: Double {
-        allSavings.filter { $0.resort == ParkGroup.universal.rawValue }.map(\.gateValue).reduce(0, +)
-    }
-
-    private var disneyParkingSavings: Double {
-        allSavings.filter { $0.resort == ParkGroup.disney.rawValue }.map(\.parkingValue).reduce(0, +)
-    }
-
-    private var universalParkingSavings: Double {
-        allSavings.filter { $0.resort == ParkGroup.universal.rawValue }.map(\.parkingValue).reduce(0, +)
-    }
-
-    private func parkingVisitCount(_ resort: String) -> Int {
-        allSavings.filter { $0.resort == resort && $0.parkingValue > 0 }.count
-    }
-
-    private var disneyPurchases: [PurchaseLog] {
-        allPurchases.filter { $0.resort == ParkGroup.disney.rawValue }
-    }
-
-    private var universalPurchases: [PurchaseLog] {
-        allPurchases.filter { $0.resort == ParkGroup.universal.rawValue }
-    }
-
-    // Only purchases marked AP eligible count toward discount savings
-    private var disneyMerchSpend: Double {
-        disneyPurchases.filter { $0.category == "Merchandise" && $0.isAPEligible }.map(\.amount).reduce(0, +)
-    }
-    private var disneyFoodSpend: Double {
-        disneyPurchases.filter { $0.category == "Food" && $0.isAPEligible }.map(\.amount).reduce(0, +)
-    }
-    private var universalMerchSpend: Double {
-        universalPurchases.filter { $0.category == "Merchandise" && $0.isAPEligible }.map(\.amount).reduce(0, +)
-    }
-    private var universalFoodSpend: Double {
-        universalPurchases.filter { $0.category == "Food" && $0.isAPEligible }.map(\.amount).reduce(0, +)
-    }
-
-    // Amounts entered are post-discount (what the user actually paid).
-    // To recover the original discount amount: savings = paid × rate / (1 − rate)
-    private var disneyDiscountSavings: Double {
-        let merch = disneyMerchRate > 0 ? disneyMerchSpend * disneyMerchRate / (1 - disneyMerchRate) : 0
-        let food  = disneyFoodRate  > 0 ? disneyFoodSpend  * disneyFoodRate  / (1 - disneyFoodRate)  : 0
-        return merch + food
-    }
-    private var universalDiscountSavings: Double {
-        let mRate = universalMerchRate
-        let fRate = universalFoodRate
-        let merch = mRate > 0 ? universalMerchSpend * mRate / (1 - mRate) : 0
-        let food  = fRate > 0 ? universalFoodSpend  * fRate / (1 - fRate) : 0
-        return merch + food
-    }
-
-    private var disneyTotalSavings: Double { disneyVisitSavings + disneyParkingSavings + disneyDiscountSavings }
-    private var universalTotalSavings: Double { universalVisitSavings + universalParkingSavings + universalDiscountSavings }
-
-    private var disneyNet: Double { disneyTotalSavings - appState.disneyPassCost }
-    private var universalNet: Double { universalTotalSavings - appState.universalPassCost }
 
     // MARK: - Body
 
@@ -125,70 +137,92 @@ struct PassSavingsView: View {
         Form {
             // Pass cost entry
             if appState.disneyPassTier != .none {
-                Section("Disney Pass Cost") {
+                Section {
                     passCostRow(
                         label: appState.disneyPassTier.rawValue,
                         cost: appState.disneyPassCost,
                         placeholder: disneyPassPricePlaceholder,
                         onChange: { appState.disneyPassCost = $0 }
                     )
+                    Button("I Renewed") { showRenewDisney = true }
+                } header: {
+                    Text("Disney Pass Cost")
+                } footer: {
+                    if let start = periodStart(.disney) {
+                        Text("This pass year started \(start.formatted(date: .abbreviated, time: .omitted)).")
+                    }
                 }
             }
 
             if appState.universalPassTier != .none {
-                Section("Universal Pass Cost") {
+                Section {
                     passCostRow(
                         label: appState.universalPassTier.rawValue,
                         cost: appState.universalPassCost,
                         placeholder: universalPassPricePlaceholder,
                         onChange: { appState.universalPassCost = $0 }
                     )
+                    Button("I Renewed") { showRenewUniversal = true }
+                } header: {
+                    Text("Universal Pass Cost")
+                } footer: {
+                    if let start = periodStart(.universal) {
+                        Text("This pass year started \(start.formatted(date: .abbreviated, time: .omitted)).")
+                    }
                 }
             }
 
-            // Disney summary
+            // Disney summary — this pass year, then lifetime
             if appState.disneyPassTier != .none {
+                let thisYear = numbers(resort: .disney, since: periodStart(.disney),
+                                       merchRate: disneyMerchRate, foodRate: disneyFoodRate)
                 Section {
-                    savingsSummaryCard(
-                        resort: ParkGroup.disney.rawValue,
-                        visitSavings: disneyVisitSavings,
-                        parkingSavings: disneyParkingSavings,
-                        parkingCount: parkingVisitCount(ParkGroup.disney.rawValue),
-                        discountSavings: disneyDiscountSavings,
-                        totalSavings: disneyTotalSavings,
-                        passCost: appState.disneyPassCost,
-                        net: disneyNet,
-                        visitCount: allSavings.filter { $0.resort == ParkGroup.disney.rawValue }.count,
-                        merchRate: disneyMerchRate,
-                        foodRate: disneyFoodRate,
-                        merchSpend: disneyMerchSpend,
-                        foodSpend: disneyFoodSpend
-                    )
+                    savingsSummaryCard(resort: ParkGroup.disney.rawValue, passCost: appState.disneyPassCost,
+                                       net: thisYear.totalSavings - appState.disneyPassCost,
+                                       merchRate: disneyMerchRate, foodRate: disneyFoodRate, numbers: thisYear)
                 } header: {
-                    Text("Disney Savings")
+                    Text("Disney Savings — This Pass Year")
+                }
+
+                if periodStart(.disney) != nil {
+                    let lifetime = numbers(resort: .disney, since: nil, merchRate: disneyMerchRate, foodRate: disneyFoodRate)
+                    let cost = lifetimeCost(.disney, currentCost: appState.disneyPassCost)
+                    Section {
+                        savingsSummaryCard(resort: ParkGroup.disney.rawValue, passCost: cost,
+                                           net: lifetime.totalSavings - cost,
+                                           merchRate: disneyMerchRate, foodRate: disneyFoodRate, numbers: lifetime)
+                    } header: {
+                        Text("Disney Savings — Lifetime")
+                    } footer: {
+                        Text("Every Disney pass you've paid for, vs. every visit you've ever logged.")
+                    }
                 }
             }
 
-            // Universal summary
+            // Universal summary — this pass year, then lifetime
             if appState.universalPassTier != .none {
+                let thisYear = numbers(resort: .universal, since: periodStart(.universal),
+                                       merchRate: universalMerchRate, foodRate: universalFoodRate)
                 Section {
-                    savingsSummaryCard(
-                        resort: ParkGroup.universal.rawValue,
-                        visitSavings: universalVisitSavings,
-                        parkingSavings: universalParkingSavings,
-                        parkingCount: parkingVisitCount(ParkGroup.universal.rawValue),
-                        discountSavings: universalDiscountSavings,
-                        totalSavings: universalTotalSavings,
-                        passCost: appState.universalPassCost,
-                        net: universalNet,
-                        visitCount: allSavings.filter { $0.resort == ParkGroup.universal.rawValue }.count,
-                        merchRate: universalMerchRate,
-                        foodRate: universalFoodRate,
-                        merchSpend: universalMerchSpend,
-                        foodSpend: universalFoodSpend
-                    )
+                    savingsSummaryCard(resort: ParkGroup.universal.rawValue, passCost: appState.universalPassCost,
+                                       net: thisYear.totalSavings - appState.universalPassCost,
+                                       merchRate: universalMerchRate, foodRate: universalFoodRate, numbers: thisYear)
                 } header: {
-                    Text("Universal Savings")
+                    Text("Universal Savings — This Pass Year")
+                }
+
+                if periodStart(.universal) != nil {
+                    let lifetime = numbers(resort: .universal, since: nil, merchRate: universalMerchRate, foodRate: universalFoodRate)
+                    let cost = lifetimeCost(.universal, currentCost: appState.universalPassCost)
+                    Section {
+                        savingsSummaryCard(resort: ParkGroup.universal.rawValue, passCost: cost,
+                                           net: lifetime.totalSavings - cost,
+                                           merchRate: universalMerchRate, foodRate: universalFoodRate, numbers: lifetime)
+                    } header: {
+                        Text("Universal Savings — Lifetime")
+                    } footer: {
+                        Text("Every Universal pass you've paid for, vs. every visit you've ever logged.")
+                    }
                 }
             }
 
@@ -263,6 +297,47 @@ struct PassSavingsView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showRenewDisney) {
+            RenewPassSheet(resortLabel: "Disney", tierOptions: DisneyPassTier.allCases.map(\.rawValue),
+                          currentTierRaw: appState.disneyPassTier.rawValue, oldCost: appState.disneyPassCost,
+                          oldExpiry: appState.disneyPassExpiry) { newCost, newExpiry, newTierRaw in
+                renew(.disney, newCost: newCost, newExpiry: newExpiry, newTierRaw: newTierRaw)
+            }
+        }
+        .sheet(isPresented: $showRenewUniversal) {
+            RenewPassSheet(resortLabel: "Universal", tierOptions: UniversalPassTier.allCases.map(\.rawValue),
+                          currentTierRaw: appState.universalPassTier.rawValue, oldCost: appState.universalPassCost,
+                          oldExpiry: appState.universalPassExpiry) { newCost, newExpiry, newTierRaw in
+                renew(.universal, newCost: newCost, newExpiry: newExpiry, newTierRaw: newTierRaw)
+            }
+        }
+    }
+
+    /// Snapshots the ending period into a `PassPeriod`, then moves `AppState`'s fields on to the
+    /// new one and reschedules the 30-day renewal reminder.
+    private func renew(_ resort: ParkGroup, newCost: Double, newExpiry: Date, newTierRaw: String) {
+        let oldCost = resort == .disney ? appState.disneyPassCost : appState.universalPassCost
+        let oldTierRaw = resort == .disney ? appState.disneyPassTier.rawValue : appState.universalPassTier.rawValue
+        let earliestVisit = allSavings.filter { $0.resort == resort.rawValue }.map(\.date).min()
+        let start = periodStart(resort) ?? earliestVisit ?? .now
+        modelContext.insert(PassPeriod(resort: resort.rawValue, tier: oldTierRaw, cost: oldCost, startDate: start, endDate: .now))
+        try? modelContext.save()
+
+        switch resort {
+        case .disney:
+            appState.disneyPassCost = newCost
+            appState.disneyPassExpiry = newExpiry
+            if let tier = DisneyPassTier(rawValue: newTierRaw) { appState.disneyPassTier = tier }
+        case .universal:
+            appState.universalPassCost = newCost
+            appState.universalPassExpiry = newExpiry
+            if let tier = UniversalPassTier(rawValue: newTierRaw) { appState.universalPassTier = tier }
+        default:
+            break
+        }
+        if let reminderDate = Calendar.current.date(byAdding: .day, value: -30, to: newExpiry) {
+            NotificationService.shared.schedulePassRenewalReminder(resort: resort.rawValue, passName: newTierRaw, date: reminderDate)
+        }
     }
 
     // MARK: - Subviews
@@ -280,19 +355,20 @@ struct PassSavingsView: View {
     @ViewBuilder
     private func savingsSummaryCard(
         resort: String,
-        visitSavings: Double,
-        parkingSavings: Double,
-        parkingCount: Int,
-        discountSavings: Double,
-        totalSavings: Double,
         passCost: Double,
         net: Double,
-        visitCount: Int,
         merchRate: Double,
         foodRate: Double,
-        merchSpend: Double,
-        foodSpend: Double
+        numbers: PassScopeNumbers
     ) -> some View {
+        let visitSavings = numbers.visitSavings
+        let parkingSavings = numbers.parkingSavings
+        let parkingCount = numbers.parkingCount
+        let discountSavings = numbers.discountSavings
+        let totalSavings = numbers.totalSavings
+        let visitCount = numbers.visitCount
+        let merchSpend = numbers.merchSpend
+        let foodSpend = numbers.foodSpend
         // Big net number
         HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text(net >= 0 ? "+" : "")

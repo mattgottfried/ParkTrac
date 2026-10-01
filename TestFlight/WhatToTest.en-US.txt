@@ -4,7 +4,7 @@ Must-Do alerts: "back up" notifications now say how long it was down and flag a 
 
 Challenges: Badges adds 4 new badges from your ride logs — Early Bird, Night Owl, Short Wait Streak, Beat the Wait. Park Bingo (Wait Times, park in focus) also works zoomed out as "Resort Bingo", and its checklist sheet now adds by-ride-type and by-thrill-level breakdowns. Visit History: "Most rides at [park]" and an "N years running" streak.
 
-Pass Savings: a forward-looking "~N more visits to break even" alongside cost-per-visit. Visit History: this trip's spend-per-day vs. last trip's, next to the rides comparison.
+Pass Savings: new "I Renewed" button — snapshots your old pass into history and starts a new pass year; now shows both "This Pass Year" and "Lifetime" savings (cost-per-visit + break-even for each). Visit History: this trip's spend-per-day vs. last trip's, next to the rides comparison.
 
 Wait Times: "Down Right Now" strip (currently-broken rides); "Nearby & Short" strip (short wait + short walk). Shows: a "Next after: …" hint when the next showing is too soon to reach. Wait tile trend arrows; "closing soon" banner + "Quietest/busiest" line; rest-stop button; ride page Loud/Dark/Sudden-moments chips; Easy Wins strip; "+15/-10 vs usual".
 
@@ -42,4 +42,4 @@ Data export CSV. Trip vs. last visit: "This Trip So Far". Tip Calculator (Settin
 
 Fixed: upload rejected for Siri's description mentioning Apple (rule 90626); a Swift build error.
 
-Check overall: a Must-Do coming back up (duration + reset-short), "One Last Ride?" near close, the rest-break nudge, a new badge, Resort/Park Bingo's thrill + type breakdowns, Favorite park/streak, Pass Savings break-even, Visit History spend pace, Down Right Now + Nearby & Short, a show's "Next after", a plan gap suggestion, live standing-time, sensory chips, wait trend arrow, closing-soon banner, Vacation Calendar's blockout flag, Spending's This Year + Quick Snack, mobile order countdown, Year in Review, Visit History weather, Rope Drop Plan, a paid Lightning Lane, Single Rider, Tip Calculator.
+Check overall: tap "I Renewed" in Pass Savings and confirm This Pass Year resets while Lifetime keeps your full history, a Must-Do coming back up (duration + reset-short), "One Last Ride?" near close, the rest-break nudge, a new badge, Resort/Park Bingo's thrill + type breakdowns, Favorite park/streak, Visit History spend pace, Down Right Now + Nearby & Short, a show's "Next after", a plan gap suggestion, live standing-time, sensory chips, wait trend arrow, closing-soon banner, Vacation Calendar's blockout flag, Spending's This Year + Quick Snack, mobile order countdown, Year in Review, Visit History weather, Rope Drop Plan, a paid Lightning Lane, Single Rider, Tip Calculator.
