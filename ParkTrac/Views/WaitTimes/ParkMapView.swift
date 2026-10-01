@@ -386,6 +386,7 @@ struct ParkMapView: View {
     @Environment(WaitTimesViewModel.self) private var viewModel
     @Query(sort: \RideLog.riddenAt) private var allRideLogs: [RideLog]
     @State private var showParkBingo = false
+    @State private var showWrapUp = false
     @State private var locationService = LocationService()
     @State private var recenterRequest = 0
     @State private var showLocationDenied = false
@@ -644,7 +645,7 @@ struct ParkMapView: View {
             GoodTimeService.shared.update(rides: viewModel.allRides, mustDo: appState.wishList, context: modelContext)
             // Must-Do down / back-up alerts (server pushes when Instant Alerts is on)
             MustDoDownService.shared.update(rides: viewModel.allRides, mustDo: appState.wishList,
-                                            resort: viewModel.selectedGroup,
+                                            resort: viewModel.selectedGroup, context: modelContext,
                                             parkName: { id in viewModel.currentParks.first { $0.id == id }?.name ?? "" })
             // Community wait history (server) — once per park per day
             let historyParks = viewModel.currentParks.map(\.id)
@@ -672,9 +673,13 @@ struct ParkMapView: View {
         .sheet(isPresented: $showTipBoard) {
             TipBoardView()
         }
+        .sheet(isPresented: $showWrapUp) {
+            ParkWrapUpSheet(rides: wrapUpPicks) { ride in selectedRide = ride }
+        }
         .sheet(isPresented: $showParkBingo) {
             if let bingo = parkBingo {
-                ParkBingoSheet(title: bingo.title, ridden: bingo.ridden, remaining: bingo.remaining, byType: typeBingo)
+                ParkBingoSheet(title: bingo.title, ridden: bingo.ridden, remaining: bingo.remaining,
+                               byType: typeBingo, byThrill: thrillBingo)
             }
         }
         .alert("Need a Break?", isPresented: $showRestStop) {
@@ -887,6 +892,20 @@ struct ParkMapView: View {
         return (title, progress.ridden, progress.remaining)
     }
 
+    /// "One last ride?" when the resort's close is within `ParkWrapUp.leadMinutes` — short waits
+    /// on rides you haven't logged yet today.
+    private var wrapUpPicks: [DisplayRide] {
+        let schedule = viewModel.todaySchedule(forResort: viewModel.selectedGroup)
+        guard ClosingSoon.minutesUntilClose(schedule: schedule, leadMinutes: ParkWrapUp.leadMinutes) != nil else { return [] }
+        let riddenToday = Set(allRideLogs
+            .filter { $0.resort == viewModel.selectedGroup.rawValue && Calendar.current.isDateInToday($0.riddenAt) }
+            .map(\.rideId))
+        let candidates = viewModel.allRides.map { (id: $0.id, waitMinutes: $0.waitMinutes, isOperating: $0.isOperating) }
+        let pickedIds = ParkWrapUp.picks(rides: candidates, riddenTodayIds: riddenToday)
+        let byId = Dictionary(viewModel.allRides.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        return pickedIds.compactMap { byId[$0] }
+    }
+
     /// Breakdown of the current Bingo scope by ride type ("Coasters: 3 of 7") — only rides with
     /// known metadata are categorized.
     private var typeBingo: [(type: RideType, ridden: Int, total: Int)] {
@@ -895,6 +914,15 @@ struct ParkMapView: View {
             RideMetadata.info(for: name, resort: viewModel.selectedGroup).map { (name, $0.type) }
         }
         return TypeBingo.progress(roster: typed, riddenThisTrip: Set(bingo.ridden))
+    }
+
+    /// Same scope as `typeBingo`, bucketed by thrill level instead.
+    private var thrillBingo: [(level: ThrillLevel, ridden: Int, total: Int)] {
+        guard let bingo = parkBingo else { return [] }
+        let leveled = (bingo.ridden + bingo.remaining).compactMap { name -> (name: String, level: ThrillLevel)? in
+            RideMetadata.info(for: name, resort: viewModel.selectedGroup).map { (name, $0.thrill) }
+        }
+        return ThrillBingo.progress(roster: leveled, riddenThisTrip: Set(bingo.ridden))
     }
 
     private var panelHeader: some View {
@@ -928,6 +956,18 @@ struct ParkMapView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Color.orange, in: Capsule())
+                }
+                if !wrapUpPicks.isEmpty {
+                    Button {
+                        showWrapUp = true
+                    } label: {
+                        Label("One Last Ride?", systemImage: "sparkles")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Color.purple, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
                 }
                 if let quietestHourText {
                     Text(quietestHourText)
@@ -1448,5 +1488,45 @@ struct ParkMapView: View {
         }
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: -2)
+    }
+}
+
+/// Short waits on rides not yet logged today, offered as the park's close approaches.
+private struct ParkWrapUpSheet: View {
+    let rides: [DisplayRide]
+    let onSelect: (DisplayRide) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if rides.isEmpty {
+                    ContentUnavailableView("All Caught Up", systemImage: "checkmark.circle",
+                                           description: Text("Nothing short and un-ridden right now."))
+                } else {
+                    ForEach(rides) { ride in
+                        Button {
+                            onSelect(ride)
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(ride.name).foregroundStyle(.primary)
+                                Spacer()
+                                Text("\(ride.waitMinutes ?? 0) min")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("One Last Ride?")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Close") { dismiss() } }
+            }
+        }
+        .presentationDetents([.medium])
     }
 }

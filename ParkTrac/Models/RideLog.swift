@@ -85,6 +85,28 @@ enum StandingTime {
     }
 }
 
+/// A gentle "take a break" nudge after a solid stretch of rides with no real gap between them —
+/// pairs with `StandingTime`, which only measures time, not pacing.
+enum RestReminder {
+    static let rideStreakThreshold = 4
+    /// A gap under this still counts as "no break"; a gap over it resets the streak.
+    static let maxGapMinutes = 20
+
+    /// True once the most recent `rideStreakThreshold` (or more) rides today were each logged
+    /// within `maxGapMinutes` of the one before, and the last of them was itself recent — so the
+    /// nudge doesn't surface hours after the stretch actually happened.
+    static func shouldNudge(todaysRideTimes: [Date], now: Date = .now) -> Bool {
+        let sorted = todaysRideTimes.sorted()
+        guard sorted.count >= rideStreakThreshold else { return false }
+        let recent = sorted.suffix(rideStreakThreshold)
+        for (a, b) in zip(recent, recent.dropFirst()) where b.timeIntervalSince(a) > Double(maxGapMinutes) * 60 {
+            return false
+        }
+        guard let last = recent.last else { return false }
+        return now.timeIntervalSince(last) <= Double(maxGapMinutes) * 60
+    }
+}
+
 /// A checklist challenge — every ride in a park, ridden this trip (not lifetime), matched by name
 /// against the park's actual roster so a bingo only ever counts rides that exist there.
 enum ParkBingo {
@@ -93,6 +115,21 @@ enum ParkBingo {
         let ridden = rosterSet.intersection(riddenThisTrip).sorted()
         let remaining = rosterSet.subtracting(riddenThisTrip).sorted()
         return (ridden, remaining)
+    }
+}
+
+/// Consecutive years with at least one logged ride, counting back from the most recent year
+/// that has history — "5 years running" for a repeat annual visitor.
+enum AnnualStreak {
+    static func count(years: Set<Int>, through: Int = Calendar.current.component(.year, from: .now)) -> Int {
+        guard let start = years.filter({ $0 <= through }).max() else { return 0 }
+        var year = start
+        var streak = 0
+        while years.contains(year) {
+            streak += 1
+            year -= 1
+        }
+        return streak
     }
 }
 

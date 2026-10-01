@@ -84,11 +84,11 @@ final class NotificationService {
     }
 
     /// A Must-Do ride that was down is running again.
-    func fireMustDoBackUp(rideId: String, rideName: String, wait: Int?) {
+    func fireMustDoBackUp(rideId: String, rideName: String, wait: Int?, downtimeMinutes: Int? = nil) {
         let content = UNMutableNotificationContent()
         content.interruptionLevel = .timeSensitive
         content.title = "✅ \(rideName) is back up"
-        content.body = wait.map { "Your Must-Do is running again — posted wait \($0) min." } ?? "Your Must-Do is running again."
+        content.body = RideComeback.message(wait: wait, downtimeMinutes: downtimeMinutes)
         content.sound = .default
         content.threadIdentifier = "mustdo-\(rideId)"
         content.userInfo = [

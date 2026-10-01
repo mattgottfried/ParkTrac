@@ -16,6 +16,7 @@ struct DayPlannerView: View {
     @State private var showSmartPlanner = false
     @State private var showAreaEntry = false
     @State private var showTipBoard = false
+    @State private var restReminderDismissed = false
     @State private var showEndPlan = false
     /// Siri's "plan my day" request, passed to the Smart Planner once
     @State private var plannerRequest: String?
@@ -126,6 +127,24 @@ struct DayPlannerView: View {
         OnThisDayMemories.find(logs: rideLogs, resort: resort)
     }
 
+    private static func todayKey() -> String {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: .now)
+    }
+
+    private var shouldShowRestReminder: Bool {
+        guard !restReminderDismissed,
+              UserDefaults.standard.string(forKey: "restReminderDismissedDay") != Self.todayKey() else { return false }
+        let todayRideTimes = rideLogs
+            .filter { $0.resort == resort && Calendar.current.isDateInToday($0.riddenAt) }
+            .map(\.riddenAt)
+        return RestReminder.shouldNudge(todaysRideTimes: todayRideTimes)
+    }
+
+    private func dismissRestReminder() {
+        restReminderDismissed = true
+        UserDefaults.standard.set(Self.todayKey(), forKey: "restReminderDismissedDay")
+    }
+
     private var todaysTimedRides: [(posted: Int?, actual: Int?)] {
         rideLogs
             .filter { $0.resort == resort && Calendar.current.isDateInToday($0.riddenAt) }
@@ -220,6 +239,19 @@ struct DayPlannerView: View {
                     Label(text, systemImage: "hourglass")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                }
+            }
+            if shouldShowRestReminder {
+                Section {
+                    HStack {
+                        Label("That's 4 rides back to back — maybe grab water or sit down for a bit.",
+                              systemImage: "figure.cooldown")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer(minLength: 8)
+                        Button("Dismiss") { dismissRestReminder() }
+                            .font(.caption)
+                    }
                 }
             }
             if let trip = TripService.shared.trip, trip.resorts.count > 1 {

@@ -8,6 +8,8 @@ struct ParkBingoSheet: View {
     let remaining: [String]
     /// By `RideType` — only rides with known metadata are categorized ("Ride-type challenge").
     var byType: [(type: RideType, ridden: Int, total: Int)] = []
+    /// By `ThrillLevel`, family → extreme ("Thrill-level challenge").
+    var byThrill: [(level: ThrillLevel, ridden: Int, total: Int)] = []
 
     @Environment(\.dismiss) private var dismiss
 
@@ -31,6 +33,21 @@ struct ParkBingoSheet: View {
                             HStack {
                                 Label(entry.type.rawValue, systemImage: entry.type.systemImage)
                                     .font(.subheadline)
+                                Spacer()
+                                Text("\(entry.ridden) of \(entry.total)")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(entry.ridden == entry.total ? .green : .secondary)
+                            }
+                        }
+                    }
+                }
+                if !byThrill.isEmpty {
+                    Section("By Thrill Level") {
+                        ForEach(byThrill, id: \.level) { entry in
+                            HStack {
+                                Label(entry.level.rawValue, systemImage: entry.level.systemImage)
+                                    .font(.subheadline)
+                                    .foregroundStyle(entry.level.color)
                                 Spacer()
                                 Text("\(entry.ridden) of \(entry.total)")
                                     .font(.subheadline.weight(.semibold))

@@ -1,51 +1,45 @@
 New since the last build (short version: TestFlight allows 4,000 characters)
 
-Challenges: Badges screen adds 4 new badges from your own ride logs — Early Bird, Night Owl, Short Wait Streak, Beat the Wait. Park Bingo (Wait Times, park in focus) now also works zoomed out as "Resort Bingo" across every park, plus a by-ride-type breakdown (Coasters, Dark Rides, …) in its checklist sheet.
+Must-Do alerts: "back up" notifications now say how long it was down and flag a short reset. New purple "One Last Ride?" capsule ~30 min before close — short waits you haven't ridden today. My Day: a dismissible "take a break" nudge after 4 back-to-back rides with no gap.
 
-Wait Times: new "Down Right Now" strip lists currently-broken rides so you don't walk to one. New "Nearby & Short" strip — short waits that are also a short walk from you. Shows list: a "Next after: …" hint when the next showing is too soon to reach. Arrows on the wait tile show rising/falling since the last refresh; "closing soon" banner + "Quietest/busiest" line when a park's in focus; seated-figure button for a nearby indoor rest stop; ride page adds best-effort Loud/Dark/Sudden-moments chips; Easy Wins strip (≤15 min); "+15/-10 vs usual" on cards; Park Bingo checklist.
+Challenges: Badges adds 4 new badges from your ride logs — Early Bird, Night Owl, Short Wait Streak, Beat the Wait. Park Bingo (Wait Times, park in focus) also works zoomed out as "Resort Bingo", and its checklist sheet now adds by-ride-type and by-thrill-level breakdowns. Visit History: "Most rides at [park]" and an "N years running" streak.
 
-Smart Planner & My Day: both flag free gaps ≥20 min between stops and suggest a nearby short-wait ride to fill them. My Day shows a live "stood in line ~Xm today" line.
+Pass Savings: a forward-looking "~N more visits to break even" alongside cost-per-visit. Visit History: this trip's spend-per-day vs. last trip's, next to the rides comparison.
 
-My Day: "On this day" card; Best Park Today for multi-resort trips.
+Wait Times: "Down Right Now" strip (currently-broken rides); "Nearby & Short" strip (short wait + short walk). Shows: a "Next after: …" hint when the next showing is too soon to reach. Wait tile trend arrows; "closing soon" banner + "Quietest/busiest" line; rest-stop button; ride page Loud/Dark/Sudden-moments chips; Easy Wins strip; "+15/-10 vs usual".
 
-Trip Planner: "Vacation Calendar" — day-by-day view with item/dining counts and a "Blocked Out" flag.
+Smart Planner & My Day: both flag free gaps ≥20 min and suggest a nearby short-wait ride. My Day: live "stood in line ~Xm today" line; "On this day" card; Best Park Today.
 
-Spending: "This Year" total; "Quick Snack" chips (you type the price). My Dining: Mobile Order pickup countdown.
+Trip Planner: "Vacation Calendar" with a "Blocked Out" flag.
 
-Ride Counter: "Your #1 ride". Recaps: "Year in Review" card. Visit History: past weather per day.
+Spending: "This Year" total; "Quick Snack" chips. My Dining: Mobile Order countdown.
 
-Pass Savings: "Cost per visit". Day Recap: "X per ride today".
+Ride Counter: "Your #1 ride". Recaps: "Year in Review". Visit History: past weather per day.
 
-Smart Planner: no invented dinners unless asked; plan a future day (60 days out); Change the Plan shows standby time + walking with one-tap chips and Apple Intelligence text requests; rain/heat plan routes indoor rides into bad-weather hours.
+Day Recap: "X per ride today".
+
+Smart Planner: no invented dinners unless asked; plan a future day; Change the Plan shows standby time + walking with one-tap chips and Apple Intelligence requests; rain/heat routes indoor rides into bad weather.
 
 Rope Drop Plan: My Day sunrise icon, times Must-Dos from actual opening.
 
-Ride page: Wait Forecast with "you usually wait ~X" from everyone's recorded waits.
+Ride page: Wait Forecast "you usually wait ~X" from everyone's recorded waits.
 
 Single Rider: busy rides suggest Single Rider (Universal) or a shorter alternative; badge + filter.
 
-Add to My Day: one screen — pick rides/a show, then Anytime/Now/Best time/showtime/set time.
+Add to My Day: one screen — rides/a show, then Anytime/Now/Best time/showtime/set time.
 
 Live Activities: resort colors, big countdowns, 3-stop timeline, Done/Skip/"I'm On"/"Used It".
 
-Alerts & stats: Must-Do down alerts; Crowd Calendar; shareable Day recap.
+Crowd Calendar; shareable Day recap. Car locator auto-guesses from GPS. Ride photos on Rode It!.
 
-Car locator: sections/rows match Disney/Universal apps; auto-guesses from GPS.
+Trip budget + pacing: "~$X/day for N more days". Offline shows "No signal", never a fake wait.
 
-Ride photos: optional photo on Rode It!; Visit History thumbnail.
+Lightning Lane: paid Single Pass auto-logs its price. Tip Board "Worth it today?".
 
-Trip budget + pacing: "Set a Trip Budget" bar, "~$X/day for N more days".
+Character tracker (Bucket List). Bucket List: a few Orlando restaurant closures handled.
 
-Offline: no signal shows "No signal", never a fake wait or false Closed.
-
-Lightning Lane: paid Single Pass auto-logs its price. Tip Board "Worth it today?" totals minutes saved + cost.
-
-Character tracker: Bucket List "Characters" tab. Bucket List refresh: a few Orlando restaurant closures (ratings kept) and a new successor entry.
-
-Data export: Settings → Data & Sync CSV. Trip vs. last visit: Visit History "This Trip So Far".
-
-Tip Calculator: Settings → Tools, quick % or custom.
+Data export CSV. Trip vs. last visit: "This Trip So Far". Tip Calculator (Settings → Tools).
 
 Fixed: upload rejected for Siri's description mentioning Apple (rule 90626); a Swift build error.
 
-Check overall: a new badge, Resort Bingo + its type breakdown, Down Right Now + Nearby & Short strips, a show's "Next after" hint, a plan gap suggestion, the live standing-time line, a ride's sensory chips, a wait trend arrow, closing-soon banner, rest-stop button, "On this day"/Best Park Today, Vacation Calendar's blockout flag, Spending's This Year + Quick Snack, a mobile order countdown, Ride Counter's #1 ride, Year in Review, Visit History weather, Pass Savings cost-per-visit, Day Recap cost-per-ride, Rope Drop Plan, car locator, a paid Lightning Lane, Bucket List changes, Settings export, Single Rider, Tip Calculator.
+Check overall: a Must-Do coming back up (duration + reset-short), "One Last Ride?" near close, the rest-break nudge, a new badge, Resort/Park Bingo's thrill + type breakdowns, Favorite park/streak, Pass Savings break-even, Visit History spend pace, Down Right Now + Nearby & Short, a show's "Next after", a plan gap suggestion, live standing-time, sensory chips, wait trend arrow, closing-soon banner, Vacation Calendar's blockout flag, Spending's This Year + Quick Snack, mobile order countdown, Year in Review, Visit History weather, Rope Drop Plan, a paid Lightning Lane, Single Rider, Tip Calculator.

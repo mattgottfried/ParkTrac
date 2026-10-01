@@ -100,6 +100,22 @@ struct MustDoRide: Codable, Equatable {
     var watchId: String { "mustdo-\(rideId)" }
 }
 
+/// "Back up" message, enriched with how long it was down (from `DowntimeRecord`) when known.
+/// A wait at or under this threshold once it reopens usually means the queue cleared completely
+/// while it was closed — worth calling out, not just the raw number.
+enum RideComeback {
+    static let resetShortThreshold = 20
+
+    static func message(wait: Int?, downtimeMinutes: Int?) -> String {
+        var parts = ["Your Must-Do is running again"]
+        if let downtimeMinutes { parts[0] += " after \(downtimeMinutes) min down" }
+        if let wait {
+            parts.append("posted wait \(wait) min" + (wait <= resetShortThreshold ? " — reset short!" : ""))
+        }
+        return parts.joined(separator: " — ") + "."
+    }
+}
+
 enum MustDoDown {
     enum Event: Equatable { case down, backUp }
 
@@ -138,7 +154,8 @@ final class MustDoDownService {
     /// After every foreground refresh: remember the Must-Dos (for the server) and alert locally
     /// for any the server isn't covering.
     @MainActor
-    func update(rides live: [DisplayRide], mustDo: Set<String>, resort: ParkGroup, parkName: (String) -> String) {
+    func update(rides live: [DisplayRide], mustDo: Set<String>, resort: ParkGroup, context: ModelContext,
+               parkName: (String) -> String) {
         guard Self.isEnabled else {
             if !rides.isEmpty { rides = []; persist(); InstantAlertsService.shared.watchesChanged() }
             return
@@ -164,10 +181,22 @@ final class MustDoDownService {
             case .down:
                 NotificationService.shared.fireMustDoDown(rideId: ride.id, rideName: ride.name)
             case .backUp:
-                NotificationService.shared.fireMustDoBackUp(rideId: ride.id, rideName: ride.name, wait: ride.waitMinutes)
+                let downtime = Self.lastDowntimeMinutes(rideId: ride.id, context: context)
+                NotificationService.shared.fireMustDoBackUp(rideId: ride.id, rideName: ride.name,
+                                                            wait: ride.waitMinutes, downtimeMinutes: downtime)
             }
         }
         persist()
+    }
+
+    /// The most recently closed downtime interval for this ride, if any — `WaitTimeRecorder`
+    /// (which runs earlier in the same refresh) has already closed it out by this point.
+    /// (`downEnd` is optional, so this sorts in memory rather than via `SortDescriptor`, which
+    /// needs a non-optional `Comparable` key.)
+    private static func lastDowntimeMinutes(rideId: String, context: ModelContext) -> Int? {
+        let predicate = #Predicate<DowntimeRecord> { $0.rideId == rideId && $0.downEnd != nil }
+        let records = (try? context.fetch(FetchDescriptor<DowntimeRecord>(predicate: predicate))) ?? []
+        return records.max { ($0.downEnd ?? .distantPast) < ($1.downEnd ?? .distantPast) }?.durationMinutes
     }
 
     /// The server already alerted (sync response) — keep local memory in step
