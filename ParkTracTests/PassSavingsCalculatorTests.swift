@@ -22,4 +22,31 @@ final class PassSavingsCalculatorTests: XCTestCase {
         XCTAssertNil(PassSavingsCalculator.visitsToBreakEven(passCost: 400, totalSavings: 0, visits: 0))
         XCTAssertNil(PassSavingsCalculator.visitsToBreakEven(passCost: 400, totalSavings: 0, visits: 4), "no savings yet to extrapolate from")
     }
+
+    // MARK: Pass periods (lifetime vs. this pass year)
+
+    private func date(_ y: Int, _ m: Int, _ d: Int) -> Date {
+        Calendar(identifier: .gregorian).date(from: DateComponents(year: y, month: m, day: d))!
+    }
+
+    func testCurrentPeriodStartIsTheLatestPastPeriodsEnd() {
+        let periods = [(resort: "Walt Disney World", endDate: date(2025, 1, 1)),
+                       (resort: "Walt Disney World", endDate: date(2026, 1, 1)),
+                       (resort: "Universal Orlando", endDate: date(2024, 6, 1))]
+        XCTAssertEqual(PassPeriodStats.currentPeriodStart(pastPeriods: periods, resort: "Walt Disney World"), date(2026, 1, 1))
+    }
+
+    func testNoCurrentPeriodStartWithoutRenewalHistory() {
+        XCTAssertNil(PassPeriodStats.currentPeriodStart(pastPeriods: [], resort: "Walt Disney World"))
+    }
+
+    func testLifetimeCostSumsPastPeriodsPlusCurrent() {
+        let periods = [(resort: "Walt Disney World", cost: 800.0), (resort: "Walt Disney World", cost: 900.0),
+                       (resort: "Universal Orlando", cost: 500.0)]
+        XCTAssertEqual(PassPeriodStats.lifetimeCost(pastPeriods: periods, resort: "Walt Disney World", currentCost: 1000), 2700)
+    }
+
+    func testLifetimeCostIsJustCurrentWithNoHistory() {
+        XCTAssertEqual(PassPeriodStats.lifetimeCost(pastPeriods: [], resort: "Walt Disney World", currentCost: 1000), 1000)
+    }
 }

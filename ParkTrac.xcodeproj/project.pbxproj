@@ -104,6 +104,7 @@
 		AA0000000000000000000162 /* WaitAccuracyCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000163 /* WaitAccuracyCard.swift */; };
 		AA0000000000000000000164 /* WaitTimerLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000165 /* WaitTimerLog.swift */; };
 		AA0000000000000000000166 /* VisitSaving.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000167 /* VisitSaving.swift */; };
+		AA00000000000000000001CD /* PassPeriod.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001CE /* PassPeriod.swift */; };
 		AA0000000000000000000168 /* ReturnTimeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000169 /* ReturnTimeBanner.swift */; };
 		AA000000000000000000016A /* WaitTimerBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016B /* WaitTimerBanner.swift */; };
 		AA000000000000000000018E /* UndoToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000018F /* UndoToast.swift */; };
@@ -114,6 +115,7 @@
 		AA00000000000000000001C5 /* RopeDropPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001C6 /* RopeDropPlanView.swift */; };
 		AA000000000000000000017B /* TicketPriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017C /* TicketPriceService.swift */; };
 		AA000000000000000000017D /* PassSavingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017E /* PassSavingsView.swift */; };
+		AA00000000000000000001CF /* RenewPassSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000001D0 /* RenewPassSheet.swift */; };
 		AA000000000000000000017F /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000180 /* LocationPickerView.swift */; };
 		AA0000000000000000000182 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000181 /* PersistenceController.swift */; };
 		AA0000000000000000000184 /* RideLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000183 /* RideLookupService.swift */; };
@@ -261,6 +263,7 @@
 		AA0000000000000000000163 /* WaitAccuracyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitAccuracyCard.swift; sourceTree = "<group>"; };
 		AA0000000000000000000165 /* WaitTimerLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimerLog.swift; sourceTree = "<group>"; };
 		AA0000000000000000000167 /* VisitSaving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitSaving.swift; sourceTree = "<group>"; };
+		AA00000000000000000001CE /* PassPeriod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassPeriod.swift; sourceTree = "<group>"; };
 		AA0000000000000000000169 /* ReturnTimeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnTimeBanner.swift; sourceTree = "<group>"; };
 		AA000000000000000000016B /* WaitTimerBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitTimerBanner.swift; sourceTree = "<group>"; };
 		AA000000000000000000018F /* UndoToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoToast.swift; sourceTree = "<group>"; };
@@ -271,6 +274,7 @@
 		AA00000000000000000001C6 /* RopeDropPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RopeDropPlanView.swift; sourceTree = "<group>"; };
 		AA000000000000000000017C /* TicketPriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketPriceService.swift; sourceTree = "<group>"; };
 		AA000000000000000000017E /* PassSavingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassSavingsView.swift; sourceTree = "<group>"; };
+		AA00000000000000000001D0 /* RenewPassSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewPassSheet.swift; sourceTree = "<group>"; };
 		AA0000000000000000000180 /* LocationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPickerView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000181 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		AA0000000000000000000183 /* RideLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLookupService.swift; sourceTree = "<group>"; };
@@ -383,6 +387,7 @@
 				AA0000000000000000000152 /* Guest.swift */,
 				AA0000000000000000000165 /* WaitTimerLog.swift */,
 				AA0000000000000000000167 /* VisitSaving.swift */,
+				AA00000000000000000001CE /* PassPeriod.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -510,6 +515,7 @@
 				AA00000000000000000001C4 /* TipCalculatorView.swift */,
 				AA000000000000000000013B /* AnnualPassView.swift */,
 				AA000000000000000000017E /* PassSavingsView.swift */,
+				AA00000000000000000001D0 /* RenewPassSheet.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -819,6 +825,7 @@
 				AA0000000000000000000162 /* WaitAccuracyCard.swift in Sources */,
 				AA0000000000000000000164 /* WaitTimerLog.swift in Sources */,
 				AA0000000000000000000166 /* VisitSaving.swift in Sources */,
+				AA00000000000000000001CD /* PassPeriod.swift in Sources */,
 				AA0000000000000000000168 /* ReturnTimeBanner.swift in Sources */,
 				AA000000000000000000016A /* WaitTimerBanner.swift in Sources */,
 				AA000000000000000000018E /* UndoToast.swift in Sources */,
@@ -829,6 +836,7 @@
 				AA00000000000000000001C5 /* RopeDropPlanView.swift in Sources */,
 				AA000000000000000000017B /* TicketPriceService.swift in Sources */,
 				AA000000000000000000017D /* PassSavingsView.swift in Sources */,
+				AA00000000000000000001CF /* RenewPassSheet.swift in Sources */,
 				AA000000000000000000017F /* LocationPickerView.swift in Sources */,
 				AA0000000000000000000182 /* PersistenceController.swift in Sources */,
 				AA0000000000000000000184 /* RideLookupService.swift in Sources */,
