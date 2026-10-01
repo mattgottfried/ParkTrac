@@ -1,20 +1,22 @@
 New since the last build (short version: TestFlight allows 4,000 characters)
 
-Smart Planner & My Day: both now flag free gaps ≥20 min between plan stops and suggest a nearby short-wait ride to fill them ("25 min free — try Jungle Cruise, 10m wait"). My Day shows a live "You've stood in line ~Xm today" line (ticks live while a wait timer runs).
+Challenges: Badges screen adds 4 new badges from your own ride logs — Early Bird, Night Owl, Short Wait Streak, Beat the Wait. Park Bingo (Wait Times, park in focus) now also works zoomed out as "Resort Bingo" across every park, plus a by-ride-type breakdown (Coasters, Dark Rides, …) in its checklist sheet.
 
-Wait Times: a park in focus shows a tappable "Park Bingo: 14 of 42 this trip" line — every ride at that park ridden since your current trip started, with a checklist sheet. Ride page adds best-effort Loud/Dark/Sudden-moments chips next to height/thrill (sourced from Disney's published sensory guide, not exhaustive). Arrows on the wait tile show rising/falling since the last refresh; orange "closing soon" banner + "Quietest around 9am, busiest around 2pm" line when a park's in focus; seated-figure button suggests a nearby indoor rest stop; Easy Wins strip (≤15 min waits); "+15/-10 vs usual" on ride cards.
+Wait Times: new "Down Right Now" strip lists currently-broken rides so you don't walk to one. New "Nearby & Short" strip — short waits that are also a short walk from you. Shows list: a "Next after: …" hint when the next showing is too soon to reach. Arrows on the wait tile show rising/falling since the last refresh; "closing soon" banner + "Quietest/busiest" line when a park's in focus; seated-figure button for a nearby indoor rest stop; ride page adds best-effort Loud/Dark/Sudden-moments chips; Easy Wins strip (≤15 min); "+15/-10 vs usual" on cards; Park Bingo checklist.
 
-My Day: "On this day" card (past-year same-date callback). Best Park Today for multi-resort trips.
+Smart Planner & My Day: both flag free gaps ≥20 min between stops and suggest a nearby short-wait ride to fill them. My Day shows a live "stood in line ~Xm today" line.
 
-Trip Planner: "Vacation Calendar" — day-by-day trip view with item/dining counts and a red "Blocked Out" flag on any day your annual pass blocks.
+My Day: "On this day" card; Best Park Today for multi-resort trips.
 
-Spending: new "This Year" total alongside Today/This Trip. "Quick Snack" chips prefill a purchase — you still type the price. My Dining: mark a reservation as a Mobile Order with a pickup-by time and a live "N min left" countdown.
+Trip Planner: "Vacation Calendar" — day-by-day view with item/dining counts and a "Blocked Out" flag.
 
-Ride Counter: "Your #1 ride" trophy stat. Stats → Recaps: "Year in Review" card alongside Day Recaps. Visit History: past weather shown for each logged day.
+Spending: "This Year" total; "Quick Snack" chips (you type the price). My Dining: Mobile Order pickup countdown.
+
+Ride Counter: "Your #1 ride". Recaps: "Year in Review" card. Visit History: past weather per day.
 
 Pass Savings: "Cost per visit". Day Recap: "X per ride today".
 
-Smart Planner: no invented dinners unless notes ask; plan a future day (60 days out); Change the Plan shows standby time + walking with one-tap chips and Apple Intelligence text requests; rain AND heat plan routes indoor rides into bad-weather hours.
+Smart Planner: no invented dinners unless asked; plan a future day (60 days out); Change the Plan shows standby time + walking with one-tap chips and Apple Intelligence text requests; rain/heat plan routes indoor rides into bad-weather hours.
 
 Rope Drop Plan: My Day sunrise icon, times Must-Dos from actual opening.
 
@@ -36,18 +38,14 @@ Trip budget + pacing: "Set a Trip Budget" bar, "~$X/day for N more days".
 
 Offline: no signal shows "No signal", never a fake wait or false Closed.
 
-Lightning Lane: paid Single Pass auto-logs its price. Tip Board "Worth it today?" totals minutes saved + real cost.
+Lightning Lane: paid Single Pass auto-logs its price. Tip Board "Worth it today?" totals minutes saved + cost.
 
-Character tracker: Bucket List "Characters" tab, 22 Orlando characters.
+Character tracker: Bucket List "Characters" tab. Bucket List refresh: a few Orlando restaurant closures (ratings kept) and a new successor entry.
 
-Bucket List refresh: Wolfgang Puck Bar & Grill and Thunder Falls Terrace closed (rating kept); Hot Dog Hall of Fame® closed, Fat One's added.
-
-Data export: Settings → Data & Sync CSV, good backup before an update.
-
-Trip vs. last visit: Visit History "This Trip So Far" vs. the same day-count into your last trip.
+Data export: Settings → Data & Sync CSV. Trip vs. last visit: Visit History "This Trip So Far".
 
 Tip Calculator: Settings → Tools, quick % or custom.
 
 Fixed: upload rejected for Siri's description mentioning Apple (rule 90626); a Swift build error.
 
-Check overall: a plan gap suggestion (Smart Planner + My Day), the live standing-time line, Park Bingo, a ride's sensory chips, a wait trend arrow, closing-soon banner, rest-stop button, Easy Wins/usual-delta, "On this day"/Best Park Today, Vacation Calendar's blockout flag, Spending's This Year + Quick Snack, a mobile order countdown, Ride Counter's #1 ride, Year in Review, Visit History weather, Pass Savings cost-per-visit, Day Recap cost-per-ride, Rope Drop Plan, car locator, a paid Lightning Lane, Bucket List changes, Settings export, Single Rider, Tip Calculator.
+Check overall: a new badge, Resort Bingo + its type breakdown, Down Right Now + Nearby & Short strips, a show's "Next after" hint, a plan gap suggestion, the live standing-time line, a ride's sensory chips, a wait trend arrow, closing-soon banner, rest-stop button, "On this day"/Best Park Today, Vacation Calendar's blockout flag, Spending's This Year + Quick Snack, a mobile order countdown, Ride Counter's #1 ride, Year in Review, Visit History weather, Pass Savings cost-per-visit, Day Recap cost-per-ride, Rope Drop Plan, car locator, a paid Lightning Lane, Bucket List changes, Settings export, Single Rider, Tip Calculator.

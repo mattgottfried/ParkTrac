@@ -199,6 +199,33 @@ final class GoodTimeService {
 // (a ride can have a short line without ever having a long "usual" to compare against) — quick
 // things to knock out while waiting for a Must-Do to get shorter, or filling a gap in the day.
 
+/// Short wait *and* close by right now — Easy Wins filtered further by actual walking distance,
+/// for picking something to do without crossing the whole park. Walk minutes come from the
+/// guest's live location (`WalkEstimate`), not from `DisplayRide` itself.
+enum NearbyShort {
+    static let maxWaitMinutes = 20
+    static let maxWalkMinutes = 5
+
+    /// Rides without a known walk time (location off, or no GPS for the ride) are excluded,
+    /// since "nearby" can't be judged for them. Returns ride ids, nearest first.
+    static func pick(rides: [(id: String, waitMinutes: Int?, isOperating: Bool, walkMinutes: Int?)],
+                     excluding: Set<String> = [], limit: Int = 6) -> [String] {
+        rides
+            .filter { r in
+                guard r.isOperating, let wait = r.waitMinutes, let walk = r.walkMinutes,
+                      !excluding.contains(r.id) else { return false }
+                return wait <= maxWaitMinutes && walk <= maxWalkMinutes
+            }
+            .sorted {
+                let a = ($0.walkMinutes ?? Int.max, $0.waitMinutes ?? Int.max)
+                let b = ($1.walkMinutes ?? Int.max, $1.waitMinutes ?? Int.max)
+                return a.0 != b.0 ? a.0 < b.0 : a.1 < b.1
+            }
+            .prefix(limit)
+            .map(\.id)
+    }
+}
+
 enum EasyWins {
     static let maxWaitMinutes = 15
 

@@ -40,6 +40,15 @@ struct ShowsListView: View {
     }
 }
 
+/// "Missed it, catch the next one" — when the next showing is too soon to reasonably reach,
+/// the showing after it (pure, unit tested).
+enum ShowEncore {
+    static func later(showtimes: [Date], next: Date?, now: Date = .now, leadMinutes: Int = 15) -> Date? {
+        guard let next, next.timeIntervalSince(now) < Double(leadMinutes) * 60 else { return nil }
+        return showtimes.filter { $0 > next }.min()
+    }
+}
+
 private struct ShowRowView: View {
     let show: DisplayShow
     let theme: ParkTheme
@@ -65,6 +74,13 @@ private struct ShowRowView: View {
         return .green
     }
 
+    /// When the next showing is probably too soon to reach, surface the one after it — without
+    /// opening the show's own sheet.
+    private var laterShowtimeHint: String? {
+        ShowEncore.later(showtimes: show.showtimes.compactMap(\.startDate), next: show.nextShowtime)
+            .map { "Next after: \(timeFmt.string(from: $0))" }
+    }
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -72,6 +88,9 @@ private struct ShowRowView: View {
                 if let next = show.nextShowtime {
                     Text(timeFmt.string(from: next))
                         .font(.caption).foregroundStyle(.secondary)
+                }
+                if let hint = laterShowtimeHint {
+                    Text(hint).font(.caption2).foregroundStyle(.secondary)
                 }
             }
             Spacer()
