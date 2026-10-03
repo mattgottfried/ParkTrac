@@ -156,6 +156,35 @@ final class VisitTripTests: XCTestCase {
         XCTAssertNil(FirstRidden.date([]))
     }
 
+    // MARK: Rope drop logging
+
+    func testNearOpenWithinThreshold() {
+        let open = day(2026, 1, 1)
+        XCTAssertTrue(RopeDropLogging.isNearOpen(riddenAt: open.addingTimeInterval(10 * 60), openTime: open))
+        XCTAssertFalse(RopeDropLogging.isNearOpen(riddenAt: open.addingTimeInterval(20 * 60), openTime: open))
+        XCTAssertFalse(RopeDropLogging.isNearOpen(riddenAt: open.addingTimeInterval(-5 * 60), openTime: open), "before open doesn't count")
+    }
+
+    func testNoNearOpenWithoutAnOpeningTime() {
+        XCTAssertFalse(RopeDropLogging.isNearOpen(riddenAt: .now, openTime: nil))
+    }
+
+    // MARK: Ride day record
+
+    func testNewRecordBeatsEveryPastDay() {
+        XCTAssertTrue(RideDayRecord.isNewRecord(todayCount: 10, pastDayCounts: [5, 8, 9]))
+        XCTAssertFalse(RideDayRecord.isNewRecord(todayCount: 9, pastDayCounts: [5, 8, 9]), "tied, not beaten")
+        XCTAssertFalse(RideDayRecord.isNewRecord(todayCount: 0, pastDayCounts: []))
+    }
+
+    // MARK: Trip record
+
+    func testBeatLastTripNeedsToExceedThePreviousTotal() {
+        XCTAssertTrue(TripRecord.hasBeatLastTrip(currentRides: 43, previousTripTotalRides: 42))
+        XCTAssertFalse(TripRecord.hasBeatLastTrip(currentRides: 42, previousTripTotalRides: 42), "tied, not beaten")
+        XCTAssertFalse(TripRecord.hasBeatLastTrip(currentRides: 5, previousTripTotalRides: 0))
+    }
+
     // MARK: Park Bingo
 
     func testParkBingoSplitsRiddenFromRemaining() {

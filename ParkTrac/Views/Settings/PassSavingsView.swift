@@ -375,6 +375,7 @@ struct PassSavingsView: View {
                 } header: {
                     Text("Disney Savings — This Pass Year")
                 }
+                .onAppear { checkPennyPincher(passCost: appState.disneyPassCost, net: thisYear.totalSavings - appState.disneyPassCost) }
 
                 upgradeSection(.disney, currentTierRaw: appState.disneyPassTier.rawValue, currentCost: appState.disneyPassCost)
 
@@ -390,6 +391,7 @@ struct PassSavingsView: View {
                     } footer: {
                         Text("Every Disney pass you've paid for, vs. every visit you've ever logged.")
                     }
+                    .onAppear { checkPennyPincher(passCost: cost, net: lifetime.totalSavings - cost) }
                     passHistorySection(.disney, label: "Disney", currentTierRaw: appState.disneyPassTier.rawValue,
                                       currentCost: appState.disneyPassCost)
                 }
@@ -406,6 +408,7 @@ struct PassSavingsView: View {
                 } header: {
                     Text("Universal Savings — This Pass Year")
                 }
+                .onAppear { checkPennyPincher(passCost: appState.universalPassCost, net: thisYear.totalSavings - appState.universalPassCost) }
 
                 upgradeSection(.universal, currentTierRaw: appState.universalPassTier.rawValue, currentCost: appState.universalPassCost)
 
@@ -421,6 +424,7 @@ struct PassSavingsView: View {
                     } footer: {
                         Text("Every Universal pass you've paid for, vs. every visit you've ever logged.")
                     }
+                    .onAppear { checkPennyPincher(passCost: cost, net: lifetime.totalSavings - cost) }
                     passHistorySection(.universal, label: "Universal", currentTierRaw: appState.universalPassTier.rawValue,
                                       currentCost: appState.universalPassCost)
                 }
@@ -511,6 +515,13 @@ struct PassSavingsView: View {
                 renew(.universal, newCost: newCost, newExpiry: newExpiry, newTierRaw: newTierRaw)
             }
         }
+    }
+
+    /// Marks the Penny Pincher badge earned the moment a scope's net savings cover its cost —
+    /// once marked it's never unmarked (see `PennyPincher`'s doc comment).
+    private func checkPennyPincher(passCost: Double, net: Double) {
+        guard passCost > 0, net >= 0 else { return }
+        PennyPincher.markBrokeEven()
     }
 
     /// Snapshots the ending period into a `PassPeriod`, then moves `AppState`'s fields on to the

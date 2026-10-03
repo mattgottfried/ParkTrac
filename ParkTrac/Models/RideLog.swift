@@ -14,6 +14,13 @@ final class RideLog {
     var notes: String = ""
     /// One photo from the ride, picked when logging it ("Rode It!" only, not the stopwatch quick-log)
     @Attribute(.externalStorage) var photoData: Data? = nil
+    /// Whether `GoodTimeToRide` flagged a deal on this ride at the moment it was logged — feeds
+    /// the "Deal Hunter" badge. Stamped only where a live deal check is available (the ride
+    /// detail sheet's save paths); older logs and the Live Activity "I'm On" path default false.
+    var wasGoodTimeDeal: Bool = false
+    /// Whether this log landed within 15 min of the park's actual opening — feeds the
+    /// "Rope Dropper" badge. Stamped only where a live schedule lookup is available.
+    var wasNearRopeDrop: Bool = false
 
     init(
         rideId: String,
@@ -25,7 +32,9 @@ final class RideLog {
         waitMinutes: Int? = nil,
         actualWaitMinutes: Int? = nil,
         notes: String = "",
-        photoData: Data? = nil
+        photoData: Data? = nil,
+        wasGoodTimeDeal: Bool = false,
+        wasNearRopeDrop: Bool = false
     ) {
         self.rideId             = rideId
         self.rideName           = rideName
@@ -37,6 +46,8 @@ final class RideLog {
         self.actualWaitMinutes  = actualWaitMinutes
         self.notes              = notes
         self.photoData          = photoData
+        self.wasGoodTimeDeal    = wasGoodTimeDeal
+        self.wasNearRopeDrop    = wasNearRopeDrop
     }
 }
 
@@ -96,6 +107,35 @@ enum StandingTime {
         let completed = today.reduce(0) { $0 + ($1.actual ?? $1.posted ?? 0) }
         let live = activeTimerStart.map { max(0, Int(now.timeIntervalSince($0) / 60)) } ?? 0
         return completed + live
+    }
+}
+
+/// Whether a log landed within a window of the park's actual opening — feeds `RideLog.wasNearRopeDrop`.
+/// The schedule lookup itself happens at the call site (a live `WaitTimesViewModel` is needed);
+/// this is just the pure time comparison.
+enum RopeDropLogging {
+    static func isNearOpen(riddenAt: Date, openTime: Date?, thresholdMinutes: Int = 15) -> Bool {
+        guard let openTime else { return false }
+        let diff = riddenAt.timeIntervalSince(openTime)
+        return diff >= 0 && diff <= Double(thresholdMinutes) * 60
+    }
+}
+
+/// "New personal best" — today's ride count beats every other single day ever logged (at this
+/// resort). Shown live in My Day as you ride, distinct from `StandingTime` (minutes, not count).
+enum RideDayRecord {
+    static func isNewRecord(todayCount: Int, pastDayCounts: [Int]) -> Bool {
+        guard todayCount > 0 else { return false }
+        return pastDayCounts.allSatisfy { todayCount > $0 }
+    }
+}
+
+/// Whether the current (possibly still in progress) trip has already caught up to or passed the
+/// *previous* trip's final ride count — worth celebrating before this trip even ends, unlike
+/// `TripComparison` above which only compares at the same day-count into each trip.
+enum TripRecord {
+    static func hasBeatLastTrip(currentRides: Int, previousTripTotalRides: Int) -> Bool {
+        previousTripTotalRides > 0 && currentRides > previousTripTotalRides
     }
 }
 

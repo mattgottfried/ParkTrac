@@ -37,4 +37,11 @@ final class StandbyBadgeTests: XCTestCase {
         XCTAssertFalse(StandbyBadgeRules.hasBeatTheWait(rides: [(posted: 60, actual: 45)]))
         XCTAssertFalse(StandbyBadgeRules.hasBeatTheWait(rides: [(posted: nil, actual: 35)]))
     }
+
+    func testMarathonDayNeedsFifteenInOneDay() {
+        let day1 = Array(repeating: at(10), count: 15)
+        XCTAssertTrue(StandbyBadgeRules.hasMarathonDay(rides: day1, calendar: cal))
+        let split = Array(repeating: at(10), count: 8) + Array(repeating: cal.date(byAdding: .day, value: 1, to: at(10))!, count: 8)
+        XCTAssertFalse(StandbyBadgeRules.hasMarathonDay(rides: split, calendar: cal), "split across two days, neither alone reaches 15")
+    }
 }

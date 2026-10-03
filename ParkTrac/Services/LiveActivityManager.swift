@@ -314,7 +314,8 @@ enum LiveActivityActionHandler {
                 riddenAt: .now,
                 waitMinutes: posted == 0 ? nil : posted,
                 actualWaitMinutes: TimerMath.actualMinutes(start: Date(timeIntervalSince1970: startTs)),
-                notes: "")
+                notes: "",
+                wasGoodTimeDeal: GoodTimeService.shared.deal(for: rideId) != nil)
             let context = PersistenceController.container.mainContext
             context.insert(log)
             try? context.save()

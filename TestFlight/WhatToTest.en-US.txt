@@ -1,18 +1,18 @@
 New since the last build (short version: TestFlight allows 4,000 characters)
 
-Pass Savings: "I Renewed" starts a new pass year, keeping "This Pass Year" and "Lifetime" separate. Once you've renewed at least once, also shows "Pass cost trend", "Best pass year", and "Cost per visit" year over year. New "Should I Upgrade?" section compares your actual spend to the next tier up's discount rate (always shown, no renewal needed).
+Challenges: 7 new badges — Rope Dropper (5 rides within 15 min of open), Deal Hunter (10 Good Time to Ride deals), Marathoner (15+ rides in a day), Coaster Collector (every named coaster at a resort, lifetime), World Traveler (a ride at all 4 resorts), Park Completionist (every park of a resort in one trip), Penny Pincher (AP savings broke even). Plus live callouts: "New personal best" ride day in My Day, and "Already beat your last trip's total" in Visit History.
 
-Ride milestones: a one-time celebration notification when a ride's count (or your resort total) crosses 10/25/50/100/200/500/1000. Ride page now shows "first ridden [Month Year]" next to your ride count.
+Pass Savings: "I Renewed" starts a new pass year, keeping "This Pass Year" and "Lifetime" separate. With renewal history, also shows "Pass cost trend", "Best pass year", and "Cost per visit" year over year. "Should I Upgrade?" compares your spend to the next tier's discount rate.
 
-Rope Drop Plan: now suggests an arrival time before park open based on today's predicted crowd level, not just the Must-Do order. Tip Board: "Worth it today?" now names the single best Lightning Lane pick right now.
+Ride milestones: a notification when a ride's count (or resort total) crosses 10/25/50/100/200/500/1000. Ride page shows "first ridden [Month Year]".
 
-My Day: the "take a break" nudge fires after 3 rides instead of 4 on a hot day, and says so. Live "walked ~X mi today" line pairs with the standing-time line. Visit History: "This Trip So Far" adds "Best day so far" and, when true, "Quietest trip yet" vs. past trips.
+Rope Drop Plan: suggests an arrival time before park open based on today's predicted crowd level. Tip Board: "Worth it today?" names the single best Lightning Lane pick right now.
 
-New: a morning briefing notification (weather + crowd + top Must-Do pick) once per trip day, 6–10am, when a Trip Planner trip covers today and this resort.
+My Day: the "take a break" nudge fires after 3 rides instead of 4 on a hot day. Live "walked ~X mi today" line. Visit History: "This Trip So Far" adds "Best day so far" and "Quietest trip yet".
 
-Must-Do alerts: "back up" notifications say how long it was down and flag a short reset. Purple "One Last Ride?" capsule ~30 min before close.
+Morning briefing notification (weather + crowd + top Must-Do pick), once per trip day 6–10am, when a Trip Planner trip covers today and this resort.
 
-Challenges: 4 badges (Early Bird, Night Owl, Short Wait Streak, Beat the Wait). Resort/Park Bingo with by-type and by-thrill breakdowns.
+Must-Do alerts: "back up" notifications say how long it was down. Purple "One Last Ride?" capsule ~30 min before close.
 
 Wait Times: "Down Right Now" and "Nearby & Short" strips; wait tile trend arrows; "closing soon" banner + "Quietest/busiest" line; rest-stop button; Loud/Dark/Sudden-moments chips; Easy Wins strip; "+15/-10 vs usual". Shows: "Next after: …" hint.
 
@@ -40,4 +40,4 @@ Data export CSV. Tip Calculator (Settings → Tools).
 
 Fixed: upload rejected for Siri's description mentioning Apple (rule 90626); a Swift build error.
 
-Check overall: Pass Savings' Should I Upgrade + cost-per-visit trend; a ride milestone notification; a ride page's "first ridden" line; Rope Drop's arrival-time suggestion; Tip Board's best-pick line; the heat-aware break nudge; the morning briefing (needs a Trip Planner trip covering today); My Day's walked-distance line; Visit History's "Best day so far"/"Quietest trip yet"; a Must-Do back-up notification; "One Last Ride?"; a new badge; Resort/Park Bingo's breakdowns; Down Right Now + Nearby & Short; a plan gap suggestion; closing-soon banner; Vacation Calendar's blockout flag; Spending's This Year + Quick Snack; mobile order countdown; Year in Review; Rope Drop Plan; Single Rider; Tip Calculator.
+Check overall: log a ride near open / after a Good Time deal and check the new badges; a 15-ride day for Marathoner; ride every coaster at a resort for Coaster Collector; Pass Savings' Should I Upgrade + cost-per-visit trend; a ride milestone notification; a ride page's "first ridden" line; Rope Drop's arrival suggestion; Tip Board's best-pick line; the heat-aware break nudge; the morning briefing; My Day's walked-distance + personal-best lines; Visit History's trip callouts; a Must-Do back-up notification; "One Last Ride?"; Down Right Now + Nearby & Short; a plan gap suggestion; closing-soon banner; Vacation Calendar's blockout flag; Spending's This Year + Quick Snack; mobile order countdown; Year in Review; Rope Drop Plan; Single Rider; Tip Calculator.

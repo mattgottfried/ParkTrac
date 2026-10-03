@@ -33,6 +33,15 @@ struct RideDetailSheet: View {
         FirstRidden.date(allRideLogs.filter { $0.rideId == ride.id }.map(\.riddenAt))
     }
 
+    /// Whether logging this ride right now would land within 15 min of today's actual park open —
+    /// feeds the Rope Dropper badge. Needs a live schedule lookup, so only computed here, not
+    /// retroactively from past logs.
+    private var isNearRopeDrop: Bool {
+        guard let park = viewModel.currentParks.first(where: { $0.id == ride.parkId }) else { return false }
+        let openTime = viewModel.schedule(for: park, on: .now).first { !$0.isExtraHours && !$0.isTicketedEvent }?.openingDate
+        return RopeDropLogging.isNearOpen(riddenAt: .now, openTime: openTime)
+    }
+
     /// A single rider line, or a similar ride with a much shorter wait right now — the two real
     /// ways to cut a long standby line without a return-time pass.
     private var alternateSuggestion: AlternateRideSuggestion.Kind? {
@@ -168,7 +177,9 @@ struct RideDetailSheet: View {
                                 riddenAt: .now,
                                 waitMinutes: posted == 0 ? nil : posted,
                                 actualWaitMinutes: actualMins,
-                                notes: ""
+                                notes: "",
+                                wasGoodTimeDeal: GoodTimeService.shared.deal(for: ride.id) != nil,
+                                wasNearRopeDrop: isNearRopeDrop
                             )
                             context.insert(log)
                             try? context.save()
@@ -520,6 +531,7 @@ struct LogRideSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
+    @Environment(WaitTimesViewModel.self) private var viewModel
 
     @State private var waitMinutes: Int? = nil
     @State private var notes = ""
@@ -527,6 +539,12 @@ struct LogRideSheet: View {
     @State private var saved = false
     @State private var photoItem: PhotosPickerItem?
     @State private var photoImage: UIImage?
+
+    private var isNearRopeDrop: Bool {
+        guard let park = viewModel.currentParks.first(where: { $0.id == ride.parkId }) else { return false }
+        let openTime = viewModel.schedule(for: park, on: riddenAt).first { !$0.isExtraHours && !$0.isTicketedEvent }?.openingDate
+        return RopeDropLogging.isNearOpen(riddenAt: riddenAt, openTime: openTime)
+    }
 
     var body: some View {
         NavigationStack {
@@ -631,7 +649,9 @@ struct LogRideSheet: View {
             riddenAt: riddenAt,
             waitMinutes: waitMinutes,
             notes: notes,
-            photoData: photoImage?.jpegData(compressionQuality: 0.7)
+            photoData: photoImage?.jpegData(compressionQuality: 0.7),
+            wasGoodTimeDeal: GoodTimeService.shared.deal(for: ride.id) != nil,
+            wasNearRopeDrop: isNearRopeDrop
         )
         context.insert(log)
         try? context.save()

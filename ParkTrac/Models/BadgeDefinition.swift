@@ -43,6 +43,77 @@ enum StandbyBadgeRules {
             return posted - actual >= beatTheWaitMargin
         }
     }
+
+    /// 15+ rides logged in a single calendar day.
+    static func hasMarathonDay(rides: [Date], threshold: Int = 15, calendar: Calendar = .current) -> Bool {
+        Dictionary(grouping: rides) { calendar.startOfDay(for: $0) }.values.contains { $0.count >= threshold }
+    }
+}
+
+// MARK: - Lifetime / multi-trip challenge rules (pure)
+// Unlike Park Bingo / Resort Bingo (trip-scoped, driven by the live ride roster), these never
+// reset and are evaluated from logged history alone — same inputs `BadgeDefinition.isEarned`
+// already gets, no live roster needed.
+
+enum LifetimeChallengeRules {
+    /// Every one of a resort's named coasters (`RideMetadata.resortCoasters`), ridden at least
+    /// once ever, for at least one resort.
+    static func hasCoasterCollection(rides: [(resort: String, rideName: String)]) -> Bool {
+        let byResort = Dictionary(grouping: rides, by: { $0.resort })
+        return byResort.contains { resortRaw, logs in
+            guard let group = ParkGroup(rawValue: resortRaw) else { return false }
+            return RideMetadata.hasAllCoasters(for: group, riddenNames: logs.map(\.rideName))
+        }
+    }
+
+    /// At least one logged ride at every resort, lifetime.
+    static func isWorldTraveler(resorts: [String]) -> Bool {
+        Set(resorts.compactMap { ParkGroup(rawValue: $0) }).count >= ParkGroup.allCases.count
+    }
+
+    /// Every park of a resort visited within a single trip (gap-inferred the same way
+    /// `VisitTripGrouper` infers trip boundaries elsewhere).
+    static func hasCompletedAParkInOneTrip(rides: [RideLog], calendar: Calendar = .current) -> Bool {
+        let byResort = Dictionary(grouping: rides, by: { $0.resort })
+        return byResort.contains { resortRaw, logs in
+            let days = Dictionary(grouping: logs) { calendar.startOfDay(for: $0.riddenAt) }
+                .map { VisitDay(id: $0.key, resort: resortRaw, entries: $0.value) }
+            let trips = VisitTripGrouper.group(days, calendar: calendar)
+            return trips.contains { trip in
+                ParkCompletionist.completed(parkNames: trip.days.flatMap(\.parks), resort: resortRaw)
+            }
+        }
+    }
+}
+
+/// A resort's named theme parks, matched by substring (not exact equality — the live API's exact
+/// park name text isn't guaranteed to match this list word for word).
+enum ParkCompletionist {
+    static func parkKeywords(for resort: String) -> [String]? {
+        switch resort {
+        case "Walt Disney World":      return ["Magic Kingdom", "Epcot", "Hollywood Studios", "Animal Kingdom"]
+        case "Universal Orlando":      return ["Universal Studios", "Islands of Adventure", "Epic Universe", "Volcano Bay"]
+        case "Tokyo Disney Resort":    return ["Tokyo Disneyland", "Tokyo DisneySea"]
+        case "Universal Studios Japan": return ["Universal Studios Japan"]
+        default: return nil
+        }
+    }
+
+    static func completed(parkNames: [String], resort: String) -> Bool {
+        guard let keywords = parkKeywords(for: resort) else { return false }
+        return keywords.allSatisfy { keyword in parkNames.contains { $0.localizedCaseInsensitiveContains(keyword) } }
+    }
+}
+
+/// "Your AP savings broke even against the pass cost" — unlike every other badge here, this
+/// needs data (`VisitSaving`, `PurchaseLog`, `AppState`'s pass cost) outside `BadgeDefinition
+/// .isEarned`'s fixed (restaurants, hotels, rides) signature. `PassSavingsView` marks it the
+/// moment it computes a non-negative net for a resort with a cost entered; once marked it's
+/// never unmarked, so it reads as "ever broken even," not "broken even right now."
+enum PennyPincher {
+    private static let key = "pennyPincherBrokeEven"
+    static func markBrokeEven() { UserDefaults.standard.set(true, forKey: key) }
+    static func hasBrokenEven() -> Bool { UserDefaults.standard.bool(forKey: key) }
 }
 
 // MARK: - All Badges
@@ -322,5 +393,70 @@ let allBadges: [BadgeDefinition] = [
         isEarned: { _, _, rides in
             StandbyBadgeRules.hasBeatTheWait(rides: rides.map { (posted: $0.waitMinutes, actual: $0.actualWaitMinutes) })
         }
+    ),
+    BadgeDefinition(
+        id: "rope_dropper",
+        title: "Rope Dropper",
+        description: "Logged 5 rides within 15 minutes of park open.",
+        howToEarn: "Log a ride with Rode It! within 15 minutes of the park's actual opening time, 5 times.",
+        systemImage: "sunrise.fill",
+        color: .yellow,
+        isEarned: { _, _, rides in rides.filter(\.wasNearRopeDrop).count >= 5 }
+    ),
+    BadgeDefinition(
+        id: "deal_hunter",
+        title: "Deal Hunter",
+        description: "Rode 10 Good Time to Ride deals.",
+        howToEarn: "Log a ride with Rode It! while its Good Time to Ride badge is active, 10 times.",
+        systemImage: "tag.fill",
+        color: .green,
+        isEarned: { _, _, rides in rides.filter(\.wasGoodTimeDeal).count >= 10 }
+    ),
+    BadgeDefinition(
+        id: "marathoner",
+        title: "Marathoner",
+        description: "Logged 15+ rides in a single day.",
+        howToEarn: "Log 15 or more rides with Rode It! on the same day.",
+        systemImage: "figure.run",
+        color: .red,
+        isEarned: { _, _, rides in StandbyBadgeRules.hasMarathonDay(rides: rides.map(\.riddenAt)) }
+    ),
+    BadgeDefinition(
+        id: "coaster_collector",
+        title: "Coaster Collector",
+        description: "Rode every named coaster at a resort, lifetime.",
+        howToEarn: "Log every one of a resort's coasters at least once \u{2014} not reset per trip, unlike Resort Bingo.",
+        systemImage: "mountain.2.fill",
+        color: .red,
+        isEarned: { _, _, rides in
+            LifetimeChallengeRules.hasCoasterCollection(rides: rides.map { (resort: $0.resort, rideName: $0.rideName) })
+        }
+    ),
+    BadgeDefinition(
+        id: "world_traveler",
+        title: "World Traveler",
+        description: "Logged a ride at all 4 resorts.",
+        howToEarn: "Log at least one ride at Walt Disney World, Universal Orlando, Tokyo Disney Resort, and Universal Studios Japan.",
+        systemImage: "globe",
+        color: .blue,
+        isEarned: { _, _, rides in LifetimeChallengeRules.isWorldTraveler(resorts: rides.map(\.resort)) }
+    ),
+    BadgeDefinition(
+        id: "park_completionist",
+        title: "Park Completionist",
+        description: "Visited every park at a resort in one trip.",
+        howToEarn: "Visit every theme park at a multi-park resort (e.g. all 4 Disney parks) within the same trip.",
+        systemImage: "checkmark.seal.fill",
+        color: .indigo,
+        isEarned: { _, _, rides in LifetimeChallengeRules.hasCompletedAParkInOneTrip(rides: rides) }
+    ),
+    BadgeDefinition(
+        id: "penny_pincher",
+        title: "Penny Pincher",
+        description: "Your AP savings broke even against the pass cost.",
+        howToEarn: "In Pass Savings, get your total savings (tickets, parking, and discounts) to match or beat what you paid for a pass.",
+        systemImage: "dollarsign.circle.fill",
+        color: .green,
+        isEarned: { _, _, _ in PennyPincher.hasBrokenEven() }
     ),
 ]
