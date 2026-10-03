@@ -29,6 +29,10 @@ struct RideDetailSheet: View {
         allRideLogs.filter { $0.rideId == ride.id }.count
     }
 
+    private var firstRiddenDate: Date? {
+        FirstRidden.date(allRideLogs.filter { $0.rideId == ride.id }.map(\.riddenAt))
+    }
+
     /// A single rider line, or a similar ride with a much shorter wait right now — the two real
     /// ways to cut a long standby line without a return-time pass.
     private var alternateSuggestion: AlternateRideSuggestion.Kind? {
@@ -167,6 +171,9 @@ struct RideDetailSheet: View {
                                 notes: ""
                             )
                             context.insert(log)
+                            try? context.save()
+                            RideMilestoneService.checkMilestones(rideId: ride.id, rideName: ride.name,
+                                                                 resort: parkGroup.rawValue, context: context)
                             flashToast("Saved! Posted: \(posted)m · Actual: \(actualMins)m")
                         }
                     )
@@ -255,7 +262,8 @@ struct RideDetailSheet: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if rideCount > 0 {
-                    Label("Ridden \(rideCount) time\(rideCount == 1 ? "" : "s")", systemImage: "checkmark.seal.fill")
+                    Label("Ridden \(rideCount) time\(rideCount == 1 ? "" : "s")\(firstRiddenDate.map { " · first \($0.formatted(.dateTime.month(.wide).year()))" } ?? "")",
+                          systemImage: "checkmark.seal.fill")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.green)
                 }
@@ -627,6 +635,7 @@ struct LogRideSheet: View {
         )
         context.insert(log)
         try? context.save()
+        RideMilestoneService.checkMilestones(rideId: ride.id, rideName: ride.name, resort: resort, context: context)
 
         withAnimation { saved = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dismiss() }

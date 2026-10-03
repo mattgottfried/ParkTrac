@@ -103,21 +103,41 @@ enum StandingTime {
 /// pairs with `StandingTime`, which only measures time, not pacing.
 enum RestReminder {
     static let rideStreakThreshold = 4
+    /// On a hot day, breaks matter more — fewer back-to-back rides before the nudge fires.
+    static let hotRideStreakThreshold = 3
     /// A gap under this still counts as "no break"; a gap over it resets the streak.
     static let maxGapMinutes = 20
 
-    /// True once the most recent `rideStreakThreshold` (or more) rides today were each logged
-    /// within `maxGapMinutes` of the one before, and the last of them was itself recent — so the
-    /// nudge doesn't surface hours after the stretch actually happened.
-    static func shouldNudge(todaysRideTimes: [Date], now: Date = .now) -> Bool {
+    /// True once the most recent `rideStreakThreshold` (or more, `hotRideStreakThreshold` on a
+    /// hot day) rides today were each logged within `maxGapMinutes` of the one before, and the
+    /// last of them was itself recent — so the nudge doesn't surface hours after the fact.
+    static func shouldNudge(todaysRideTimes: [Date], now: Date = .now, isHot: Bool = false) -> Bool {
+        let threshold = isHot ? hotRideStreakThreshold : rideStreakThreshold
         let sorted = todaysRideTimes.sorted()
-        guard sorted.count >= rideStreakThreshold else { return false }
-        let recent = sorted.suffix(rideStreakThreshold)
+        guard sorted.count >= threshold else { return false }
+        let recent = sorted.suffix(threshold)
         for (a, b) in zip(recent, recent.dropFirst()) where b.timeIntervalSince(a) > Double(maxGapMinutes) * 60 {
             return false
         }
         guard let last = recent.last else { return false }
         return now.timeIntervalSince(last) <= Double(maxGapMinutes) * 60
+    }
+}
+
+/// The earliest time a ride was logged — "First ridden: June 2022" on its detail page.
+enum FirstRidden {
+    static func date(_ logDates: [Date]) -> Date? { logDates.min() }
+}
+
+/// Round-number ride-count celebrations — the 100th ride on a favorite coaster, the 500th ride
+/// overall at a resort. `crossed` compares before/after counts so only the highest milestone
+/// actually reached in that step fires (normally just one, since counts are checked after every
+/// single new log).
+enum RideMilestone {
+    static let thresholds = [10, 25, 50, 100, 200, 500, 1000]
+
+    static func crossed(oldCount: Int, newCount: Int) -> Int? {
+        thresholds.last { $0 > oldCount && $0 <= newCount }
     }
 }
 

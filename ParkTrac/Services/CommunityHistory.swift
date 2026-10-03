@@ -240,6 +240,25 @@ enum QuietestTrip {
     }
 }
 
+/// How much earlier than official park open to arrive to beat the rope-drop crowd — a busier
+/// predicted day rewards getting there earlier, beyond what `RopeDropPlanView` already times
+/// from the moment the park actually opens.
+enum ArrivalAdvisor {
+    static func leadMinutes(for level: CrowdLevel) -> Int {
+        switch level {
+        case .ghost:    return 15
+        case .low:      return 20
+        case .moderate: return 30
+        case .high:     return 45
+        case .veryHigh: return 60
+        }
+    }
+
+    static func suggestedArrival(openTime: Date, level: CrowdLevel) -> Date {
+        openTime.addingTimeInterval(-Double(leadMinutes(for: level)) * 60)
+    }
+}
+
 /// Best/worst hour to be at a park today, from every operating ride's community typical wait
 /// per hour (`CommunityHistoryService.waitsByHour`) — a park-wide view, not a per-ride one.
 enum QuietestHour {

@@ -183,4 +183,29 @@ final class GenieTests: XCTestCase {
         XCTAssertEqual(summary.totalMinutesSaved, 0)
         XCTAssertFalse(summary.hasPaidRides)
     }
+
+    func testBestPickIsTheMostMinutesSaved() throws {
+        let multi = try llInfo(#"{"state":"AVAILABLE","returnStart":"2026-09-26T13:00:00Z"}"#)
+        let summary = LightningLaneValue.summary(rides: [
+            (name: "Free Return", standbyWait: 65, multiPass: multi, singlePass: nil),
+            (name: "Shorter Return", standbyWait: 40, multiPass: multi, singlePass: nil),
+        ])
+        let best = try XCTUnwrap(LightningLaneValue.bestPick(summary))
+        XCTAssertEqual(best.name, "Free Return")
+    }
+
+    func testBestPickPrefersFreeOverPaidOnATie() throws {
+        let multi = try llInfo(#"{"state":"AVAILABLE","returnStart":"2026-09-26T13:00:00Z"}"#)
+        let single = try llInfo(#"{"state":"AVAILABLE","returnStart":"2026-09-26T13:00:00Z","price":{"amount":1500,"currency":"USD","formatted":"$15.00"}}"#)
+        let summary = LightningLaneValue.summary(rides: [
+            (name: "Paid Return", standbyWait: 50, multiPass: nil, singlePass: single),
+            (name: "Free Return", standbyWait: 50, multiPass: multi, singlePass: nil),
+        ])
+        let best = try XCTUnwrap(LightningLaneValue.bestPick(summary))
+        XCTAssertEqual(best.name, "Free Return")
+    }
+
+    func testNoBestPickWhenNothingAvailable() {
+        XCTAssertNil(LightningLaneValue.bestPick(LightningLaneValue.Summary(rides: [])))
+    }
 }

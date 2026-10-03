@@ -132,13 +132,24 @@ struct DayPlannerView: View {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: .now)
     }
 
+    private var isHotRightNow: Bool {
+        let currentHour = Calendar.current.component(.hour, from: .now)
+        return HeatForecastService.shared.hotHours(for: appState.selectedResort).contains(currentHour)
+    }
+
     private var shouldShowRestReminder: Bool {
         guard !restReminderDismissed,
               UserDefaults.standard.string(forKey: "restReminderDismissedDay") != Self.todayKey() else { return false }
         let todayRideTimes = rideLogs
             .filter { $0.resort == resort && Calendar.current.isDateInToday($0.riddenAt) }
             .map(\.riddenAt)
-        return RestReminder.shouldNudge(todaysRideTimes: todayRideTimes)
+        return RestReminder.shouldNudge(todaysRideTimes: todayRideTimes, isHot: isHotRightNow)
+    }
+
+    private var restReminderText: String {
+        isHotRightNow
+            ? "It's hot out and you've been riding back to back — grab water or sit down for a bit."
+            : "That's 4 rides back to back — maybe grab water or sit down for a bit."
     }
 
     private func dismissRestReminder() {
@@ -261,8 +272,7 @@ struct DayPlannerView: View {
             if shouldShowRestReminder {
                 Section {
                     HStack {
-                        Label("That's 4 rides back to back — maybe grab water or sit down for a bit.",
-                              systemImage: "figure.cooldown")
+                        Label(restReminderText, systemImage: "figure.cooldown")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         Spacer(minLength: 8)

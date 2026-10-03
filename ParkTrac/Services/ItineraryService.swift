@@ -244,6 +244,15 @@ enum LightningLaneValue {
         }
         return Summary(rides: entries)
     }
+
+    /// The single best Lightning Lane pick right now — most standby minutes saved. Ties prefer
+    /// the free Multi Pass option over a paid Single Pass one.
+    static func bestPick(_ summary: Summary) -> RideSaving? {
+        summary.rides.max { lhs, rhs in
+            if lhs.minutesSaved != rhs.minutesSaved { return lhs.minutesSaved < rhs.minutesSaved }
+            return lhs.cost != nil && rhs.cost == nil
+        }
+    }
 }
 
 // MARK: - Interest suggestions (pure)

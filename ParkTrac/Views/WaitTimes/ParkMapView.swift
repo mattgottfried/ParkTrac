@@ -654,6 +654,20 @@ struct ParkMapView: View {
             // Rain plan: hourly rain chance (≤ every 30 min) + the once-a-day heads-up
             let rainResort = viewModel.selectedGroup
             Task { await RainForecastService.shared.refreshIfNeeded(resort: rainResort) }
+            // Morning briefing: one consolidated weather/crowd/top-pick notification per trip morning
+            Task { await CrowdHistoryService.shared.refreshIfNeeded(resort: rainResort) }
+            let currentHour = Calendar.current.component(.hour, from: .now)
+            let morningMustDo = viewModel.allRides
+                .filter { appState.wishList.contains($0.id) && $0.isOperating }
+                .compactMap { ride -> (name: String, wait: Int)? in ride.waitMinutes.map { (name: ride.name, wait: $0) } }
+                .min { $0.wait < $1.wait }
+            MorningBriefingService.shared.checkAndFire(
+                resort: rainResort,
+                isWet: RainForecastService.shared.wetHours(for: rainResort).contains(currentHour),
+                isHot: HeatForecastService.shared.hotHours(for: rainResort).contains(currentHour),
+                crowdLevel: CrowdHistoryService.shared.days(for: rainResort).map { CrowdHistory.level(for: .now, resort: rainResort, data: $0) },
+                mustDoPick: morningMustDo,
+                trip: TripService.shared.trip)
             // Today's plan re-plans from here and now
             ItineraryService.shared.replan(viewModel: viewModel, resort: viewModel.selectedGroup,
                                            location: locationService.userCoordinate, context: modelContext)
