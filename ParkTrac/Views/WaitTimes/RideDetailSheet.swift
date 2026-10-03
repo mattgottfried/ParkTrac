@@ -479,7 +479,7 @@ struct RideDetailSheet: View {
                 // Japan's return passes come from live data (shown above), not this table
                 if parkGroup.isOrlando {
                     infoChip(
-                        label: info.lightningLane ? "Lightning Lane" : "Standby Only",
+                        label: info.lightningLane ? parkGroup.returnPassNames.section : "Standby Only",
                         systemImage: info.lightningLane ? "bolt.fill" : "person.2.fill",
                         color: info.lightningLane ? .yellow : .secondary
                     )

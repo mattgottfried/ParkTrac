@@ -90,8 +90,13 @@ enum ParkGroup: String, CaseIterable, Identifiable {
             return ("Priority Pass", "Premier Access", "Priority Pass & Premier Access", "PP")
         case .universalJapan:
             return ("Express", "Express Pass", "Express Pass", "EX")
-        case .disney, .universal:
+        case .disney:
             return ("Multi Pass", "Single Pass", "Lightning Lane", "LL")
+        case .universal:
+            // Universal Orlando's product is Express Pass — "Lightning Lane"/"Multi Pass"/
+            // "Single Pass" are Disney-only branding. Express has no free/paid split the way
+            // Disney's Multi vs. Single Pass does, so both sides read the same here.
+            return ("Express Pass", "Express Pass", "Express Pass", "EX")
         }
     }
 

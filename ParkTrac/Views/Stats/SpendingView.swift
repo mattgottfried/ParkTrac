@@ -26,14 +26,17 @@ struct SpendingView: View {
                               year: Calendar.current.component(.year, from: .now))
     }
 
-    private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
+    /// The return-pass category name follows the resort — "Lightning Lane" at Disney, "Express
+    /// Pass" at Universal Orlando, etc. — rather than Disney's name everywhere.
+    private var returnPassCategory: String { appState.selectedResort.returnPassNames.section }
+    private var categories: [String] { ["Food", "Merchandise", "Tickets", returnPassCategory, "Other"] }
     /// Japan resorts log yen; show ≈ dollars beside it
     private var showsDollars: Bool { appState.selectedResort.currencyCode == "JPY" }
     private let currency = CurrencyConverter.shared
-    private let categoryColors: [String: Color] = [
-        "Food": .orange, "Merchandise": .blue, "Tickets": .purple,
-        "Lightning Lane": .yellow, "Other": .gray
-    ]
+    private var categoryColors: [String: Color] {
+        ["Food": .orange, "Merchandise": .blue, "Tickets": .purple,
+         returnPassCategory: .yellow, "Other": .gray]
+    }
     static let snackPresets = ["Popcorn", "Churro", "Soda", "Ice Cream", "Pretzel", "Turkey Leg"]
 
     var body: some View {
@@ -285,7 +288,10 @@ struct AddPurchaseView: View {
     @State private var isAPEligible = false
     @State private var selectedPark = ""
     @State private var showLocationPicker = false
-    private let categories = ["Food", "Merchandise", "Tickets", "Lightning Lane", "Other"]
+    private var categories: [String] {
+        let returnPass = ParkGroup(rawValue: resort)?.returnPassNames.section ?? "Lightning Lane"
+        return ["Food", "Merchandise", "Tickets", returnPass, "Other"]
+    }
     /// Japan resorts are logged in yen
     private var isYen: Bool { ParkGroup(rawValue: resort)?.currencyCode == "JPY" }
 

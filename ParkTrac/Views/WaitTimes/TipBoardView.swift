@@ -58,8 +58,9 @@ struct TipBoardView: View {
     /// "Worth it today?" — real minutes saved and any real paid cost across your picks' current
     /// Lightning Lane returns. No made-up verdict, just the numbers.
     private func lightningLaneValueCard(_ value: LightningLaneValue.Summary) -> some View {
+        let passSection = appState.selectedResort.returnPassNames.section
         VStack(alignment: .leading, spacing: 6) {
-            Label("Lightning Lane Today", systemImage: "bolt.fill")
+            Label("\(passSection) Today", systemImage: "bolt.fill")
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(.yellow)
             Text("~\(value.totalMinutesSaved) min saved across \(value.rides.count) ride\(value.rides.count == 1 ? "" : "s") right now")
@@ -71,11 +72,11 @@ struct TipBoardView: View {
                     .foregroundStyle(.orange)
             }
             if value.hasPaidRides {
-                Text("Includes \(value.totalCost, format: .currency(code: appState.selectedResort.currencyCode)) in Individual Lightning Lane")
+                Text("Includes \(value.totalCost, format: .currency(code: appState.selectedResort.currencyCode)) in paid \(passSection)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Text("Based on today's standby waits vs. a typical \(LightningLaneValue.assumedLLWaitMinutes)-minute Lightning Lane wait — updates as waits change.")
+            Text("Based on today's standby waits vs. a typical \(LightningLaneValue.assumedLLWaitMinutes)-minute \(passSection) wait — updates as waits change.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
