@@ -3,7 +3,7 @@ import SwiftData
 
 @Model final class PurchaseLog {
     var amount: Double = 0
-    var category: String = ""  // "Food", "Merchandise", "Tickets", "Lightning Lane", "Other"
+    var category: String = ""  // "Food", "Merchandise", "Tickets", the resort's return-pass name ("Lightning Lane" at Disney, "Express Pass" at Universal), "Other"
     var date: Date = Date()
     var resort: String = ""
     var note: String = ""

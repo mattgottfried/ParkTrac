@@ -604,9 +604,8 @@ struct DayPlannerView: View {
 
     private var passSectionTitle: String {
         switch appState.selectedResort {
-        case .disney, .universal: return "Lightning Lane / Express Pass"
-        case .tokyoDisney:        return appState.selectedResort.returnPassNames.section
-        case .universalJapan:     return "Express Pass & Timed Entry"
+        case .disney, .universal, .tokyoDisney: return appState.selectedResort.returnPassNames.section
+        case .universalJapan:                   return "Express Pass & Timed Entry"
         }
     }
 

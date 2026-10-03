@@ -1,12 +1,14 @@
 New since the last build (short version: TestFlight allows 4,000 characters)
 
+Fixed: Universal Orlando screens were saying "Lightning Lane" (Disney's branding) instead of "Express Pass" — the ride page chip, Add to My Day, My Day's section title, Tip Board, and the Spending category are now resort-correct.
+
 Challenges: 7 new badges — Rope Dropper (5 rides within 15 min of open), Deal Hunter (10 Good Time to Ride deals), Marathoner (15+ rides in a day), Coaster Collector (every named coaster at a resort, lifetime), World Traveler (a ride at all 4 resorts), Park Completionist (every park of a resort in one trip), Penny Pincher (AP savings broke even). Plus live callouts: "New personal best" ride day in My Day, and "Already beat your last trip's total" in Visit History.
 
 Pass Savings: "I Renewed" starts a new pass year, keeping "This Pass Year" and "Lifetime" separate. With renewal history, also shows "Pass cost trend", "Best pass year", and "Cost per visit" year over year. "Should I Upgrade?" compares your spend to the next tier's discount rate.
 
 Ride milestones: a notification when a ride's count (or resort total) crosses 10/25/50/100/200/500/1000. Ride page shows "first ridden [Month Year]".
 
-Rope Drop Plan: suggests an arrival time before park open based on today's predicted crowd level. Tip Board: "Worth it today?" names the single best Lightning Lane pick right now.
+Rope Drop Plan: suggests an arrival time before park open based on today's predicted crowd level. Tip Board: "Worth it today?" names the single best return-pass pick right now.
 
 My Day: the "take a break" nudge fires after 3 rides instead of 4 on a hot day. Live "walked ~X mi today" line. Visit History: "This Trip So Far" adds "Best day so far" and "Quietest trip yet".
 
@@ -14,30 +16,16 @@ Morning briefing notification (weather + crowd + top Must-Do pick), once per tri
 
 Must-Do alerts: "back up" notifications say how long it was down. Purple "One Last Ride?" capsule ~30 min before close.
 
-Wait Times: "Down Right Now" and "Nearby & Short" strips; wait tile trend arrows; "closing soon" banner + "Quietest/busiest" line; rest-stop button; Loud/Dark/Sudden-moments chips; Easy Wins strip; "+15/-10 vs usual". Shows: "Next after: …" hint.
+Wait Times: "Down Right Now" and "Nearby & Short" strips; wait tile trend arrows; "closing soon" + "Quietest/busiest" line; rest-stop button; sensory chips; Easy Wins strip; "+15/-10 vs usual". Shows: "Next after: …" hint.
 
 Smart Planner & My Day: flag free gaps ≥20 min with a nearby short-wait suggestion; "On this day" card; Best Park Today; plan a future day; Change the Plan shows standby time + walking; rain/heat routes indoor rides into bad weather.
 
-Trip Planner: "Vacation Calendar" with a "Blocked Out" flag; Trip Budget pacing.
+Trip Planner: "Vacation Calendar" with a "Blocked Out" flag; Trip Budget pacing. Spending: "This Year" total; "Quick Snack" chips. My Dining: Mobile Order countdown.
 
-Spending: "This Year" total; "Quick Snack" chips. My Dining: Mobile Order countdown.
+Ride Counter: "Your #1 ride". Recaps: "Year in Review". Visit History: past weather per day. Day Recap: "X per ride today". Ride page: Wait Forecast "you usually wait ~X".
 
-Ride Counter: "Your #1 ride". Recaps: "Year in Review". Visit History: past weather per day. Day Recap: "X per ride today".
+Single Rider badge + filter (Universal). Add to My Day: one screen — rides/a show, then Anytime/Now/Best time/showtime/set time. Live Activities: resort colors, big countdowns, 3-stop timeline, Done/Skip/"I'm On"/"Used It".
 
-Ride page: Wait Forecast "you usually wait ~X" from everyone's recorded waits.
+Crowd Calendar; shareable Day recap. Car locator auto-guesses from GPS. Ride photos on Rode It!. Character tracker (Bucket List). Bucket List: a few Orlando restaurant closures handled. Data export CSV. Tip Calculator (Settings → Tools).
 
-Single Rider: busy rides suggest Single Rider (Universal) or a shorter alternative; badge + filter.
-
-Add to My Day: one screen — rides/a show, then Anytime/Now/Best time/showtime/set time.
-
-Live Activities: resort colors, big countdowns, 3-stop timeline, Done/Skip/"I'm On"/"Used It".
-
-Crowd Calendar; shareable Day recap. Car locator auto-guesses from GPS. Ride photos on Rode It!.
-
-Character tracker (Bucket List). Bucket List: a few Orlando restaurant closures handled.
-
-Data export CSV. Tip Calculator (Settings → Tools).
-
-Fixed: upload rejected for Siri's description mentioning Apple (rule 90626); a Swift build error.
-
-Check overall: log a ride near open / after a Good Time deal and check the new badges; a 15-ride day for Marathoner; ride every coaster at a resort for Coaster Collector; Pass Savings' Should I Upgrade + cost-per-visit trend; a ride milestone notification; a ride page's "first ridden" line; Rope Drop's arrival suggestion; Tip Board's best-pick line; the heat-aware break nudge; the morning briefing; My Day's walked-distance + personal-best lines; Visit History's trip callouts; a Must-Do back-up notification; "One Last Ride?"; Down Right Now + Nearby & Short; a plan gap suggestion; closing-soon banner; Vacation Calendar's blockout flag; Spending's This Year + Quick Snack; mobile order countdown; Year in Review; Rope Drop Plan; Single Rider; Tip Calculator.
+Check overall: at Universal, confirm Express Pass (not Lightning Lane) on the ride page, Add to My Day, My Day, Tip Board and Spending; log a ride near open / after a Good Time deal for the new badges; a 15-ride day for Marathoner; every coaster at a resort for Coaster Collector; Pass Savings' Should I Upgrade + cost-per-visit trend; a ride milestone notification; a ride page's "first ridden" line; Rope Drop's arrival suggestion; Tip Board's best-pick line; the heat-aware break nudge; the morning briefing; My Day's walked-distance + personal-best lines; Visit History's trip callouts; a Must-Do back-up notification; "One Last Ride?"; a plan gap suggestion; Vacation Calendar's blockout flag; mobile order countdown; Year in Review.

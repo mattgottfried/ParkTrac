@@ -48,6 +48,16 @@ final class ResortTests: XCTestCase {
         XCTAssertEqual(ParkGroup.disney.returnPassNames.short, "LL")
     }
 
+    /// Universal Orlando's product is Express Pass — "Lightning Lane"/"Multi Pass"/"Single
+    /// Pass" are Disney-only branding and must never leak onto Universal screens.
+    func testUniversalOrlandoUsesExpressPassNotLightningLane() {
+        let names = ParkGroup.universal.returnPassNames
+        XCTAssertEqual(names.free, "Express Pass")
+        XCTAssertEqual(names.paid, "Express Pass")
+        XCTAssertEqual(names.section, "Express Pass")
+        XCTAssertNotEqual(names.section, "Lightning Lane")
+    }
+
     func testShortTextPrefix() throws {
         let info = LightningLaneInfo(try JSONDecoder().decode(ReturnTimeQueue.self, from: Data(#"{"state":"FINISHED"}"#.utf8)))
         XCTAssertEqual(info?.shortText(prefix: "PP"), "PP sold out")

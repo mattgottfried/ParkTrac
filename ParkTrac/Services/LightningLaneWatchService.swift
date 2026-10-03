@@ -14,7 +14,9 @@ struct LightningLaneWatch: Codable, Identifiable, Equatable {
     var parkId: String
     /// Optional so watches saved before these fields existed still decode
     var parkName: String?
-    /// "Multi Pass" / "Priority Pass" … (nil = Lightning Lane Multi Pass)
+    /// "Multi Pass" / "Express Pass" / "Priority Pass" … always set at creation
+    /// (`LightningLaneSection.saveWatch`); optional only so watches saved before this field
+    /// existed still decode, where nil falls back to Disney's "Lightning Lane".
     var passName: String?
     /// ParkGroup raw value (nil = Walt Disney World)
     var resortRaw: String?

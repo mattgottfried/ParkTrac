@@ -5,8 +5,8 @@ import SwiftData
 struct LightningLaneSection: View {
     let ride: DisplayRide
     var parkName: String = ""
-    /// Names differ by resort: Lightning Lane Multi/Single Pass in Orlando,
-    /// Priority Pass / Premier Access at Tokyo Disney Resort.
+    /// Names differ by resort: Lightning Lane Multi/Single Pass at Disney, Express Pass at
+    /// Universal Orlando, Priority Pass / Premier Access at Tokyo Disney Resort.
     var resort: ParkGroup = .disney
 
     private var names: (free: String, paid: String, section: String, short: String) { resort.returnPassNames }
@@ -142,7 +142,7 @@ struct LightningLaneSection: View {
             resort: resort, passLabel: names.paid, context: context)
         if let amount = single.amount, amount > 0 {
             let purchase = PurchaseLog(
-                amount: amount, category: "Lightning Lane", resort: resort.rawValue,
+                amount: amount, category: names.section, resort: resort.rawValue,
                 note: "\(ride.name) — \(names.paid)", isAPEligible: false)
             context.insert(purchase)
             try? context.save()

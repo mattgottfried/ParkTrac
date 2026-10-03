@@ -159,7 +159,7 @@ struct AddPlanItemView: View {
         Set(planItems.filter { $0.resort == resort && Calendar.current.isDateInToday($0.date) }.compactMap(\.rideId))
     }
 
-    private var passName: String { group.isOrlando ? "Lightning Lane" : group.returnPassNames.free }
+    private var passName: String { group.returnPassNames.section }
 
     // MARK: Body
 
