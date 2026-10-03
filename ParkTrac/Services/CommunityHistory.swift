@@ -215,6 +215,31 @@ enum BestParkToday {
     }
 }
 
+struct QuietestTripResult: Equatable {
+    let currentAverageRank: Double
+    let tripsCompared: Int
+}
+
+/// Compares this trip's average crowd level (across every day of it) to every past trip's,
+/// using `CrowdHistory.rank` so a seasonal-estimate day and a measured day compare the same way.
+enum QuietestTrip {
+    /// nil once a trip has no days with a known crowd level.
+    static func averageRank(trip: VisitTrip, level: (Date) -> CrowdLevel?) -> Double? {
+        let ranks = trip.days.compactMap { level($0.id).map(CrowdHistory.rank) }
+        guard !ranks.isEmpty else { return nil }
+        return Double(ranks.reduce(0, +)) / Double(ranks.count)
+    }
+
+    /// nil with fewer than 2 trips, or no crowd data for the current trip or any past one.
+    /// Only reports when the current trip is actually the quietest of them all (a positive-only callout).
+    static func compare(trips: [VisitTrip], level: (Date) -> CrowdLevel?) -> QuietestTripResult? {
+        guard trips.count >= 2, let current = trips.last, let currentAvg = averageRank(trip: current, level: level) else { return nil }
+        let pastAvgs = trips.dropLast().compactMap { averageRank(trip: $0, level: level) }
+        guard !pastAvgs.isEmpty, pastAvgs.allSatisfy({ currentAvg <= $0 }) else { return nil }
+        return QuietestTripResult(currentAverageRank: currentAvg, tripsCompared: pastAvgs.count)
+    }
+}
+
 /// Best/worst hour to be at a park today, from every operating ride's community typical wait
 /// per hour (`CommunityHistoryService.waitsByHour`) — a park-wide view, not a per-ride one.
 enum QuietestHour {

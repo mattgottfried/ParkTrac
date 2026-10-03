@@ -35,6 +35,43 @@ enum PassPeriodStats {
     static func lifetimeCost(pastPeriods: [(resort: String, cost: Double)], resort: String, currentCost: Double) -> Double {
         pastPeriods.filter { $0.resort == resort }.map(\.cost).reduce(0, +) + currentCost
     }
+
+    /// How much the pass has cost across every renewal — "$769 → $999 over 3 renewals (+30%)".
+    /// nil with no renewal history yet (nothing to trend).
+    static func costTrend(pastPeriods: [(resort: String, cost: Double, startDate: Date)], resort: String, currentCost: Double) -> PassCostTrend? {
+        let periods = pastPeriods.filter { $0.resort == resort }.sorted { $0.startDate < $1.startDate }
+        guard let first = periods.first else { return nil }
+        return PassCostTrend(firstCost: first.cost, currentCost: currentCost, renewalCount: periods.count)
+    }
+
+    /// Which pass year (past periods, plus the current still-open one) had the best ROI —
+    /// "your best pass year" — once there are at least 2 years to compare. `years` only needs
+    /// gate/parking savings, not the discount-rate math (a looser, best-effort fun stat, same
+    /// spirit as `DayRecap.costPerRide`), since a past period's tier-specific discount rate
+    /// isn't worth re-deriving here.
+    static func bestPassYear(years: [PassYear], resort: String) -> PassYear? {
+        let matches = years.filter { $0.resort == resort }
+        guard matches.count >= 2 else { return nil }
+        return matches.max { $0.netSavings < $1.netSavings }
+    }
+}
+
+struct PassCostTrend: Equatable {
+    let firstCost: Double
+    let currentCost: Double
+    let renewalCount: Int
+    var percentChange: Double? {
+        guard firstCost > 0 else { return nil }
+        return (currentCost - firstCost) / firstCost * 100
+    }
+}
+
+struct PassYear: Equatable {
+    let resort: String
+    let tier: String
+    let startDate: Date
+    let endDate: Date?       // nil = still open (the current year)
+    let netSavings: Double
 }
 
 /// Everything `savingsSummaryCard` needs for one resort, one scope (lifetime or this pass year).
@@ -102,6 +139,33 @@ struct PassSavingsView: View {
 
     private func lifetimeCost(_ resort: ParkGroup, currentCost: Double) -> Double {
         PassPeriodStats.lifetimeCost(pastPeriods: pastPeriodCosts, resort: resort.rawValue, currentCost: currentCost)
+    }
+
+    private func costTrend(_ resort: ParkGroup, currentCost: Double) -> PassCostTrend? {
+        let periods = pastPeriods.filter { $0.resort == resort.rawValue }
+            .map { (resort: $0.resort, cost: $0.cost, startDate: $0.startDate) }
+        return PassPeriodStats.costTrend(pastPeriods: periods, resort: resort.rawValue, currentCost: currentCost)
+    }
+
+    /// Gate ticket + parking savings logged within a date range (the discount-free basis for `PassYear`).
+    private func visitSavingsNet(resort: ParkGroup, from: Date, to: Date) -> Double {
+        allSavings.filter { $0.resort == resort.rawValue && $0.date >= from && $0.date < to }
+            .map { $0.gateValue + $0.parkingValue }.reduce(0, +)
+    }
+
+    private func passYears(_ resort: ParkGroup, currentTierRaw: String, currentCost: Double) -> [PassYear] {
+        let past = pastPeriods.filter { $0.resort == resort.rawValue }.map { period in
+            PassYear(resort: resort.rawValue, tier: period.tier, startDate: period.startDate, endDate: period.endDate,
+                     netSavings: visitSavingsNet(resort: resort, from: period.startDate, to: period.endDate) - period.cost)
+        }
+        let currentStart = periodStart(resort) ?? past.map(\.startDate).min() ?? .distantPast
+        let currentYear = PassYear(resort: resort.rawValue, tier: currentTierRaw, startDate: currentStart, endDate: nil,
+                                   netSavings: visitSavingsNet(resort: resort, from: currentStart, to: .distantFuture) - currentCost)
+        return past + [currentYear]
+    }
+
+    private func bestPassYear(_ resort: ParkGroup, currentTierRaw: String, currentCost: Double) -> PassYear? {
+        PassPeriodStats.bestPassYear(years: passYears(resort, currentTierRaw: currentTierRaw, currentCost: currentCost), resort: resort.rawValue)
     }
 
     // MARK: - Savings calculations
@@ -196,6 +260,8 @@ struct PassSavingsView: View {
                     } footer: {
                         Text("Every Disney pass you've paid for, vs. every visit you've ever logged.")
                     }
+                    passHistorySection(.disney, label: "Disney", currentTierRaw: appState.disneyPassTier.rawValue,
+                                      currentCost: appState.disneyPassCost)
                 }
             }
 
@@ -223,6 +289,8 @@ struct PassSavingsView: View {
                     } footer: {
                         Text("Every Universal pass you've paid for, vs. every visit you've ever logged.")
                     }
+                    passHistorySection(.universal, label: "Universal", currentTierRaw: appState.universalPassTier.rawValue,
+                                      currentCost: appState.universalPassCost)
                 }
             }
 
@@ -341,6 +409,39 @@ struct PassSavingsView: View {
     }
 
     // MARK: - Subviews
+
+    /// "Pass cost trend" and "Your best pass year" — shown only once there's renewal history to
+    /// compare (same gate as the Lifetime section above, which this sits right after).
+    @ViewBuilder
+    private func passHistorySection(_ resort: ParkGroup, label: String, currentTierRaw: String, currentCost: Double) -> some View {
+        if let trend = costTrend(resort, currentCost: currentCost) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Label("Pass cost trend", systemImage: "chart.line.uptrend.xyaxis")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Text("\(trend.firstCost, format: .currency(code: "USD")) → \(trend.currentCost, format: .currency(code: "USD"))")
+                        .font(.caption.weight(.semibold))
+                }
+                if let pct = trend.percentChange {
+                    Text("Over \(trend.renewalCount) renewal\(trend.renewalCount == 1 ? "" : "s") — \(pct >= 0 ? "+" : "")\(Int(pct.rounded()))%")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            .padding(.vertical, 2)
+        }
+        if let best = bestPassYear(resort, currentTierRaw: currentTierRaw, currentCost: currentCost) {
+            HStack {
+                Label("Best \(label) pass year", systemImage: "trophy.fill")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(best.netSavings, format: .currency(code: "USD")).font(.caption.weight(.semibold)).foregroundStyle(.green)
+                    Text(best.startDate, format: .dateTime.month(.abbreviated).year()).font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
 
     private func passCostRow(label: String, cost: Double, placeholder: String, onChange: @escaping (Double) -> Void) -> some View {
         HStack {

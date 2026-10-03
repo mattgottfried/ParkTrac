@@ -49,4 +49,36 @@ final class PassSavingsCalculatorTests: XCTestCase {
     func testLifetimeCostIsJustCurrentWithNoHistory() {
         XCTAssertEqual(PassPeriodStats.lifetimeCost(pastPeriods: [], resort: "Walt Disney World", currentCost: 1000), 1000)
     }
+
+    // MARK: Pass cost trend
+
+    func testCostTrendComparesFirstEverCostToCurrent() {
+        let periods = [(resort: "Walt Disney World", cost: 769.0, startDate: date(2024, 1, 1)),
+                       (resort: "Walt Disney World", cost: 899.0, startDate: date(2025, 1, 1))]
+        let trend = try! XCTUnwrap(PassPeriodStats.costTrend(pastPeriods: periods, resort: "Walt Disney World", currentCost: 999))
+        XCTAssertEqual(trend.firstCost, 769)
+        XCTAssertEqual(trend.renewalCount, 2)
+        XCTAssertEqual(trend.percentChange.map { ($0 * 10).rounded() / 10 }, 29.9)
+    }
+
+    func testNoCostTrendWithoutRenewalHistory() {
+        XCTAssertNil(PassPeriodStats.costTrend(pastPeriods: [], resort: "Walt Disney World", currentCost: 999))
+    }
+
+    // MARK: Best pass year
+
+    func testBestPassYearPicksTheHighestNetSavings() {
+        let years = [
+            PassYear(resort: "Walt Disney World", tier: "Pirate Pass", startDate: date(2024, 1, 1), endDate: date(2025, 1, 1), netSavings: 200),
+            PassYear(resort: "Walt Disney World", tier: "Sorcerer Pass", startDate: date(2025, 1, 1), endDate: nil, netSavings: 450),
+        ]
+        let best = try! XCTUnwrap(PassPeriodStats.bestPassYear(years: years, resort: "Walt Disney World"))
+        XCTAssertEqual(best.tier, "Sorcerer Pass")
+        XCTAssertEqual(best.netSavings, 450)
+    }
+
+    func testNoBestPassYearWithFewerThanTwoYears() {
+        let years = [PassYear(resort: "Walt Disney World", tier: "Pirate Pass", startDate: date(2024, 1, 1), endDate: nil, netSavings: 200)]
+        XCTAssertNil(PassPeriodStats.bestPassYear(years: years, resort: "Walt Disney World"))
+    }
 }
