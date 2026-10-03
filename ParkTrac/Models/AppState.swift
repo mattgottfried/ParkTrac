@@ -25,6 +25,15 @@ enum UniversalExpressType: String, CaseIterable {
     case expressNow = "Express Now"
 }
 
+/// Plain Universal Express Pass has no return time to book, watch, or log — you just walk up to
+/// the Express entrance whenever. Only Express Now (a per-ride app purchase) behaves like
+/// Disney's Lightning Lane. Disney and Tokyo's return passes are always reservation-based.
+enum ReturnTimeAvailability {
+    static func showsReturnTime(resort: ParkGroup, expressType: UniversalExpressType) -> Bool {
+        resort != .universal || expressType == .expressNow
+    }
+}
+
 // MARK: - AppState
 
 @Observable

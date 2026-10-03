@@ -158,8 +158,9 @@ struct TipBoardView: View {
             if a.isMustDo != b.isMustDo { return a.isMustDo }
             return a.name < b.name
         }
-        llValue = LightningLaneValue.summary(rides: rides.map {
+        let showsReturnTimes = ReturnTimeAvailability.showsReturnTime(resort: resort, expressType: appState.universalExpressType)
+        llValue = showsReturnTimes ? LightningLaneValue.summary(rides: rides.map {
             (name: $0.name, standbyWait: $0.isOperating ? $0.waitMinutes : nil, multiPass: $0.multiPass, singlePass: $0.singlePass)
-        })
+        }) : nil
     }
 }

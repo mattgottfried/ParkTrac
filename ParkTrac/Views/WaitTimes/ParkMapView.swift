@@ -1476,6 +1476,8 @@ struct ParkMapView: View {
                                              goodTime: GoodTimeService.shared.deal(for: ride.id),
                                              usual: GoodTimeService.shared.usual(for: ride.id),
                                              trend: viewModel.waitTrends[ride.id],
+                                             showsReturnPass: ReturnTimeAvailability.showsReturnTime(
+                                                 resort: viewModel.selectedGroup, expressType: appState.universalExpressType),
                                              isMustDo: appState.wishList.contains(ride.id))
                                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14, style: .continuous))
                                     .onTapGesture { selectedRide = ride }
