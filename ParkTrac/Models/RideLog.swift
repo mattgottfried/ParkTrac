@@ -66,6 +66,20 @@ struct VisitTrip: Identifiable {
     var rideNames: Set<String> { Set(days.flatMap(\.rideNames)) }
 }
 
+/// This trip's single best day so far — the day with the most rides logged. A simple, honest
+/// stat (not weighted by Good Time deals, which aren't persisted per day).
+struct TripHighlightDay: Equatable {
+    let date: Date
+    let rideCount: Int
+}
+
+enum TripHighlight {
+    static func bestDay(trip: VisitTrip) -> TripHighlightDay? {
+        guard let best = trip.days.max(by: { $0.totalRides < $1.totalRides }), best.totalRides > 0 else { return nil }
+        return TripHighlightDay(date: best.id, rideCount: best.totalRides)
+    }
+}
+
 /// This trip's progress against the same point in the previous trip (same day-count into each).
 struct TripComparison: Equatable {
     let currentRides: Int

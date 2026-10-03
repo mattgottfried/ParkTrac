@@ -5,6 +5,7 @@ struct VisitHistoryView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RideLog.riddenAt, order: .reverse) private var allLogs: [RideLog]
     @Query private var allPurchases: [PurchaseLog]
+    @State private var crowdHistory = CrowdHistoryService.shared
 
     private var resortLogs: [RideLog] {
         allLogs.filter { $0.resort == appState.selectedResort.rawValue && !UndoDeleteCenter.shared.isHidden($0) }
@@ -66,6 +67,18 @@ struct VisitHistoryView: View {
         return SpendPaceComparer.compare(trips: trips, purchases: purchases)
     }
 
+    /// This trip's single best day so far (most rides).
+    private var tripHighlight: TripHighlightDay? {
+        trips.last.flatMap(TripHighlight.bestDay)
+    }
+
+    /// Whether this trip is the quietest one yet, vs. every past trip.
+    private var quietestTrip: QuietestTripResult? {
+        let resort = appState.selectedResort
+        guard let data = crowdHistory.days(for: resort) else { return nil }
+        return QuietestTrip.compare(trips: trips) { date in CrowdHistory.level(for: date, resort: resort, data: data) }
+    }
+
     var body: some View {
         List {
             if visitDays.isEmpty {
@@ -110,6 +123,18 @@ struct VisitHistoryView: View {
                         if let spend = spendComparison {
                             spendComparisonRow(spend)
                         }
+                        if let highlight = tripHighlight {
+                            Label(highlightText(highlight), systemImage: "star.fill")
+                                .font(.caption).foregroundStyle(.secondary)
+                                .padding(.top, 2)
+                        }
+                        if let quietest = quietestTrip {
+                            Label(quietestText(quietest), systemImage: "leaf.fill")
+                                .font(.caption).foregroundStyle(.green)
+                        }
+                    }
+                    .task {
+                        await crowdHistory.refreshIfNeeded(resort: appState.selectedResort)
                     }
                 }
 
@@ -173,6 +198,15 @@ struct VisitHistoryView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func highlightText(_ highlight: TripHighlightDay) -> String {
+        let f = DateFormatter(); f.dateFormat = "MMM d"
+        return "Best day so far: \(f.string(from: highlight.date)) — \(highlight.rideCount) ride\(highlight.rideCount == 1 ? "" : "s")"
+    }
+
+    private func quietestText(_ quietest: QuietestTripResult) -> String {
+        "Quietest trip yet — lower crowds than your last \(quietest.tripsCompared) trip\(quietest.tripsCompared == 1 ? "" : "s")"
     }
 
     private func spendComparisonRow(_ spend: SpendComparison) -> some View {

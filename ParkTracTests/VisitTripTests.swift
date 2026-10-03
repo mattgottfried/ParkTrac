@@ -180,4 +180,19 @@ final class VisitTripTests: XCTestCase {
         let trips = VisitTripGrouper.group([visitDay(2026, 1, 1, rides: ["A"])], calendar: cal)
         XCTAssertNil(SpendPaceComparer.compare(trips: trips, purchases: [], calendar: cal))
     }
+
+    // MARK: Trip highlight day
+
+    func testTripHighlightPicksTheMostRiddenDay() {
+        let trip = VisitTripGrouper.group([visitDay(2026, 1, 1, rides: ["A"]),
+                                           visitDay(2026, 1, 2, rides: ["B", "C", "D"])], calendar: cal)[0]
+        let highlight = try! XCTUnwrap(TripHighlight.bestDay(trip: trip))
+        XCTAssertEqual(highlight.date, day(2026, 1, 2))
+        XCTAssertEqual(highlight.rideCount, 3)
+    }
+
+    func testNoTripHighlightWithNoRides() {
+        let trip = VisitTrip(id: day(2026, 1, 1), days: [])
+        XCTAssertNil(TripHighlight.bestDay(trip: trip))
+    }
 }

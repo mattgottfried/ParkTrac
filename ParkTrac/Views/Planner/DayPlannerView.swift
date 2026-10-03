@@ -18,6 +18,7 @@ struct DayPlannerView: View {
     @State private var showTipBoard = false
     @State private var restReminderDismissed = false
     @State private var showEndPlan = false
+    @State private var walkedMeters: Double?
     /// Siri's "plan my day" request, passed to the Smart Planner once
     @State private var plannerRequest: String?
     /// Smart Planner opened for a future day (Coming Up → Plan a Future Day)
@@ -159,6 +160,15 @@ struct DayPlannerView: View {
         return "You've stood in line \(text) today"
     }
 
+    /// Live running total from the pedometer, alongside standing time — only shown once there's
+    /// something to report (same spirit as `standingTimeText`).
+    private var walkedDistanceText: String? {
+        guard let walkedMeters, walkedMeters > 0 else { return nil }
+        let text = Measurement(value: walkedMeters, unit: UnitLength.meters)
+            .formatted(.measurement(width: .abbreviated, usage: .road))
+        return "You've walked ~\(text) today"
+    }
+
     private func onThisDayText(_ memory: OnThisDayMemory) -> String {
         let yearWord = memory.yearsAgo == 1 ? "One year ago today" : "\(memory.yearsAgo) years ago today"
         var text = "\(yearWord), you logged \(memory.rideCount) ride\(memory.rideCount == 1 ? "" : "s")"
@@ -237,6 +247,13 @@ struct DayPlannerView: View {
             } else if let text = standingTimeText {
                 Section {
                     Label(text, systemImage: "hourglass")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            if let text = walkedDistanceText {
+                Section {
+                    Label(text, systemImage: "figure.walk")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -544,6 +561,13 @@ struct DayPlannerView: View {
         .task {
             ItineraryService.shared.replan(viewModel: waitTimesVM, resort: appState.selectedResort,
                                            location: nil, context: context)
+        }
+        // Live walking distance, re-polled while My Day is open (cancelled automatically when it closes)
+        .task {
+            while !Task.isCancelled {
+                walkedMeters = await StepCounter.steps(on: .now)?.meters
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+            }
         }
         .sheet(isPresented: $showAreaEntry) {
             AreaEntrySheet(resort: appState.selectedResort)

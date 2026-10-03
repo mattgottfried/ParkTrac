@@ -67,4 +67,39 @@ final class CommunityHistoryTests: XCTestCase {
     func testQuietestHourHeadline() {
         XCTAssertEqual(QuietestHour.headline(quiet: 9, busy: 14), "Quietest around 9am, busiest around 2pm")
     }
+
+    // MARK: Quietest trip ever
+
+    private func day(_ y: Int, _ m: Int, _ d: Int) -> Date {
+        Calendar(identifier: .gregorian).date(from: DateComponents(year: y, month: m, day: d))!
+    }
+
+    private func trip(_ dates: [Date]) -> VisitTrip {
+        VisitTrip(id: dates[0], days: dates.map { VisitDay(id: $0, resort: "Walt Disney World", entries: []) })
+    }
+
+    func testQuietestTripReportsWhenCurrentBeatsEveryPastTrip() {
+        let busyTrip = trip([day(2025, 1, 1)])
+        let quietTrip = trip([day(2026, 1, 1)])
+        let levels: [Date: CrowdLevel] = [day(2025, 1, 1): .high, day(2026, 1, 1): .low]
+        let result = QuietestTrip.compare(trips: [busyTrip, quietTrip]) { levels[$0] }
+        XCTAssertEqual(result?.tripsCompared, 1)
+    }
+
+    func testQuietestTripNilWhenNotActuallyTheQuietest() {
+        let quietTrip = trip([day(2025, 1, 1)])
+        let busyTrip = trip([day(2026, 1, 1)])
+        let levels: [Date: CrowdLevel] = [day(2025, 1, 1): .low, day(2026, 1, 1): .high]
+        XCTAssertNil(QuietestTrip.compare(trips: [quietTrip, busyTrip]) { levels[$0] })
+    }
+
+    func testQuietestTripNilWithFewerThanTwoTrips() {
+        let onlyTrip = trip([day(2026, 1, 1)])
+        XCTAssertNil(QuietestTrip.compare(trips: [onlyTrip]) { _ in .low })
+    }
+
+    func testQuietestTripNilWithoutCrowdData() {
+        let trips = [trip([day(2025, 1, 1)]), trip([day(2026, 1, 1)])]
+        XCTAssertNil(QuietestTrip.compare(trips: trips) { _ in nil })
+    }
 }
