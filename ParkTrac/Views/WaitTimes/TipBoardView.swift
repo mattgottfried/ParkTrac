@@ -59,7 +59,7 @@ struct TipBoardView: View {
     /// Lightning Lane returns. No made-up verdict, just the numbers.
     private func lightningLaneValueCard(_ value: LightningLaneValue.Summary) -> some View {
         let passSection = appState.selectedResort.returnPassNames.section
-        VStack(alignment: .leading, spacing: 6) {
+        return VStack(alignment: .leading, spacing: 6) {
             Label("\(passSection) Today", systemImage: "bolt.fill")
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(.yellow)
