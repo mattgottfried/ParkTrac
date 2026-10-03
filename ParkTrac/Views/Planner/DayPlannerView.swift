@@ -171,6 +171,17 @@ struct DayPlannerView: View {
         return "You've stood in line \(text) today"
     }
 
+    /// "New personal best" — today's ride count beats every other day ever logged at this resort.
+    private var isNewRideDayRecord: Bool {
+        let cal = Calendar.current
+        let resortLogs = rideLogs.filter { $0.resort == resort }
+        let todayCount = resortLogs.filter { cal.isDateInToday($0.riddenAt) }.count
+        let pastDayCounts = Dictionary(grouping: resortLogs.filter { !cal.isDateInToday($0.riddenAt) }) {
+            cal.startOfDay(for: $0.riddenAt)
+        }.values.map(\.count)
+        return RideDayRecord.isNewRecord(todayCount: todayCount, pastDayCounts: pastDayCounts)
+    }
+
     /// Live running total from the pedometer, alongside standing time — only shown once there's
     /// something to report (same spirit as `standingTimeText`).
     private var walkedDistanceText: String? {
@@ -267,6 +278,13 @@ struct DayPlannerView: View {
                     Label(text, systemImage: "figure.walk")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                }
+            }
+            if isNewRideDayRecord {
+                Section {
+                    Label("New personal best — most rides you've ever logged in a day!", systemImage: "trophy.fill")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.yellow)
                 }
             }
             if shouldShowRestReminder {

@@ -79,6 +79,15 @@ struct VisitHistoryView: View {
         return QuietestTrip.compare(trips: trips) { date in CrowdHistory.level(for: date, resort: resort, data: data) }
     }
 
+    /// Whether the current (possibly still in progress) trip has already passed the previous
+    /// trip's FINAL ride count — distinct from `tripComparison`, which only compares at the same
+    /// day-count into each trip.
+    private var beatLastTrip: Bool {
+        guard trips.count >= 2 else { return false }
+        return TripRecord.hasBeatLastTrip(currentRides: trips[trips.count - 1].totalRides,
+                                          previousTripTotalRides: trips[trips.count - 2].totalRides)
+    }
+
     var body: some View {
         List {
             if visitDays.isEmpty {
@@ -131,6 +140,11 @@ struct VisitHistoryView: View {
                         if let quietest = quietestTrip {
                             Label(quietestText(quietest), systemImage: "leaf.fill")
                                 .font(.caption).foregroundStyle(.green)
+                        }
+                        if beatLastTrip {
+                            Label("Already beat your last trip's total (\(trips[trips.count - 2].totalRides) rides)!",
+                                  systemImage: "trophy.fill")
+                                .font(.caption.weight(.medium)).foregroundStyle(.yellow)
                         }
                     }
                     .task {

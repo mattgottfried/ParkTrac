@@ -178,6 +178,34 @@ enum RideMetadata {
         "Hollywood Dream – The Ride", "Space Fantasy – The Ride",
     ].map { RideMetadata.normalize($0) })
 
+    /// Each resort's named coasters, curated by hand — Orlando's `rideMetadata` table is shared
+    /// between Disney and Universal (their ride names don't collide) with no per-resort tag, so
+    /// it can't be filtered by resort the way `catalog(for:)` can. Best-effort and not exhaustive,
+    /// same spirit as `singleRiderRides`/`indoorOverrides` above — a closed, renamed or newly
+    /// opened coaster may need updating here (compiled Oct 2026).
+    static let resortCoasters: [ParkGroup: Set<String>] = [
+        .disney: Set([
+            "Space Mountain", "Big Thunder Mountain Railroad", "Seven Dwarfs Mine Train",
+            "Expedition Everest", "TRON Lightcycle / Run", "Guardians of the Galaxy: Cosmic Rewind",
+            "Rock 'n' Roller Coaster Starring Aerosmith", "Slinky Dog Dash",
+        ].map { RideMetadata.normalize($0) }),
+        .universal: Set([
+            "The Incredible Hulk Coaster", "Jurassic World VelociCoaster",
+            "Hagrid's Magical Creatures Motorbike Adventure", "Revenge of the Mummy",
+            "Stardust Racers", "Mine-Cart Madness", "Curse of the Werewolf",
+        ].map { RideMetadata.normalize($0) }),
+        .tokyoDisney: Set(["Space Mountain", "Big Thunder Mountain"].map { RideMetadata.normalize($0) }),
+        .universalJapan: Set(["Hollywood Dream – The Ride", "Space Fantasy – The Ride", "Flying Dinosaur"]
+            .map { RideMetadata.normalize($0) }),
+    ]
+
+    /// True once every one of a resort's named coasters has been ridden at least once.
+    static func hasAllCoasters(for resort: ParkGroup, riddenNames: [String]) -> Bool {
+        guard let roster = resortCoasters[resort], !roster.isEmpty else { return false }
+        let ridden = Set(riddenNames.map { RideMetadata.normalize($0) })
+        return roster.isSubset(of: ridden)
+    }
+
     static func hasSingleRider(name: String, resort: ParkGroup) -> Bool {
         guard resort != .disney, resort != .tokyoDisney else { return false }   // Disney parks don't run single rider
         let key = normalize(name)
