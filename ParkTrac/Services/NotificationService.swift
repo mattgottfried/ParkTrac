@@ -100,6 +100,45 @@ final class NotificationService {
             UNNotificationRequest(identifier: "mustdo-up-\(rideId)", content: content, trigger: nil))
     }
 
+    /// A round-number ride-count milestone was just crossed — one ride's own count, or the
+    /// resort-wide total.
+    func fireRideMilestone(rideId: String?, rideName: String, milestone: Int, overall: Bool) {
+        let content = UNMutableNotificationContent()
+        if overall {
+            content.title = "🎉 \(milestone) rides logged!"
+            content.body = "You've now logged \(milestone) rides here. Keep it up!"
+        } else {
+            content.title = "🎉 \(milestone)th ride on \(rideName)!"
+            content.body = "That's \(milestone) times you've ridden \(rideName)."
+        }
+        content.sound = .default
+        content.threadIdentifier = "milestone"
+        if let rideId {
+            content.userInfo = [
+                DeepLink.userInfoKey: DeepLink.ride(id: rideId).url.absoluteString,
+                NotificationKeys.rideId: rideId,
+                NotificationKeys.rideName: rideName,
+            ]
+        }
+        let identifier = "milestone-\(overall ? "overall" : (rideId ?? rideName))-\(milestone)"
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: identifier, content: content, trigger: nil))
+    }
+
+    /// One consolidated notification per trip morning — weather, crowd level, and today's top
+    /// Must-Do pick — instead of several separate banners you'd have to find in-app.
+    func fireMorningBriefing(resort: ParkGroup, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "☀️ Good morning at \(resort.shortName)"
+        content.body = body
+        content.sound = .default
+        content.threadIdentifier = "morning-briefing"
+        content.userInfo = [DeepLink.userInfoKey: DeepLink.plan.url.absoluteString]
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: "morning-\(resort.rawValue)-\(MorningBriefing.dayKey(.now))",
+                                  content: content, trigger: nil))
+    }
+
     /// Rain is about to arrive at the resort (once a day) — plan indoor rides.
     func fireRainHeadsUp(resort: ParkGroup, headline: String) {
         let content = UNMutableNotificationContent()
@@ -256,6 +295,78 @@ final class NotificationService {
             repeats: false)
         let request = UNNotificationRequest(identifier: "passRenewal-\(resort)-\(passName)", content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request)
+    }
+}
+
+/// Checks ride-count milestones after a new `RideLog` is saved — both the ride's own count and
+/// the resort-wide total — and fires `fireRideMilestone` when a round number is newly crossed.
+/// UserDefaults-tracked (per ride, per resort) the same way `WaitTimeRecorder`'s DOWN transitions
+/// are, so it only compares against the last-seen count rather than re-deriving history.
+@MainActor
+enum RideMilestoneService {
+    static func checkMilestones(rideId: String, rideName: String, resort: String, context: ModelContext) {
+        guard let allLogs = try? context.fetch(FetchDescriptor<RideLog>()) else { return }
+        let rideCount = allLogs.filter { $0.rideId == rideId && $0.resort == resort }.count
+        checkOne(key: "milestoneCount_\(resort)_\(rideId)", newCount: rideCount) { milestone in
+            NotificationService.shared.fireRideMilestone(rideId: rideId, rideName: rideName, milestone: milestone, overall: false)
+        }
+        let overallCount = allLogs.filter { $0.resort == resort }.count
+        checkOne(key: "milestoneCount_overall_\(resort)", newCount: overallCount) { milestone in
+            NotificationService.shared.fireRideMilestone(rideId: nil, rideName: rideName, milestone: milestone, overall: true)
+        }
+    }
+
+    private static func checkOne(key: String, newCount: Int, fire: (Int) -> Void) {
+        let oldCount = UserDefaults.standard.integer(forKey: key)
+        UserDefaults.standard.set(newCount, forKey: key)
+        if let milestone = RideMilestone.crossed(oldCount: oldCount, newCount: newCount) {
+            fire(milestone)
+        }
+    }
+}
+
+/// One consolidated morning notification — weather, crowd level, and today's top Must-Do pick —
+/// instead of several separate banners. Fires at most once per (resort, calendar day), only
+/// within an early-morning window, and only on a day the planned Trip actually covers this
+/// resort. Driven from the foreground refresh (`ParkMapView`), same as the rain/heat heads-up —
+/// not a true background-scheduled wake, so it needs the app opened once that morning.
+enum MorningBriefing {
+    static let windowHours = 6...10
+
+    static func shouldFire(hour: Int, resort: String, tripResorts: [String], tripRange: ClosedRange<Date>?,
+                           today: Date, calendar: Calendar = .current) -> Bool {
+        guard windowHours.contains(hour), tripResorts.contains(resort), let tripRange else { return false }
+        return tripRange.contains(calendar.startOfDay(for: today))
+    }
+
+    static func body(weather: String?, crowd: String?, mustDo: String?) -> String {
+        let parts = [weather, crowd, mustDo].compactMap { $0 }
+        return parts.isEmpty ? "Have a great day at the parks!" : parts.joined(separator: " · ")
+    }
+
+    static func dayKey(_ date: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: date)
+    }
+}
+
+@MainActor
+final class MorningBriefingService {
+    static let shared = MorningBriefingService()
+    private init() {}
+
+    func checkAndFire(resort: ParkGroup, isWet: Bool, isHot: Bool, crowdLevel: CrowdLevel?,
+                      mustDoPick: (name: String, wait: Int)?, trip: Trip?, now: Date = .now) {
+        let hour = Calendar.current.component(.hour, from: now)
+        guard MorningBriefing.shouldFire(hour: hour, resort: resort.rawValue, tripResorts: trip?.resortsRaw ?? [],
+                                         tripRange: trip.map { $0.startDate...$0.endDate }, today: now) else { return }
+        let key = "morningBriefingDay_\(resort.rawValue)"
+        let dayKey = MorningBriefing.dayKey(now)
+        guard UserDefaults.standard.string(forKey: key) != dayKey else { return }
+        UserDefaults.standard.set(dayKey, forKey: key)
+        let weather = isWet ? "Rain likely today" : (isHot ? "Hot today — plan indoor breaks" : nil)
+        let crowd = crowdLevel.map { "\($0.rawValue) crowds expected" }
+        let mustDo = mustDoPick.map { "Top pick: \($0.name) (~\($0.wait) min)" }
+        NotificationService.shared.fireMorningBriefing(resort: resort, body: MorningBriefing.body(weather: weather, crowd: crowd, mustDo: mustDo))
     }
 }
 

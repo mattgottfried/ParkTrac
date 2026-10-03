@@ -54,6 +54,20 @@ enum PassPeriodStats {
         guard matches.count >= 2 else { return nil }
         return matches.max { $0.netSavings < $1.netSavings }
     }
+
+    /// Cost per visit for each pass year (past periods plus the current one), chronological —
+    /// nil entries are years with no logged visits (yet). nil overall with fewer than 2 years.
+    static func costPerVisitTrend(years: [(startDate: Date, cost: Double, visitCount: Int)]) -> [Double?]? {
+        guard years.count >= 2 else { return nil }
+        return years.sorted { $0.startDate < $1.startDate }
+            .map { PassSavingsCalculator.costPerVisit(passCost: $0.cost, visits: $0.visitCount) }
+    }
+
+    /// "$192 → $90 → $64" for display, skipping years with no visits yet.
+    static func costPerVisitTrendText(_ trend: [Double?]) -> String {
+        trend.map { perVisit in perVisit.map { String(format: "$%.0f", $0) } ?? "–" }
+            .joined(separator: " → ")
+    }
 }
 
 struct PassCostTrend: Equatable {
@@ -71,7 +85,93 @@ struct PassYear: Equatable {
     let tier: String
     let startDate: Date
     let endDate: Date?       // nil = still open (the current year)
+    let cost: Double
+    let visitCount: Int
     let netSavings: Double
+}
+
+/// Discount rates by tier (not just the currently-selected one) — needed both by
+/// `PassSavingsView`'s own tier and by `PassUpgradeAdvisor`'s "what if I upgraded" comparison.
+/// Source: Official Disney/Universal passholder discount pages (verified May 2026).
+enum PassDiscountRates {
+    /// All Disney AP tiers receive the same discount rates.
+    static func disneyMerchRate(_ tier: DisneyPassTier) -> Double { tier != .none ? 0.20 : 0 }
+    static func disneyFoodRate(_ tier: DisneyPassTier) -> Double { tier != .none ? 0.10 : 0 }
+
+    /// Universal rates vary by tier.
+    static func universalMerchRate(_ tier: UniversalPassTier) -> Double {
+        switch tier {
+        case .premier:              return 0.15
+        case .preferred:            return 0.10
+        case .power, .select, .seasonal, .none: return 0
+        }
+    }
+    static func universalFoodRate(_ tier: UniversalPassTier) -> Double {
+        switch tier {
+        case .premier:              return 0.15
+        case .preferred:            return 0.10
+        case .power, .select, .seasonal, .none: return 0
+        }
+    }
+
+    /// Typical sticker price for a tier, same figures as the cost field's placeholder text —
+    /// used as a reference "what the next tier up usually costs" starting point for the
+    /// upgrade advisor (the guest can still type in their own actual price).
+    static func referencePrice(_ tier: DisneyPassTier) -> Double? {
+        switch tier {
+        case .incredi:   return 1399
+        case .sorcerer:  return 1099
+        case .pirate:    return 769
+        case .pixieDust: return 399
+        case .none:      return nil
+        }
+    }
+    static func referencePrice(_ tier: UniversalPassTier) -> Double? {
+        switch tier {
+        case .premier:   return 769
+        case .preferred: return 499
+        case .power:     return 309
+        case .select:    return 229
+        case .seasonal:  return 149
+        case .none:      return nil
+        }
+    }
+}
+
+/// Whether upgrading to the next tier up would be worth it, purely on discount-rate math — this
+/// doesn't account for blockout-date access, which is the other real reason to upgrade and isn't
+/// quantifiable from data this app has.
+enum PassUpgradeAdvisor {
+    struct Comparison: Equatable {
+        let costDifference: Double        // upgradeCost − currentCost (positive = upgrade costs more)
+        let extraDiscountSavings: Double  // discount savings at upgrade rates − at current rates, from spend so far
+        var netDifference: Double { costDifference - extraDiscountSavings }
+    }
+
+    static func compare(currentCost: Double, upgradeCost: Double, merchSpend: Double, foodSpend: Double,
+                        currentMerchRate: Double, currentFoodRate: Double,
+                        upgradeMerchRate: Double, upgradeFoodRate: Double) -> Comparison {
+        func discountSavings(merchRate: Double, foodRate: Double) -> Double {
+            let merch = merchRate > 0 ? merchSpend * merchRate / (1 - merchRate) : 0
+            let food = foodRate > 0 ? foodSpend * foodRate / (1 - foodRate) : 0
+            return merch + food
+        }
+        let extra = discountSavings(merchRate: upgradeMerchRate, foodRate: upgradeFoodRate)
+            - discountSavings(merchRate: currentMerchRate, foodRate: currentFoodRate)
+        return Comparison(costDifference: upgradeCost - currentCost, extraDiscountSavings: extra)
+    }
+
+    /// The next tier up in each ladder, or nil already at the top.
+    static func nextTier(_ tier: DisneyPassTier) -> DisneyPassTier? {
+        let tiers = DisneyPassTier.allCases.filter { $0 != .none }
+        guard let idx = tiers.firstIndex(of: tier), idx + 1 < tiers.count else { return nil }
+        return tiers[idx + 1]
+    }
+    static func nextTier(_ tier: UniversalPassTier) -> UniversalPassTier? {
+        let tiers = UniversalPassTier.allCases.filter { $0 != .none }
+        guard let idx = tiers.firstIndex(of: tier), idx + 1 < tiers.count else { return nil }
+        return tiers[idx + 1]
+    }
 }
 
 /// Everything `savingsSummaryCard` needs for one resort, one scope (lifetime or this pass year).
@@ -100,28 +200,11 @@ struct PassSavingsView: View {
     @State private var showRenewUniversal = false
 
     // MARK: - Discount rates per pass tier
-    // Source: Official Disney/Universal passholder discount pages (verified May 2026)
 
-    // All Disney AP tiers receive the same discount rates
-    private var disneyMerchRate: Double { appState.disneyPassTier != .none ? 0.20 : 0 }
-    private var disneyFoodRate:  Double { appState.disneyPassTier != .none ? 0.10 : 0 }
-
-    // Universal rates vary by tier
-    private var universalMerchRate: Double {
-        switch appState.universalPassTier {
-        case .premier:              return 0.15
-        case .preferred:            return 0.10
-        case .power, .select, .seasonal, .none: return 0
-        }
-    }
-
-    private var universalFoodRate: Double {
-        switch appState.universalPassTier {
-        case .premier:              return 0.15
-        case .preferred:            return 0.10
-        case .power, .select, .seasonal, .none: return 0
-        }
-    }
+    private var disneyMerchRate: Double { PassDiscountRates.disneyMerchRate(appState.disneyPassTier) }
+    private var disneyFoodRate:  Double { PassDiscountRates.disneyFoodRate(appState.disneyPassTier) }
+    private var universalMerchRate: Double { PassDiscountRates.universalMerchRate(appState.universalPassTier) }
+    private var universalFoodRate: Double { PassDiscountRates.universalFoodRate(appState.universalPassTier) }
 
     // MARK: - Pass periods
 
@@ -149,23 +232,68 @@ struct PassSavingsView: View {
 
     /// Gate ticket + parking savings logged within a date range (the discount-free basis for `PassYear`).
     private func visitSavingsNet(resort: ParkGroup, from: Date, to: Date) -> Double {
+        savingsInRange(resort: resort, from: from, to: to).map { $0.gateValue + $0.parkingValue }.reduce(0, +)
+    }
+
+    private func visitCount(resort: ParkGroup, from: Date, to: Date) -> Int {
+        savingsInRange(resort: resort, from: from, to: to).count
+    }
+
+    private func savingsInRange(resort: ParkGroup, from: Date, to: Date) -> [VisitSaving] {
         allSavings.filter { $0.resort == resort.rawValue && $0.date >= from && $0.date < to }
-            .map { $0.gateValue + $0.parkingValue }.reduce(0, +)
     }
 
     private func passYears(_ resort: ParkGroup, currentTierRaw: String, currentCost: Double) -> [PassYear] {
-        let past = pastPeriods.filter { $0.resort == resort.rawValue }.map { period in
-            PassYear(resort: resort.rawValue, tier: period.tier, startDate: period.startDate, endDate: period.endDate,
-                     netSavings: visitSavingsNet(resort: resort, from: period.startDate, to: period.endDate) - period.cost)
+        let past = pastPeriods.filter { $0.resort == resort.rawValue }.map { period -> PassYear in
+            let visits = visitCount(resort: resort, from: period.startDate, to: period.endDate)
+            let net = visitSavingsNet(resort: resort, from: period.startDate, to: period.endDate) - period.cost
+            return PassYear(resort: resort.rawValue, tier: period.tier, startDate: period.startDate, endDate: period.endDate,
+                            cost: period.cost, visitCount: visits, netSavings: net)
         }
         let currentStart = periodStart(resort) ?? past.map(\.startDate).min() ?? .distantPast
+        let currentVisits = visitCount(resort: resort, from: currentStart, to: .distantFuture)
+        let currentNet = visitSavingsNet(resort: resort, from: currentStart, to: .distantFuture) - currentCost
         let currentYear = PassYear(resort: resort.rawValue, tier: currentTierRaw, startDate: currentStart, endDate: nil,
-                                   netSavings: visitSavingsNet(resort: resort, from: currentStart, to: .distantFuture) - currentCost)
+                                   cost: currentCost, visitCount: currentVisits, netSavings: currentNet)
         return past + [currentYear]
     }
 
     private func bestPassYear(_ resort: ParkGroup, currentTierRaw: String, currentCost: Double) -> PassYear? {
         PassPeriodStats.bestPassYear(years: passYears(resort, currentTierRaw: currentTierRaw, currentCost: currentCost), resort: resort.rawValue)
+    }
+
+    private func costPerVisitTrend(_ resort: ParkGroup, currentTierRaw: String, currentCost: Double) -> [Double?]? {
+        let years = passYears(resort, currentTierRaw: currentTierRaw, currentCost: currentCost)
+            .map { (startDate: $0.startDate, cost: $0.cost, visitCount: $0.visitCount) }
+        return PassPeriodStats.costPerVisitTrend(years: years)
+    }
+
+    /// Discount-free financial comparison against the next tier up, from this pass year's spend
+    /// so far. nil already at the top tier.
+    private func upgradeComparison(_ resort: ParkGroup, currentTierRaw: String, currentCost: Double) -> (nextTierName: String, comparison: PassUpgradeAdvisor.Comparison)? {
+        let thisYear = numbers(resort: resort, since: periodStart(resort),
+                               merchRate: resort == .disney ? disneyMerchRate : universalMerchRate,
+                               foodRate: resort == .disney ? disneyFoodRate : universalFoodRate)
+        switch resort {
+        case .disney:
+            guard let next = PassUpgradeAdvisor.nextTier(appState.disneyPassTier) else { return nil }
+            let upgradeCost = PassDiscountRates.referencePrice(next) ?? currentCost
+            let comparison = PassUpgradeAdvisor.compare(
+                currentCost: currentCost, upgradeCost: upgradeCost, merchSpend: thisYear.merchSpend, foodSpend: thisYear.foodSpend,
+                currentMerchRate: disneyMerchRate, currentFoodRate: disneyFoodRate,
+                upgradeMerchRate: PassDiscountRates.disneyMerchRate(next), upgradeFoodRate: PassDiscountRates.disneyFoodRate(next))
+            return (next.rawValue, comparison)
+        case .universal:
+            guard let next = PassUpgradeAdvisor.nextTier(appState.universalPassTier) else { return nil }
+            let upgradeCost = PassDiscountRates.referencePrice(next) ?? currentCost
+            let comparison = PassUpgradeAdvisor.compare(
+                currentCost: currentCost, upgradeCost: upgradeCost, merchSpend: thisYear.merchSpend, foodSpend: thisYear.foodSpend,
+                currentMerchRate: universalMerchRate, currentFoodRate: universalFoodRate,
+                upgradeMerchRate: PassDiscountRates.universalMerchRate(next), upgradeFoodRate: PassDiscountRates.universalFoodRate(next))
+            return (next.rawValue, comparison)
+        default:
+            return nil
+        }
     }
 
     // MARK: - Savings calculations
@@ -248,6 +376,8 @@ struct PassSavingsView: View {
                     Text("Disney Savings — This Pass Year")
                 }
 
+                upgradeSection(.disney, currentTierRaw: appState.disneyPassTier.rawValue, currentCost: appState.disneyPassCost)
+
                 if periodStart(.disney) != nil {
                     let lifetime = numbers(resort: .disney, since: nil, merchRate: disneyMerchRate, foodRate: disneyFoodRate)
                     let cost = lifetimeCost(.disney, currentCost: appState.disneyPassCost)
@@ -276,6 +406,8 @@ struct PassSavingsView: View {
                 } header: {
                     Text("Universal Savings — This Pass Year")
                 }
+
+                upgradeSection(.universal, currentTierRaw: appState.universalPassTier.rawValue, currentCost: appState.universalPassCost)
 
                 if periodStart(.universal) != nil {
                     let lifetime = numbers(resort: .universal, since: nil, merchRate: universalMerchRate, foodRate: universalFoodRate)
@@ -441,6 +573,39 @@ struct PassSavingsView: View {
                 }
             }
         }
+        if let trend = costPerVisitTrend(resort, currentTierRaw: currentTierRaw, currentCost: currentCost) {
+            VStack(alignment: .leading, spacing: 2) {
+                Label("Cost per visit, year over year", systemImage: "chart.xyaxis.line")
+                    .font(.caption).foregroundStyle(.secondary)
+                Text(PassPeriodStats.costPerVisitTrendText(trend))
+                    .font(.caption.weight(.semibold))
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    /// Whether the next tier up would be worth it, purely on discount-rate math from this pass
+    /// year's spend so far. Always shown (not gated on renewal history) when a next tier exists.
+    @ViewBuilder
+    private func upgradeSection(_ resort: ParkGroup, currentTierRaw: String, currentCost: Double) -> some View {
+        if let result = upgradeComparison(resort, currentTierRaw: currentTierRaw, currentCost: currentCost) {
+            let nextTierName = result.nextTierName
+            let comparison = result.comparison
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Upgrading to \(nextTierName) would cost \(comparison.costDifference, format: .currency(code: "USD")) more\(comparison.extraDiscountSavings > 0 ? ", offset by \(comparison.extraDiscountSavings, format: .currency(code: "USD")) in extra discounts so far" : "")")
+                        .font(.subheadline)
+                    Text(comparison.netDifference <= 0
+                        ? "Already worth it on discounts alone this pass year."
+                        : "Net \(abs(comparison.netDifference), format: .currency(code: "USD")) more out of pocket so far — the other reason to upgrade is blockout-date access, which this doesn't account for.")
+                        .font(.caption)
+                        .foregroundStyle(comparison.netDifference <= 0 ? .green : .secondary)
+                }
+                .padding(.vertical, 2)
+            } header: {
+                Text("Should I Upgrade?")
+            }
+        }
     }
 
     private func passCostRow(label: String, cost: Double, placeholder: String, onChange: @escaping (Double) -> Void) -> some View {
@@ -573,25 +738,20 @@ struct PassSavingsView: View {
 
     // MARK: - Placeholder pricing
 
+    private static func pricePlaceholder(_ price: Double?) -> String {
+        guard let price else { return "" }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        return "e.g. $\(formatter.string(from: price as NSNumber) ?? "\(Int(price))")"
+    }
+
     private var disneyPassPricePlaceholder: String {
-        switch appState.disneyPassTier {
-        case .incredi:   return "e.g. $1,399"
-        case .sorcerer:  return "e.g. $1,099"
-        case .pirate:    return "e.g. $769"
-        case .pixieDust: return "e.g. $399"
-        case .none:      return ""
-        }
+        Self.pricePlaceholder(PassDiscountRates.referencePrice(appState.disneyPassTier))
     }
 
     private var universalPassPricePlaceholder: String {
-        switch appState.universalPassTier {
-        case .premier:   return "e.g. $769"
-        case .preferred: return "e.g. $499"
-        case .power:     return "e.g. $309"
-        case .select:    return "e.g. $229"
-        case .seasonal:  return "e.g. $149"
-        case .none:      return ""
-        }
+        Self.pricePlaceholder(PassDiscountRates.referencePrice(appState.universalPassTier))
     }
 }
 

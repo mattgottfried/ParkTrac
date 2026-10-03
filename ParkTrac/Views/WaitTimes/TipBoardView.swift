@@ -64,6 +64,12 @@ struct TipBoardView: View {
                 .foregroundStyle(.yellow)
             Text("~\(value.totalMinutesSaved) min saved across \(value.rides.count) ride\(value.rides.count == 1 ? "" : "s") right now")
                 .font(.subheadline)
+            if let best = LightningLaneValue.bestPick(value) {
+                Label("Best pick: \(best.name) — ~\(best.minutesSaved) min saved\(best.cost.map { " (\($0, format: .currency(code: appState.selectedResort.currencyCode)))" } ?? "")",
+                      systemImage: "star.fill")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.orange)
+            }
             if value.hasPaidRides {
                 Text("Includes \(value.totalCost, format: .currency(code: appState.selectedResort.currencyCode)) in Individual Lightning Lane")
                     .font(.caption)

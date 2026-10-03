@@ -102,4 +102,18 @@ final class CommunityHistoryTests: XCTestCase {
         let trips = [trip([day(2025, 1, 1)]), trip([day(2026, 1, 1)])]
         XCTAssertNil(QuietestTrip.compare(trips: trips) { _ in nil })
     }
+
+    // MARK: Arrival advisor
+
+    func testArrivalAdvisorScalesLeadTimeWithCrowdLevel() {
+        XCTAssertEqual(ArrivalAdvisor.leadMinutes(for: .ghost), 15)
+        XCTAssertEqual(ArrivalAdvisor.leadMinutes(for: .veryHigh), 60)
+        XCTAssertGreaterThan(ArrivalAdvisor.leadMinutes(for: .high), ArrivalAdvisor.leadMinutes(for: .moderate))
+    }
+
+    func testSuggestedArrivalIsBeforeOpen() {
+        let open = Date(timeIntervalSince1970: 1_800_000_000)
+        let arrival = ArrivalAdvisor.suggestedArrival(openTime: open, level: .high)
+        XCTAssertEqual(open.timeIntervalSince(arrival), 45 * 60)
+    }
 }

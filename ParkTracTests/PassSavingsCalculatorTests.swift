@@ -69,8 +69,8 @@ final class PassSavingsCalculatorTests: XCTestCase {
 
     func testBestPassYearPicksTheHighestNetSavings() {
         let years = [
-            PassYear(resort: "Walt Disney World", tier: "Pirate Pass", startDate: date(2024, 1, 1), endDate: date(2025, 1, 1), netSavings: 200),
-            PassYear(resort: "Walt Disney World", tier: "Sorcerer Pass", startDate: date(2025, 1, 1), endDate: nil, netSavings: 450),
+            PassYear(resort: "Walt Disney World", tier: "Pirate Pass", startDate: date(2024, 1, 1), endDate: date(2025, 1, 1), cost: 769, visitCount: 10, netSavings: 200),
+            PassYear(resort: "Walt Disney World", tier: "Sorcerer Pass", startDate: date(2025, 1, 1), endDate: nil, cost: 1099, visitCount: 15, netSavings: 450),
         ]
         let best = try! XCTUnwrap(PassPeriodStats.bestPassYear(years: years, resort: "Walt Disney World"))
         XCTAssertEqual(best.tier, "Sorcerer Pass")
@@ -78,7 +78,58 @@ final class PassSavingsCalculatorTests: XCTestCase {
     }
 
     func testNoBestPassYearWithFewerThanTwoYears() {
-        let years = [PassYear(resort: "Walt Disney World", tier: "Pirate Pass", startDate: date(2024, 1, 1), endDate: nil, netSavings: 200)]
+        let years = [PassYear(resort: "Walt Disney World", tier: "Pirate Pass", startDate: date(2024, 1, 1), endDate: nil, cost: 769, visitCount: 10, netSavings: 200)]
         XCTAssertNil(PassPeriodStats.bestPassYear(years: years, resort: "Walt Disney World"))
+    }
+
+    // MARK: Cost per visit trend
+
+    func testCostPerVisitTrendOverYears() {
+        let years: [(startDate: Date, cost: Double, visitCount: Int)] = [
+            (startDate: date(2024, 1, 1), cost: 769, visitCount: 4),
+            (startDate: date(2025, 1, 1), cost: 1099, visitCount: 20),
+        ]
+        let trend = try! XCTUnwrap(PassPeriodStats.costPerVisitTrend(years: years))
+        XCTAssertEqual(trend, [192.25, 54.95])
+        XCTAssertEqual(PassPeriodStats.costPerVisitTrendText(trend), "$192 → $55")
+    }
+
+    func testCostPerVisitTrendSkipsYearsWithNoVisits() {
+        let years: [(startDate: Date, cost: Double, visitCount: Int)] = [
+            (startDate: date(2024, 1, 1), cost: 769, visitCount: 0),
+            (startDate: date(2025, 1, 1), cost: 1099, visitCount: 10),
+        ]
+        let trend = try! XCTUnwrap(PassPeriodStats.costPerVisitTrend(years: years))
+        XCTAssertEqual(PassPeriodStats.costPerVisitTrendText(trend), "– → $110")
+    }
+
+    func testNoCostPerVisitTrendWithFewerThanTwoYears() {
+        XCTAssertNil(PassPeriodStats.costPerVisitTrend(years: [(startDate: date(2024, 1, 1), cost: 769, visitCount: 4)]))
+    }
+
+    // MARK: Should I upgrade?
+
+    func testUpgradeAdvisorFindsTheNextTierUp() {
+        XCTAssertEqual(PassUpgradeAdvisor.nextTier(DisneyPassTier.pirate), .sorcerer)
+        XCTAssertNil(PassUpgradeAdvisor.nextTier(DisneyPassTier.incredi), "already at the top")
+        XCTAssertEqual(PassUpgradeAdvisor.nextTier(UniversalPassTier.select), .power)
+    }
+
+    func testUpgradeComparisonAccountsForExtraDiscountSavings() {
+        // Universal Preferred (10%) -> Premier (15%): $150 more upfront, but 5% more off $1000 of spend saves ~$56
+        let comparison = PassUpgradeAdvisor.compare(
+            currentCost: 499, upgradeCost: 649, merchSpend: 500, foodSpend: 500,
+            currentMerchRate: 0.10, currentFoodRate: 0.10, upgradeMerchRate: 0.15, upgradeFoodRate: 0.15)
+        XCTAssertEqual(comparison.costDifference, 150)
+        XCTAssertGreaterThan(comparison.extraDiscountSavings, 0)
+    }
+
+    func testUpgradeComparisonIsJustCostWhenDiscountRatesMatch() {
+        // Disney tiers all share the same merch/food rate, so upgrading only ever costs more.
+        let comparison = PassUpgradeAdvisor.compare(
+            currentCost: 769, upgradeCost: 1099, merchSpend: 300, foodSpend: 300,
+            currentMerchRate: 0.20, currentFoodRate: 0.10, upgradeMerchRate: 0.20, upgradeFoodRate: 0.10)
+        XCTAssertEqual(comparison.extraDiscountSavings, 0)
+        XCTAssertEqual(comparison.netDifference, 330)
     }
 }

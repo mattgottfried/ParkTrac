@@ -124,6 +124,38 @@ final class VisitTripTests: XCTestCase {
         XCTAssertEqual(StandingTime.minutes(today: []), 0)
     }
 
+    // MARK: Rest reminder — heat-aware threshold
+
+    func testHotDayNudgesWithFewerRidesThanNormal() {
+        let now = Date()
+        let times = [now.addingTimeInterval(-30 * 60), now.addingTimeInterval(-15 * 60), now]
+        XCTAssertFalse(RestReminder.shouldNudge(todaysRideTimes: times, now: now), "only 3 rides — not enough on a normal day")
+        XCTAssertTrue(RestReminder.shouldNudge(todaysRideTimes: times, now: now, isHot: true), "3 is enough on a hot day")
+    }
+
+    // MARK: Ride milestones
+
+    func testMilestoneCrossedPicksTheHighestNewlyReached() {
+        XCTAssertEqual(RideMilestone.crossed(oldCount: 9, newCount: 10), 10)
+        XCTAssertEqual(RideMilestone.crossed(oldCount: 8, newCount: 12), 10, "12 only crosses the 10 milestone, not 25")
+        XCTAssertNil(RideMilestone.crossed(oldCount: 10, newCount: 11), "no new milestone between 10 and 25")
+    }
+
+    func testMilestoneCrossedPicksHighestWhenMultipleAreSkipped() {
+        XCTAssertEqual(RideMilestone.crossed(oldCount: 5, newCount: 60), 50, "jumped past 10, 25 and 50 — report the highest")
+    }
+
+    // MARK: First ridden
+
+    func testFirstRiddenIsTheEarliestLogDate() {
+        let dates = [day(2024, 6, 15), day(2022, 3, 1), day(2023, 1, 1)]
+        XCTAssertEqual(FirstRidden.date(dates), day(2022, 3, 1))
+    }
+
+    func testNoFirstRiddenWithNoLogs() {
+        XCTAssertNil(FirstRidden.date([]))
+    }
+
     // MARK: Park Bingo
 
     func testParkBingoSplitsRiddenFromRemaining() {

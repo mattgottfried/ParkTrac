@@ -23,8 +23,14 @@ struct RopeDropPlanView: View {
     @State private var stops: [PlannedStop] = []
     @State private var openTime: Date?
     @State private var parkName = ""
+    @State private var crowdHistory = CrowdHistoryService.shared
 
     private var resort: ParkGroup { appState.selectedResort }
+
+    private var crowdLevelToday: CrowdLevel? {
+        guard let data = crowdHistory.days(for: resort) else { return nil }
+        return CrowdHistory.level(for: .now, resort: resort, data: data)
+    }
 
     var body: some View {
         NavigationStack {
@@ -41,10 +47,18 @@ struct RopeDropPlanView: View {
                               systemImage: "sunrise.fill")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.orange)
+                        if let level = crowdLevelToday {
+                            let arrival = ArrivalAdvisor.suggestedArrival(openTime: openTime, level: level)
+                            Label("\(level.rawValue) crowds expected — arrive by \(arrival.formatted(date: .omitted, time: .shortened)) to beat the rope-drop line",
+                                  systemImage: "figure.walk.motion")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(level.color)
+                        }
                         Text("Waits are lowest right at open — the earlier you're through the gate, the more of this holds. This route is by walking distance, not predicted wait, since everything's short this early.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .task { await crowdHistory.refreshIfNeeded(resort: resort) }
                     if stops.isEmpty {
                         ContentUnavailableView {
                             Label("Nothing to Plan", systemImage: "questionmark.circle")

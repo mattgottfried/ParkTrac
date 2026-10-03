@@ -318,6 +318,7 @@ enum LiveActivityActionHandler {
             let context = PersistenceController.container.mainContext
             context.insert(log)
             try? context.save()
+            RideMilestoneService.checkMilestones(rideId: log.rideId, rideName: log.rideName, resort: log.resort, context: context)
         }
         for key in ["activeTimerRideId", "activeTimerStart", "timerRideName", "timerPostedMinutes", "timerResort"] {
             defaults.removeObject(forKey: key)
