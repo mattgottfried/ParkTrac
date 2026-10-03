@@ -58,6 +58,16 @@ final class ResortTests: XCTestCase {
         XCTAssertNotEqual(names.section, "Lightning Lane")
     }
 
+    /// Plain Universal Express Pass has no return time at all — only Express Now does. Every
+    /// other resort's return pass is always reservation-based.
+    func testReturnTimeOnlyAtUniversalWithExpressNow() {
+        XCTAssertFalse(ReturnTimeAvailability.showsReturnTime(resort: .universal, expressType: .none))
+        XCTAssertTrue(ReturnTimeAvailability.showsReturnTime(resort: .universal, expressType: .expressNow))
+        XCTAssertTrue(ReturnTimeAvailability.showsReturnTime(resort: .disney, expressType: .none))
+        XCTAssertTrue(ReturnTimeAvailability.showsReturnTime(resort: .tokyoDisney, expressType: .none))
+        XCTAssertTrue(ReturnTimeAvailability.showsReturnTime(resort: .universalJapan, expressType: .none))
+    }
+
     func testShortTextPrefix() throws {
         let info = LightningLaneInfo(try JSONDecoder().decode(ReturnTimeQueue.self, from: Data(#"{"state":"FINISHED"}"#.utf8)))
         XCTAssertEqual(info?.shortText(prefix: "PP"), "PP sold out")

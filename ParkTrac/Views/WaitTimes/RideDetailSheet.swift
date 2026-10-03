@@ -58,6 +58,13 @@ struct RideDetailSheet: View {
         viewModel.allRides.first { $0.parkId == ride.parkId && $0.name == name }
     }
 
+    /// Plain Universal Express Pass has no return time to book or watch for — you just walk up
+    /// to the Express entrance whenever. Only Express Now (a per-ride app purchase) behaves like
+    /// Disney's Lightning Lane. Disney and Tokyo's return passes are always reservation-based.
+    private var showsReturnTimeSection: Bool {
+        ReturnTimeAvailability.showsReturnTime(resort: parkGroup, expressType: appState.universalExpressType)
+    }
+
     /// Today's logged-but-unused DAS/AAP return for this ride, if any
     private var loggedAccessReturn: PlanItem? {
         openAccessReturns.first {
@@ -151,8 +158,10 @@ struct RideDetailSheet: View {
                     card { accessPassSection(pass) }
                 }
 
-                // Lightning Lane: next returns + notify-only watch
-                if ride.multiPass != nil || ride.singlePass != nil {
+                // Lightning Lane: next returns + notify-only watch. At Universal Orlando this
+                // only applies with Express Now — plain Express Pass has no return time at all,
+                // you just walk up to the Express entrance whenever.
+                if (ride.multiPass != nil || ride.singlePass != nil) && showsReturnTimeSection {
                     card { LightningLaneSection(ride: ride, parkName: parkName, resort: parkGroup) }
                 }
 

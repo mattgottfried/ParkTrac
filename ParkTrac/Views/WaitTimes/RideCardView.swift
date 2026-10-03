@@ -17,6 +17,9 @@ struct RideCardView: View {
     var usual: GoodTimeToRide.Usual? = nil
     /// Rising/falling vs. the last refresh — a small corner arrow on the wait tile
     var trend: WaitTrend? = nil
+    /// False only at Universal Orlando without Express Now — plain Express Pass has no return
+    /// time to show, so the capsule (and the live-data watch bell) stay hidden.
+    var showsReturnPass: Bool = true
 
     /// Starred as a Must-Do (shown as a star beside the name)
     var isMustDo: Bool = false
@@ -127,8 +130,8 @@ struct RideCardView: View {
     }
 
     private var hasDetails: Bool {
-        (ride.isOperating && ride.multiPass != nil) || isWatchingLL || walkMinutes != nil
-            || meta != nil || hasSingleRider
+        (showsReturnPass && ride.isOperating && ride.multiPass != nil) || (showsReturnPass && isWatchingLL)
+            || walkMinutes != nil || meta != nil || hasSingleRider
     }
 
     /// Return pass, walk and height on one line, dot-separated.
@@ -141,14 +144,14 @@ struct RideCardView: View {
                     .padding(.horizontal, 7).padding(.vertical, 2)
                     .background(Color.blue.opacity(0.12), in: Capsule())
             }
-            if ride.isOperating, let ll = ride.multiPass {
+            if showsReturnPass, ride.isOperating, let ll = ride.multiPass {
                 Text(ll.shortText(prefix: returnPassShort))
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(ll.isAvailable ? Color.white : Color.secondary)
                     .padding(.horizontal, 7).padding(.vertical, 2)
                     .background(ll.isAvailable ? Color.orange : Color.secondary.opacity(0.15), in: Capsule())
             }
-            if isWatchingLL {
+            if showsReturnPass, isWatchingLL {
                 Image(systemName: "bell.fill")
                     .font(.caption2)
                     .foregroundStyle(.orange)
@@ -177,14 +180,14 @@ struct RideCardView: View {
 
     private var accessibilityValue: String {
         var parts = [ride.spokenStatus]
-        if ride.isOperating, let ll = ride.multiPass {
+        if showsReturnPass, ride.isOperating, let ll = ride.multiPass {
             if ll.isAvailable, let start = ll.returnStart {
                 parts.append("\(returnPassName) return \(start.formatted(date: .omitted, time: .shortened))")
             } else {
                 parts.append(ll.shortText(prefix: returnPassName))
             }
         }
-        if LightningLaneWatchService.shared.watch(for: ride.id) != nil {
+        if showsReturnPass, LightningLaneWatchService.shared.watch(for: ride.id) != nil {
             parts.append("watching for \(returnPassName) openings")
         }
         if let goodTime { parts.append("good time to ride, \(goodTime.longText)") }

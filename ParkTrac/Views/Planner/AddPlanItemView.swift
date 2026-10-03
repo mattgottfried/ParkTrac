@@ -161,6 +161,12 @@ struct AddPlanItemView: View {
 
     private var passName: String { group.returnPassNames.section }
 
+    /// Plain Universal Express Pass has no return time to log — only Express Now does. Disney
+    /// and Tokyo's return passes are always reservation-based.
+    private var showsReturnTimeKind: Bool {
+        ReturnTimeAvailability.showsReturnTime(resort: group, expressType: appState.universalExpressType)
+    }
+
     // MARK: Body
 
     var body: some View {
@@ -205,7 +211,7 @@ struct AddPlanItemView: View {
 
     private var kindPicker: some View {
         HStack(spacing: 8) {
-            ForEach(Kind.allCases.filter { !(isFutureDay && $0 == .ll) }) { k in
+            ForEach(Kind.allCases.filter { !($0 == .ll && (isFutureDay || !showsReturnTimeKind)) }) { k in
                 Button {
                     withAnimation(.spring(response: 0.25)) { switchKind(to: k) }
                 } label: {
