@@ -328,14 +328,15 @@ enum LiveActivityActionHandler {
         NotificationCenter.default.post(name: .waitTimerChangedExternally, object: nil)
     }
 
-    /// "Used It": tick off today's return for this ride and end its countdown.
+    /// "Used It": tick off today's return for this ride and end its countdown. For AAP/DAS this
+    /// also logs the ride as ridden (`ReturnTimeLogger.markAccessPassUsed`) — using the return
+    /// means you actually rode it.
     private static func usedReturn(rideId: String) {
         let context = PersistenceController.container.mainContext
         let items = (try? context.fetch(FetchDescriptor<PlanItem>())) ?? []
         for item in items where TimerMath.isOpenReturn(item, rideId: rideId) {
-            item.isDone = true
+            ReturnTimeLogger.markAccessPassUsed(item, context: context)
         }
-        try? context.save()
         LiveActivityManager.endReturnTime()
     }
 }
