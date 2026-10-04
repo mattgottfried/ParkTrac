@@ -233,4 +233,24 @@ enum ReturnTimeLogger {
             returnEnd: .distantFuture, context: context)
         return returnStart
     }
+
+    /// Marking a DAS/AAP return "used" means you were called back and actually rode it — unlike
+    /// a Lightning Lane return (still just a window you might not use), there's no standby wait
+    /// to record since DAS/AAP skip it, so this logs the same `RideLog` a manual "Rode It!"
+    /// would, with no wait times. Called from both "mark done" entry points (My Day's checkbox,
+    /// the Live Activity "Used It" button) so a guest's ride count/badges/milestones reflect
+    /// rides they actually used their pass on, not just ones they booked.
+    @MainActor
+    static func markAccessPassUsed(_ item: PlanItem, context: ModelContext) {
+        item.isDone = true
+        guard item.kind == "aap", let rideId = item.rideId else {
+            try? context.save()
+            return
+        }
+        let log = RideLog(rideId: rideId, rideName: item.title, parkId: "", parkName: item.parkName,
+                          resort: item.resort, riddenAt: .now)
+        context.insert(log)
+        try? context.save()
+        RideMilestoneService.checkMilestones(rideId: rideId, rideName: item.title, resort: item.resort, context: context)
+    }
 }

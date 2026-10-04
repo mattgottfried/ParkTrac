@@ -639,6 +639,8 @@ private struct PlanItemRow: View {
     let item: PlanItem
     let liveWait: Int?
 
+    @Environment(\.modelContext) private var context
+
     private static let timeFmt: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "h:mm a"; return f
     }()
@@ -656,7 +658,15 @@ private struct PlanItemRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Button {
-                withAnimation { item.isDone.toggle() }
+                let wasDone = item.isDone
+                withAnimation {
+                    if !wasDone && item.kind == "aap" {
+                        // Using an AAP/DAS return means you actually rode it — log it like Rode It! would.
+                        ReturnTimeLogger.markAccessPassUsed(item, context: context)
+                    } else {
+                        item.isDone.toggle()
+                    }
+                }
                 if item.isDone && (item.kind == "ll" || item.kind == "aap") {
                     LiveActivityManager.endReturnTime()
                 }
